@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-01
+
+### ✨ Features
+- **Diff Engine & Economy Calculator**: Pure diff algorithm detecting inventory purchases/consumptions, kills, respawns, dragon/baron/turret takedowns, and Blue vs Red gold difference (`shared/utils/gameDiff.ts`)
+- **Data Dragon CDN Helpers**: Static asset URLs for champion squares, item icons, and MM:SS time formatting (`shared/utils/ddragon.ts`)
+- **Tactical Side-by-Side Dashboard**: Blue vs Red comparative scoreboard with KDA, level, respawn timers, gold difference $\Delta$, and full 6+1 item slots with DDragon icons (`app/components/TacticalDashboard.vue`)
+- **Live Diff Event Feed**: Real-time chronological detection journal with category filters (Tous, Achats, Kills, Objectifs)
+- **View Switcher**: Seamless toggling between Tactical Dashboard view and Diagnostic Console view (`app/pages/index.vue`)
+
+### 🧪 Tests
+- Add comprehensive Vitest unit tests for inventory diffing, turret/dragon/baron attribution, and economy calculation (`tests/unit/gameDiff.test.ts`)
+- Add Playwright E2E tests for tactical dashboard rendering, champion display, and view switching (`tests/e2e/dashboard.spec.ts`)
+
+### 🛠️ Improvements & Bug Fixes
+- Fix async race condition in `useRiotLive` by adding sequence counters to discard stale out-of-order responses
+- Fix Playwright hydration timing by awaiting status API response before interactions
+- Use Nuxt 4 `#shared` alias for clean shared type and utility imports across client, server, and Nitro
+- Configure deterministic single-worker sequential E2E test runs to prevent mock state collision
+
 ## [0.1.0] - 2026-03-01
 
 ### ✨ Features

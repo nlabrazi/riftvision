@@ -49,14 +49,17 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Endpoints API (`/api/riot/status`, `/api/riot/live`, `/api/riot/events`, `/api/riot/mock`)
   - [x] Console de diagnostic second screen avec bascule Mode Simulation (Mock)
   - [x] Suite de tests unitaires Vitest et tests E2E Playwright
-- [ ] **v0.5 — Collecte, Moteur de Diff & Dashboard Brut**
-  - [ ] Moteur de diff temps réel (détection de nouveaux kills, items achetés, structures tombées)
-  - [ ] Tableau de bord comparatif Équipe Bleue vs Équipe Rouge (golds, KDA, items)
-  - [ ] Journal d'événements dynamique
+- [x] **v0.5 — Collecte, Moteur de Diff & Dashboard Brut**
+  - [x] Moteur de diff temps réel pur (achats d'objets, kills, respawns, objectifs neutres & tourelles)
+  - [x] Calcul de l'économie d'équipe (valeur totale d'inventaire, $\Delta$ d'or Bleue vs Rouge)
+  - [x] Intégration CDN Riot Data Dragon (icônes d'items, portraits de champions officiels)
+  - [x] Tableau de bord tactique face-à-face (scoreboards, KDA, inventaires 6+1 slots, barres d'économie)
+  - [x] Journal d'événements et de détections dynamique filtrable par catégorie
+  - [x] Tests unitaires et E2E exhaustifs (17 tests Vitest, 4 tests Playwright)
 - [ ] **v1 — Expérience Second Screen Complète**
   - [ ] Moteur d'inférence de zones (déduction Top/Mid/Bot/Jungle/Rivière)
   - [ ] Minimap vectorielle interactive avec pins dynamiques
-  - [ ] Alertes visuelles grand format temporaires
+  - [ ] Alertes visuelles grand format temporaires (cartes flash)
   - [ ] Alertes sonores contextuelles via Web Audio API
 
 ---
