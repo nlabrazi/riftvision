@@ -7,17 +7,27 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
   },
   "dependencies": {
-    "@nuxt/eslint": "^1.12.1",
     "@nuxt/hints": "^1.0.0-alpha.3",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.2.1",
-    "eslint": "^9.39.2",
     "nuxt": "^4.2.2",
     "typescript": "^5.9.3",
     "vue": "^3.5.25",
     "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "@playwright/test": "^1.63.0",
+    "vitest": "^5.0.0"
   }
 }
