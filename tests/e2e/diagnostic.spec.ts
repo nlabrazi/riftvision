@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Diagnostic Page & Riot Client Interface', () => {
+  test.beforeEach(async ({ request }) => {
+    await request.post('/api/riot/mock', {
+      data: { enabled: false },
+    })
+  })
   test('renders header, title, and mandatory Riot disclaimer', async ({ page }) => {
     await page.goto('/')
 
@@ -16,7 +21,12 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
   })
 
   test('toggles mock mode and displays simulated game data', async ({ page }) => {
+    // Wait for the client-side initial fetchStatus to know Vue is mounted
+    const initialStatusPromise = page.waitForResponse((res) =>
+      res.url().includes('/api/riot/status'),
+    )
     await page.goto('/')
+    await initialStatusPromise
 
     const mockBtn = page.locator('[data-testid="mock-toggle-button"]')
     await expect(mockBtn).toBeVisible()
@@ -27,6 +37,9 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     // Banner should indicate mock mode
     const banner = page.locator('[data-testid="status-banner"]')
     await expect(banner).toContainText('Mode Simulation / Mock actif')
+
+    // Switch to diagnostic view to inspect tabs
+    await page.locator('[data-testid="view-diagnostic-btn"]').click()
 
     // Navigate to Players tab using explicit test id
     await page.locator('[data-testid="tab-players"]').click()

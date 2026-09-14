@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import type { GameDiffEvent, TeamEconomySummary } from '../../shared/types/diff'
-import type { RiotAllGameData, RiotEvent, RiotStatusResponse } from '../../shared/types/riot'
-import { computeGameDiff } from '../../shared/utils/gameDiff'
+import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
+import type { RiotAllGameData, RiotEvent, RiotStatusResponse } from '#shared/types/riot'
+import { computeGameDiff } from '#shared/utils/gameDiff'
 
 export function useRiotLive() {
   const clientMockMode = ref(false)
@@ -38,15 +38,20 @@ export function useRiotLive() {
   const lastError = ref<string | null>(null)
 
   let timer: ReturnType<typeof setInterval> | null = null
+  let statusSeq = 0
+  let liveDataSeq = 0
 
   async function fetchStatus() {
+    const seq = ++statusSeq
     try {
       const url = clientMockMode.value ? '/api/riot/status?mock=true' : '/api/riot/status'
       const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(url)
+      if (seq !== statusSeq) return status.value
       status.value = res
       lastError.value = res.error || null
       return res
     } catch (err) {
+      if (seq !== statusSeq) return status.value
       lastError.value = (err as Error).message
       status.value = {
         status: clientMockMode.value ? 'MOCK' : 'DISCONNECTED',
@@ -63,10 +68,12 @@ export function useRiotLive() {
       return
     }
 
+    const seq = ++liveDataSeq
     try {
       isLoading.value = true
       const url = isMockActive ? '/api/riot/live?mock=true' : '/api/riot/live'
       const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
+      if (seq !== liveDataSeq) return
       if (res?.success && res.data) {
         const diff = computeGameDiff(previousGameData.value, res.data)
         blueEconomy.value = diff.blueEconomy
@@ -85,9 +92,13 @@ export function useRiotLive() {
         events.value = res.data.events?.Events || []
       }
     } catch (err) {
-      lastError.value = (err as Error).message
+      if (seq === liveDataSeq) {
+        lastError.value = (err as Error).message
+      }
     } finally {
-      isLoading.value = false
+      if (seq === liveDataSeq) {
+        isLoading.value = false
+      }
     }
   }
 
@@ -109,11 +120,12 @@ export function useRiotLive() {
   }
 
   async function toggleMockMode() {
-    clientMockMode.value = !clientMockMode.value
+    const nextState = !status.value.isMock
+    clientMockMode.value = nextState
     try {
       await $fetch('/api/riot/mock', {
         method: 'POST',
-        body: { enabled: clientMockMode.value },
+        body: { enabled: nextState },
       })
     } catch {
       // Ignore fallback
