@@ -1,5 +1,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import type { GameDiffEvent, TeamEconomySummary } from '../../shared/types/diff'
 import type { RiotAllGameData, RiotEvent, RiotStatusResponse } from '../../shared/types/riot'
+import { computeGameDiff } from '../../shared/utils/gameDiff'
 
 export function useRiotLive() {
   const clientMockMode = ref(false)
@@ -8,7 +10,29 @@ export function useRiotLive() {
     isMock: false,
   })
   const gameData = ref<RiotAllGameData | null>(null)
+  const previousGameData = ref<RiotAllGameData | null>(null)
   const events = ref<RiotEvent[]>([])
+  const allDiffEvents = ref<GameDiffEvent[]>([])
+
+  const blueEconomy = ref<TeamEconomySummary>({
+    totalItemGold: 0,
+    killCount: 0,
+    deathCount: 0,
+    turretCount: 0,
+    dragonCount: 0,
+    baronCount: 0,
+  })
+
+  const redEconomy = ref<TeamEconomySummary>({
+    totalItemGold: 0,
+    killCount: 0,
+    deathCount: 0,
+    turretCount: 0,
+    dragonCount: 0,
+    baronCount: 0,
+  })
+
+  const goldDifference = ref(0)
   const isLoading = ref(false)
   const isPolling = ref(true)
   const lastError = ref<string | null>(null)
@@ -44,6 +68,19 @@ export function useRiotLive() {
       const url = isMockActive ? '/api/riot/live?mock=true' : '/api/riot/live'
       const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
       if (res?.success && res.data) {
+        const diff = computeGameDiff(previousGameData.value, res.data)
+        blueEconomy.value = diff.blueEconomy
+        redEconomy.value = diff.redEconomy
+        goldDifference.value = diff.goldDifference
+
+        if (diff.newEvents.length > 0) {
+          // Prepend new events, avoiding duplicate ids, and cap at 100
+          const existingIds = new Set(allDiffEvents.value.map((e) => e.id))
+          const freshEvents = diff.newEvents.filter((e) => !existingIds.has(e.id))
+          allDiffEvents.value = [...freshEvents, ...allDiffEvents.value].slice(0, 100)
+        }
+
+        previousGameData.value = res.data
         gameData.value = res.data
         events.value = res.data.events?.Events || []
       }
@@ -64,8 +101,10 @@ export function useRiotLive() {
     ) {
       await fetchLiveData()
     } else {
+      previousGameData.value = null
       gameData.value = null
       events.value = []
+      allDiffEvents.value = []
     }
   }
 
@@ -77,7 +116,7 @@ export function useRiotLive() {
         body: { enabled: clientMockMode.value },
       })
     } catch {
-      // Ignore if server endpoint has issues; client query mock=true is authoritative
+      // Ignore fallback
     }
     await refreshAll()
   }
@@ -132,6 +171,10 @@ export function useRiotLive() {
     status,
     gameData,
     events,
+    diffEvents: allDiffEvents,
+    blueEconomy,
+    redEconomy,
+    goldDifference,
     isLoading,
     isPolling,
     lastError,
