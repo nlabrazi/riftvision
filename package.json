@@ -9,6 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "assets:download": "bash scripts/download-assets.sh",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",

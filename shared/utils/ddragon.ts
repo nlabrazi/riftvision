@@ -57,3 +57,63 @@ export function formatSecondsToTime(seconds: number): string {
   const secs = Math.floor(seconds % 60)
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
+
+/**
+ * Get official role / lane icon from local assets
+ */
+export function getRoleIconUrl(role: string): string {
+  const normalized = (role || '').toUpperCase()
+  switch (normalized) {
+    case 'TOP':
+      return '/assets/icons/roles/top.png'
+    case 'JUNGLE':
+      return '/assets/icons/roles/jungle.png'
+    case 'MIDDLE':
+    case 'MID':
+      return '/assets/icons/roles/middle.png'
+    case 'BOTTOM':
+    case 'BOT':
+      return '/assets/icons/roles/bottom.png'
+    case 'UTILITY':
+    case 'SUPPORT':
+      return '/assets/icons/roles/utility.png'
+    default:
+      return ''
+  }
+}
+
+/**
+ * Get champion full splash art URL from Data Dragon CDN
+ */
+export function getChampionSplashUrl(championName: string): string {
+  const formatted = formatChampionNameForDDragon(championName)
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${formatted}_0.jpg`
+}
+
+/**
+ * Get champion vertical loading screen art URL from Data Dragon CDN
+ */
+export function getChampionLoadingUrl(championName: string): string {
+  const formatted = formatChampionNameForDDragon(championName)
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${formatted}_0.jpg`
+}
+
+/**
+ * Get objective icon from local assets
+ */
+export function getObjectiveIconUrl(
+  type: 'tower' | 'dragon' | 'baron' | 'herald',
+  team: 'ORDER' | 'CHAOS',
+): string {
+  const suffix = team === 'ORDER' ? 'blue' : 'red'
+  return `/assets/icons/objectives/${type}-${suffix}.png`
+}
+
+/**
+ * Local stat icons
+ */
+export const STAT_ICONS = {
+  gold: '/assets/icons/stats/gold.png',
+  kills: '/assets/icons/stats/kills.png',
+  minions: '/assets/icons/stats/minions.png',
+} as const
