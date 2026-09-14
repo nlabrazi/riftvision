@@ -2,6 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { RiotAllGameData, RiotEvent, RiotStatusResponse } from '../../shared/types/riot'
 
 export function useRiotLive() {
+  const clientMockMode = ref(false)
   const status = ref<RiotStatusResponse>({
     status: 'DISCONNECTED',
     isMock: false,
@@ -16,17 +17,16 @@ export function useRiotLive() {
 
   async function fetchStatus() {
     try {
-      const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(
-        '/api/riot/status',
-      )
+      const url = clientMockMode.value ? '/api/riot/status?mock=true' : '/api/riot/status'
+      const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(url)
       status.value = res
       lastError.value = res.error || null
       return res
     } catch (err) {
       lastError.value = (err as Error).message
       status.value = {
-        status: 'DISCONNECTED',
-        isMock: false,
+        status: clientMockMode.value ? 'MOCK' : 'DISCONNECTED',
+        isMock: clientMockMode.value,
         error: (err as Error).message,
       }
       return status.value
@@ -34,13 +34,14 @@ export function useRiotLive() {
   }
 
   async function fetchLiveData() {
-    if (status.value.status === 'DISCONNECTED' && !status.value.isMock) {
+    const isMockActive = clientMockMode.value || status.value.isMock
+    if (status.value.status === 'DISCONNECTED' && !isMockActive) {
       return
     }
 
     try {
       isLoading.value = true
-      const url = status.value.isMock ? '/api/riot/live?mock=true' : '/api/riot/live'
+      const url = isMockActive ? '/api/riot/live?mock=true' : '/api/riot/live'
       const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
       if (res?.success && res.data) {
         gameData.value = res.data
@@ -58,6 +59,7 @@ export function useRiotLive() {
     if (
       currentStatus.status === 'IN_GAME' ||
       currentStatus.status === 'MOCK' ||
+      clientMockMode.value ||
       currentStatus.isMock
     ) {
       await fetchLiveData()
@@ -68,16 +70,16 @@ export function useRiotLive() {
   }
 
   async function toggleMockMode() {
-    const nextState = !status.value.isMock
+    clientMockMode.value = !clientMockMode.value
     try {
       await $fetch('/api/riot/mock', {
         method: 'POST',
-        body: { enabled: nextState },
+        body: { enabled: clientMockMode.value },
       })
-      await refreshAll()
-    } catch (err) {
-      lastError.value = (err as Error).message
+    } catch {
+      // Ignore if server endpoint has issues; client query mock=true is authoritative
     }
+    await refreshAll()
   }
 
   function startPolling() {
@@ -126,6 +128,7 @@ export function useRiotLive() {
   })
 
   return {
+    clientMockMode,
     status,
     gameData,
     events,

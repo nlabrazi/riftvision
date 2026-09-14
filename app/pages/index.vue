@@ -154,6 +154,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         <div class="flex border-b border-slate-800 gap-2">
           <button
             type="button"
+            data-testid="tab-overview"
             @click="activeTab = 'overview'"
             class="px-4 py-2 text-xs font-semibold border-b-2 transition"
             :class="activeTab === 'overview' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-slate-400 hover:text-slate-200'"
@@ -162,6 +163,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           </button>
           <button
             type="button"
+            data-testid="tab-players"
             @click="activeTab = 'players'"
             class="px-4 py-2 text-xs font-semibold border-b-2 transition flex items-center gap-1.5"
             :class="activeTab === 'players' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-slate-400 hover:text-slate-200'"
@@ -173,6 +175,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           </button>
           <button
             type="button"
+            data-testid="tab-events"
             @click="activeTab = 'events'"
             class="px-4 py-2 text-xs font-semibold border-b-2 transition flex items-center gap-1.5"
             :class="activeTab === 'events' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-slate-400 hover:text-slate-200'"
@@ -184,6 +187,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           </button>
           <button
             type="button"
+            data-testid="tab-raw"
             @click="activeTab = 'raw'"
             class="px-4 py-2 text-xs font-semibold border-b-2 transition"
             :class="activeTab === 'raw' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-slate-400 hover:text-slate-200'"

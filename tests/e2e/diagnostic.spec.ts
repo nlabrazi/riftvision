@@ -28,16 +28,16 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     const banner = page.locator('[data-testid="status-banner"]')
     await expect(banner).toContainText('Mode Simulation / Mock actif')
 
-    // Navigate to Players tab
-    await page.getByRole('button', { name: 'Joueurs' }).click()
+    // Navigate to Players tab using explicit test id
+    await page.locator('[data-testid="tab-players"]').click()
 
     // Verify champions from mock dataset are rendered
     await expect(page.getByText('Darius', { exact: true })).toBeVisible()
     await expect(page.getByText('Ahri', { exact: true })).toBeVisible()
     await expect(page.getByText('Garen', { exact: true })).toBeVisible()
 
-    // Navigate to Events tab
-    await page.getByRole('button', { name: 'Événements' }).click()
+    // Navigate to Events tab using explicit test id
+    await page.locator('[data-testid="tab-events"]').click()
     await expect(page.getByText('FirstBlood', { exact: true })).toBeVisible()
     await expect(page.getByText('Chemtech')).toBeVisible()
   })
