@@ -25,24 +25,23 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 </script>
 
 <template>
-  <div
-    class="relative min-h-screen bg-[#010a13] text-slate-100 flex flex-col font-sans selection:bg-[#c8aa6e] selection:text-black">
+  <div class="relative min-h-screen bg-[#010a13] text-slate-100 flex flex-col font-sans selection:bg-[#c8aa6e] selection:text-black">
     <!-- LoL Atmospheric Background Texture & Vignette Overlay -->
-    <div class="fixed inset-0 pointer-events-none bg-cover bg-center opacity-25 z-0"
-      style="background-image: url('/assets/images/background.jpg');"></div>
-    <div class="fixed inset-0 pointer-events-none bg-gradient-to-b from-[#010a13]/85 via-[#010a13]/90 to-[#010a13] z-0">
-    </div>
+    <div
+      class="fixed inset-0 pointer-events-none bg-cover bg-center opacity-25 z-0"
+      style="background-image: url('/assets/images/background.jpg');"
+    ></div>
+    <div class="fixed inset-0 pointer-events-none bg-gradient-to-b from-[#010a13]/85 via-[#010a13]/90 to-[#010a13] z-0"></div>
 
     <!-- Header -->
-    <header
-      class="relative z-30 border-b border-[#785a28]/40 bg-[#091428]/95 backdrop-blur-md sticky top-0 px-6 py-3.5 shadow-2xl">
+    <header class="relative z-30 border-b border-[#785a28]/40 bg-[#091428]/95 backdrop-blur-md sticky top-0 px-6 py-3.5 shadow-2xl">
       <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
         <!-- Logo & Title -->
         <div class="flex items-center gap-3">
           <div
-            class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#785a28] via-[#c8aa6e] to-[#f0e6d2] p-[1px] shadow-lg shadow-[#785a28]/40">
-            <div
-              class="w-full h-full bg-[#010a13] rounded-xl flex items-center justify-center font-cinzel font-black text-lg text-gold-gradient">
+            class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#785a28] via-[#c8aa6e] to-[#f0e6d2] p-[1px] shadow-lg shadow-[#785a28]/40"
+          >
+            <div class="w-full h-full bg-[#010a13] rounded-xl flex items-center justify-center font-cinzel font-black text-lg text-gold-gradient">
               RV
             </div>
           </div>
@@ -51,8 +50,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
               <h1 class="text-xl font-bold tracking-wider font-cinzel text-gold-gradient drop-shadow">
                 RiftVision
               </h1>
-              <span
-                class="text-xs px-2 py-0.5 rounded font-rajdhani font-bold bg-[#010a13] border border-[#785a28] text-[#c8aa6e]">
+              <span class="text-xs px-2 py-0.5 rounded font-rajdhani font-bold bg-[#010a13] border border-[#785a28] text-[#c8aa6e]">
                 v0.2.0
               </span>
             </div>
@@ -63,16 +61,23 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         </div>
 
         <!-- View Switcher -->
-        <div
-          class="flex items-center bg-[#010a13] p-1 rounded-xl border border-[#785a28]/50 text-xs font-rajdhani font-bold shadow-inner">
-          <button type="button" data-testid="view-tactical-btn" @click="currentView = 'tactical'"
+        <div class="flex items-center bg-[#010a13] p-1 rounded-xl border border-[#785a28]/50 text-xs font-rajdhani font-bold shadow-inner">
+          <button
+            type="button"
+            data-testid="view-tactical-btn"
+            @click="currentView = 'tactical'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
-            :class="currentView === 'tactical' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
+            :class="currentView === 'tactical' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'"
+          >
             <span>⚔️</span> Tableau Tactique
           </button>
-          <button type="button" data-testid="view-diagnostic-btn" @click="currentView = 'diagnostic'"
+          <button
+            type="button"
+            data-testid="view-diagnostic-btn"
+            @click="currentView = 'diagnostic'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
-            :class="currentView === 'diagnostic' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
+            :class="currentView === 'diagnostic' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'"
+          >
             <span>🛠️</span> Diagnostic API
           </button>
         </div>
@@ -199,8 +204,10 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           </div>
         </div>
 
-        <div v-if="lastError && status.status === 'DISCONNECTED'"
-          class="mt-2.5 text-xs text-rose-300 font-mono bg-rose-950/50 p-2.5 rounded-lg border border-rose-900/60">
+        <div
+          v-if="lastError && status.status === 'DISCONNECTED'"
+          class="mt-2.5 text-xs text-rose-300 font-mono bg-rose-950/50 p-2.5 rounded-lg border border-rose-900/60"
+        >
           Dernière erreur de connexion : {{ lastError }}
         </div>
       </section>
@@ -219,17 +226,22 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           @stop-mock="toggleMockMode"
         />
 
-        <div v-else class="text-center py-20 hextech-card rounded-2xl p-8 space-y-4">
+        <div
+          v-else
+          class="text-center py-20 hextech-card rounded-2xl p-8 space-y-4"
+        >
           <div class="text-5xl drop-shadow">⚔️</div>
           <h3 class="text-lg font-bold font-cinzel text-gold-gradient">
             Aucune partie active détectée
           </h3>
           <p class="text-xs text-slate-400 max-w-md mx-auto">
-            Pour afficher le tableau de bord tactique en direct, lancez une partie dans League of Legends ou activez le
-            mode simulation ci-dessus.
+            Pour afficher le tableau de bord tactique en direct, lancez une partie dans League of Legends ou activez le mode simulation ci-dessus.
           </p>
-          <button type="button" @click="toggleMockMode"
-            class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white transition shadow-lg shadow-purple-950/60 border border-purple-400/40 uppercase tracking-wider">
+          <button
+            type="button"
+            @click="toggleMockMode"
+            class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white transition shadow-lg shadow-purple-950/60 border border-purple-400/40 uppercase tracking-wider"
+          >
             Lancer le Mode Simulation (Démo)
           </button>
         </div>
@@ -239,29 +251,46 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
       <section v-if="currentView === 'diagnostic'" class="space-y-4">
         <!-- Navigation Tabs -->
         <div class="flex border-b border-[#785a28]/40 gap-2 font-rajdhani font-bold text-sm">
-          <button type="button" data-testid="tab-overview" @click="activeTab = 'overview'"
+          <button
+            type="button"
+            data-testid="tab-overview"
+            @click="activeTab = 'overview'"
             class="px-4 py-2 border-b-2 transition"
-            :class="activeTab === 'overview' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'">
+            :class="activeTab === 'overview' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'"
+          >
             Vue d'ensemble
           </button>
-          <button type="button" data-testid="tab-players" @click="activeTab = 'players'"
+          <button
+            type="button"
+            data-testid="tab-players"
+            @click="activeTab = 'players'"
             class="px-4 py-2 border-b-2 transition flex items-center gap-1.5"
-            :class="activeTab === 'players' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'">
+            :class="activeTab === 'players' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'"
+          >
             Joueurs
             <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#010a13] border border-[#785a28]/50 text-[#c8aa6e]">
               {{ gameData?.allPlayers?.length || 0 }}
             </span>
           </button>
-          <button type="button" data-testid="tab-events" @click="activeTab = 'events'"
+          <button
+            type="button"
+            data-testid="tab-events"
+            @click="activeTab = 'events'"
             class="px-4 py-2 border-b-2 transition flex items-center gap-1.5"
-            :class="activeTab === 'events' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'">
+            :class="activeTab === 'events' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'"
+          >
             Événements Riot
             <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#010a13] border border-[#785a28]/50 text-[#c8aa6e]">
               {{ events.length }}
             </span>
           </button>
-          <button type="button" data-testid="tab-raw" @click="activeTab = 'raw'" class="px-4 py-2 border-b-2 transition"
-            :class="activeTab === 'raw' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'">
+          <button
+            type="button"
+            data-testid="tab-raw"
+            @click="activeTab = 'raw'"
+            class="px-4 py-2 border-b-2 transition"
+            :class="activeTab === 'raw' ? 'border-[#c8aa6e] text-[#f0e6d2]' : 'border-transparent text-slate-400 hover:text-white'"
+          >
             Payload JSON Brut
           </button>
         </div>
@@ -276,8 +305,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
             <div v-if="gameData?.activePlayer" class="space-y-3">
               <div class="flex items-center justify-between border-b border-[#785a28]/30 pb-2">
                 <span class="text-sm font-bold font-cinzel text-white">{{ gameData.activePlayer.summonerName }}</span>
-                <span
-                  class="text-xs font-rajdhani font-bold bg-cyan-950 border border-cyan-800 text-cyan-300 px-2 py-0.5 rounded">
+                <span class="text-xs font-rajdhani font-bold bg-cyan-950 border border-cyan-800 text-cyan-300 px-2 py-0.5 rounded">
                   Niveau {{ gameData.activePlayer.level }}
                 </span>
               </div>
@@ -295,13 +323,11 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                 </div>
                 <div class="bg-[#010a13] border border-slate-800 p-2 rounded">
                   <span class="text-slate-400">AD:</span>
-                  <span class="text-orange-400 ml-1">{{ gameData.activePlayer.championStats?.attackDamage?.toFixed(0) ||
-                    '—' }}</span>
+                  <span class="text-orange-400 ml-1">{{ gameData.activePlayer.championStats?.attackDamage?.toFixed(0) || '—' }}</span>
                 </div>
                 <div class="bg-[#010a13] border border-slate-800 p-2 rounded">
                   <span class="text-slate-400">AP:</span>
-                  <span class="text-purple-400 ml-1">{{ gameData.activePlayer.championStats?.abilityPower?.toFixed(0) ||
-                    '—' }}</span>
+                  <span class="text-purple-400 ml-1">{{ gameData.activePlayer.championStats?.abilityPower?.toFixed(0) || '—' }}</span>
                 </div>
               </div>
             </div>
@@ -316,8 +342,11 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
               Derniers Événements Détectés
             </h3>
             <div v-if="events.length > 0" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-              <div v-for="e in events.slice(-5).reverse()" :key="e.EventID"
-                class="text-xs p-2 rounded-lg bg-[#010a13] border border-[#785a28]/30 flex items-center justify-between gap-2">
+              <div
+                v-for="e in events.slice(-5).reverse()"
+                :key="e.EventID"
+                class="text-xs p-2 rounded-lg bg-[#010a13] border border-[#785a28]/30 flex items-center justify-between gap-2"
+              >
                 <div class="flex items-center gap-2 font-rajdhani">
                   <span class="text-cyan-400 text-xs font-bold">
                     {{ Math.floor(e.EventTime / 60) }}:{{ String(Math.floor(e.EventTime % 60)).padStart(2, '0') }}
@@ -353,28 +382,35 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                 </span>
               </div>
               <div class="divide-y divide-[#785a28]/20">
-                <div v-for="p in gameData.allPlayers.filter(pl => pl.team === 'ORDER')" :key="p.summonerName"
-                  class="p-3 hover:bg-slate-800/30 transition flex items-center justify-between gap-3 text-xs">
+                <div
+                  v-for="p in gameData.allPlayers.filter(pl => pl.team === 'ORDER')"
+                  :key="p.summonerName"
+                  class="p-3 hover:bg-slate-800/30 transition flex items-center justify-between gap-3 text-xs"
+                >
                   <div>
                     <div class="flex items-center gap-2">
                       <span class="font-cinzel font-bold text-white">{{ p.championName }}</span>
-                      <span
-                        class="text-[10px] font-rajdhani font-bold px-1.5 py-0.2 rounded bg-[#010a13] border border-cyan-800 text-cyan-300">
+                      <span class="text-[10px] font-rajdhani font-bold px-1.5 py-0.2 rounded bg-[#010a13] border border-cyan-800 text-cyan-300">
                         {{ p.position }}
                       </span>
-                      <span v-if="p.isDead"
-                        class="text-[10px] font-rajdhani font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.2 rounded">
+                      <span
+                        v-if="p.isDead"
+                        class="text-[10px] font-rajdhani font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.2 rounded"
+                      >
                         MORT ({{ p.respawnTimer }}s)
                       </span>
                     </div>
                     <div class="text-[11px] text-slate-400 mt-0.5 font-rajdhani font-semibold">
-                      {{ p.summonerName }} • Niv. {{ p.level }} • KDA: {{ p.scores.kills }}/{{ p.scores.deaths }}/{{
-                        p.scores.assists }} ({{ p.scores.creepScore }} CS)
+                      {{ p.summonerName }} • Niv. {{ p.level }} • KDA: {{ p.scores.kills }}/{{ p.scores.deaths }}/{{ p.scores.assists }} ({{ p.scores.creepScore }} CS)
                     </div>
                   </div>
                   <div class="flex gap-1">
-                    <span v-for="(item, i) in p.items" :key="i" :title="item.displayName"
-                      class="text-[10px] bg-[#010a13] border border-[#785a28]/40 px-1.5 py-0.5 rounded text-slate-300 truncate max-w-[100px]">
+                    <span
+                      v-for="(item, i) in p.items"
+                      :key="i"
+                      :title="item.displayName"
+                      class="text-[10px] bg-[#010a13] border border-[#785a28]/40 px-1.5 py-0.5 rounded text-slate-300 truncate max-w-[100px]"
+                    >
                       {{ item.displayName }}
                     </span>
                   </div>
@@ -390,28 +426,35 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                 </span>
               </div>
               <div class="divide-y divide-[#785a28]/20">
-                <div v-for="p in gameData.allPlayers.filter(pl => pl.team === 'CHAOS')" :key="p.summonerName"
-                  class="p-3 hover:bg-slate-800/30 transition flex items-center justify-between gap-3 text-xs">
+                <div
+                  v-for="p in gameData.allPlayers.filter(pl => pl.team === 'CHAOS')"
+                  :key="p.summonerName"
+                  class="p-3 hover:bg-slate-800/30 transition flex items-center justify-between gap-3 text-xs"
+                >
                   <div>
                     <div class="flex items-center gap-2">
                       <span class="font-cinzel font-bold text-white">{{ p.championName }}</span>
-                      <span
-                        class="text-[10px] font-rajdhani font-bold px-1.5 py-0.2 rounded bg-[#010a13] border border-rose-800 text-rose-300">
+                      <span class="text-[10px] font-rajdhani font-bold px-1.5 py-0.2 rounded bg-[#010a13] border border-rose-800 text-rose-300">
                         {{ p.position }}
                       </span>
-                      <span v-if="p.isDead"
-                        class="text-[10px] font-rajdhani font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.2 rounded">
+                      <span
+                        v-if="p.isDead"
+                        class="text-[10px] font-rajdhani font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.2 rounded"
+                      >
                         MORT ({{ p.respawnTimer }}s)
                       </span>
                     </div>
                     <div class="text-[11px] text-slate-400 mt-0.5 font-rajdhani font-semibold">
-                      {{ p.summonerName }} • Niv. {{ p.level }} • KDA: {{ p.scores.kills }}/{{ p.scores.deaths }}/{{
-                        p.scores.assists }} ({{ p.scores.creepScore }} CS)
+                      {{ p.summonerName }} • Niv. {{ p.level }} • KDA: {{ p.scores.kills }}/{{ p.scores.deaths }}/{{ p.scores.assists }} ({{ p.scores.creepScore }} CS)
                     </div>
                   </div>
                   <div class="flex gap-1">
-                    <span v-for="(item, i) in p.items" :key="i" :title="item.displayName"
-                      class="text-[10px] bg-[#010a13] border border-[#785a28]/40 px-1.5 py-0.5 rounded text-slate-300 truncate max-w-[100px]">
+                    <span
+                      v-for="(item, i) in p.items"
+                      :key="i"
+                      :title="item.displayName"
+                      class="text-[10px] bg-[#010a13] border border-[#785a28]/40 px-1.5 py-0.5 rounded text-slate-300 truncate max-w-[100px]"
+                    >
                       {{ item.displayName }}
                     </span>
                   </div>
@@ -424,14 +467,16 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         <!-- Tab 3: Events -->
         <div v-if="activeTab === 'events'" class="hextech-card rounded-xl p-4">
           <div v-if="events.length" class="space-y-2 max-h-96 overflow-y-auto font-rajdhani">
-            <div v-for="e in events" :key="e.EventID"
-              class="p-2.5 rounded-lg bg-[#010a13] border border-[#785a28]/30 text-xs flex items-center justify-between gap-3">
+            <div
+              v-for="e in events"
+              :key="e.EventID"
+              class="p-2.5 rounded-lg bg-[#010a13] border border-[#785a28]/30 text-xs flex items-center justify-between gap-3"
+            >
               <div class="flex items-center gap-3">
                 <span class="text-cyan-400 text-xs font-bold">
                   {{ Math.floor(e.EventTime / 60) }}:{{ String(Math.floor(e.EventTime % 60)).padStart(2, '0') }}
                 </span>
-                <span
-                  class="font-bold text-white bg-[#091428] border border-[#785a28]/50 px-2 py-0.5 rounded text-[11px]">
+                <span class="font-bold text-white bg-[#091428] border border-[#785a28]/50 px-2 py-0.5 rounded text-[11px]">
                   {{ e.EventName }}
                 </span>
                 <span class="text-slate-300 font-sans">
@@ -447,12 +492,10 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                     <span class="font-semibold text-emerald-400">{{ e.Recipient }}</span>
                   </template>
                   <template v-else-if="e.TurretKilled">
-                    Tour détruite: <span class="font-semibold text-amber-300">{{ e.TurretKilled }}</span> par {{
-                    e.KillerName }}
+                    Tour détruite: <span class="font-semibold text-amber-300">{{ e.TurretKilled }}</span> par {{ e.KillerName }}
                   </template>
                   <template v-else-if="e.DragonType">
-                    Dragon <span class="font-semibold text-indigo-300">{{ e.DragonType }}</span> éliminé par {{
-                    e.KillerName }}
+                    Dragon <span class="font-semibold text-indigo-300">{{ e.DragonType }}</span> éliminé par {{ e.KillerName }}
                   </template>
                   <template v-else>
                     {{ JSON.stringify(e) }}
@@ -466,20 +509,16 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 
         <!-- Tab 4: Raw JSON -->
         <div v-if="activeTab === 'raw'" class="hextech-card rounded-xl p-4">
-          <pre
-            class="text-xs font-mono bg-[#010a13] p-4 rounded-lg overflow-x-auto text-cyan-300/90 max-h-[500px] border border-[#785a28]/30">
-    {{ JSON.stringify(gameData || status, null, 2) }}</pre>
+          <pre class="text-xs font-mono bg-[#010a13] p-4 rounded-lg overflow-x-auto text-cyan-300/90 max-h-[500px] border border-[#785a28]/30">{{ JSON.stringify(gameData || status, null, 2) }}</pre>
         </div>
       </section>
     </main>
 
     <!-- Riot Games Legal Disclaimer Footer -->
-    <footer
-      class="relative z-10 border-t border-[#785a28]/40 bg-[#091428]/95 py-4 px-6 text-center text-[11px] text-slate-400">
+    <footer class="relative z-10 border-t border-[#785a28]/40 bg-[#091428]/95 py-4 px-6 text-center text-[11px] text-slate-400">
       <div class="max-w-4xl mx-auto space-y-1">
         <p>
-          RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone
-          officially involved in producing or managing Riot Games properties.
+          RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties.
         </p>
         <p class="text-[#c8aa6e]/60">
           Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.

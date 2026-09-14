@@ -89,10 +89,8 @@ const filteredEvents = computed(() => {
       </div>
 
       <!-- Demo Banner Indicator (when in mock mode) -->
-      <div
-        v-if="isMock"
-        class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-purple-600/50 bg-purple-950/60 px-4 py-2 text-xs font-rajdhani"
-      >
+      <div v-if="isMock"
+        class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-purple-600/50 bg-purple-950/60 px-4 py-2 text-xs font-rajdhani">
         <div class="flex items-center gap-2">
           <span class="h-2 w-2 rounded-full bg-purple-400 animate-ping"></span>
           <span class="font-bold text-purple-200">
@@ -100,11 +98,8 @@ const filteredEvents = computed(() => {
           </span>
         </div>
 
-        <button
-          type="button"
-          @click="emit('stop-mock')"
-          class="flex items-center gap-1.5 rounded-lg border border-rose-500/80 bg-rose-950/90 px-3 py-1 font-bold text-rose-200 hover:bg-rose-900 hover:border-rose-400 transition shadow"
-        >
+        <button type="button" @click="emit('stop-mock')"
+          class="flex items-center gap-1.5 rounded-lg border border-rose-500/80 bg-rose-950/90 px-3 py-1 font-bold text-rose-200 hover:bg-rose-900 hover:border-rose-400 transition shadow">
           <span>⏹️</span>
           <span>Arrêter le Mode Démo</span>
         </button>
