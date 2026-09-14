@@ -37,28 +37,36 @@ export function useRiotLive() {
   const isPolling = ref(true)
   const lastError = ref<string | null>(null)
 
-  let timer: ReturnType<typeof setInterval> | null = null
+  let pollTimeout: ReturnType<typeof setTimeout> | null = null
+  let isRefreshing = false
   let statusSeq = 0
   let liveDataSeq = 0
 
-  async function fetchStatus() {
+  async function fetchStatus(): Promise<
+    (RiotStatusResponse & { globalMockEnabled: boolean }) | null
+  > {
     const seq = ++statusSeq
     try {
-      const url = clientMockMode.value ? '/api/riot/status?mock=true' : '/api/riot/status'
+      const url = clientMockMode.value
+        ? '/api/riot/status?mock=true'
+        : '/api/riot/status?mock=false'
       const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(url)
-      if (seq !== statusSeq) return status.value
+      if (seq !== statusSeq) return null
       status.value = res
       lastError.value = res.error || null
       return res
     } catch (err) {
-      if (seq !== statusSeq) return status.value
+      if (seq !== statusSeq) return null
       lastError.value = (err as Error).message
       status.value = {
         status: clientMockMode.value ? 'MOCK' : 'DISCONNECTED',
         isMock: clientMockMode.value,
         error: (err as Error).message,
       }
-      return status.value
+      return {
+        ...status.value,
+        globalMockEnabled: clientMockMode.value,
+      }
     }
   }
 
@@ -103,48 +111,128 @@ export function useRiotLive() {
   }
 
   async function refreshAll() {
-    const currentStatus = await fetchStatus()
-    if (
-      currentStatus.status === 'IN_GAME' ||
-      currentStatus.status === 'MOCK' ||
-      clientMockMode.value ||
-      currentStatus.isMock
-    ) {
-      await fetchLiveData()
-    } else {
-      previousGameData.value = null
-      gameData.value = null
-      events.value = []
-      allDiffEvents.value = []
+    if (isRefreshing) return
+    isRefreshing = true
+    try {
+      const currentStatus = await fetchStatus()
+      if (!currentStatus) return
+
+      if (
+        currentStatus.status === 'IN_GAME' ||
+        currentStatus.status === 'MOCK' ||
+        clientMockMode.value ||
+        currentStatus.isMock
+      ) {
+        await fetchLiveData()
+      } else {
+        resetGameData()
+      }
+    } finally {
+      isRefreshing = false
     }
   }
 
-  async function toggleMockMode() {
-    const nextState = !status.value.isMock
-    clientMockMode.value = nextState
+  function resetGameData() {
+    previousGameData.value = null
+    gameData.value = null
+    events.value = []
+    allDiffEvents.value = []
+    blueEconomy.value = {
+      totalItemGold: 0,
+      killCount: 0,
+      deathCount: 0,
+      turretCount: 0,
+      dragonCount: 0,
+      baronCount: 0,
+    }
+    redEconomy.value = {
+      totalItemGold: 0,
+      killCount: 0,
+      deathCount: 0,
+      turretCount: 0,
+      dragonCount: 0,
+      baronCount: 0,
+    }
+    goldDifference.value = 0
+  }
+
+  async function stopMockMode() {
+    // Invalidate any pending requests immediately
+    statusSeq++
+    liveDataSeq++
+    clientMockMode.value = false
+    status.value = {
+      status: 'DISCONNECTED',
+      isMock: false,
+    }
+    resetGameData()
+
     try {
       await $fetch('/api/riot/mock', {
         method: 'POST',
-        body: { enabled: nextState },
+        body: { enabled: false },
       })
     } catch {
       // Ignore fallback
     }
+
     await refreshAll()
+    scheduleNextPoll()
   }
 
-  function startPolling() {
-    if (timer) return
-    isPolling.value = true
-    timer = setInterval(() => {
-      refreshAll()
+  async function startMockMode() {
+    statusSeq++
+    liveDataSeq++
+    clientMockMode.value = true
+    status.value = {
+      status: 'MOCK',
+      isMock: true,
+    }
+
+    try {
+      await $fetch('/api/riot/mock', {
+        method: 'POST',
+        body: { enabled: true },
+      })
+    } catch {
+      // Ignore fallback
+    }
+
+    await refreshAll()
+    scheduleNextPoll()
+  }
+
+  async function toggleMockMode() {
+    if (status.value.isMock || clientMockMode.value) {
+      await stopMockMode()
+    } else {
+      await startMockMode()
+    }
+  }
+
+  function scheduleNextPoll() {
+    if (!isPolling.value) return
+    if (pollTimeout) {
+      clearTimeout(pollTimeout)
+      pollTimeout = null
+    }
+    pollTimeout = setTimeout(async () => {
+      if (!isPolling.value) return
+      await refreshAll()
+      scheduleNextPoll()
     }, 2000)
   }
 
+  function startPolling() {
+    if (isPolling.value && pollTimeout) return
+    isPolling.value = true
+    scheduleNextPoll()
+  }
+
   function stopPolling() {
-    if (timer) {
-      clearInterval(timer)
-      timer = null
+    if (pollTimeout) {
+      clearTimeout(pollTimeout)
+      pollTimeout = null
     }
     isPolling.value = false
   }
@@ -194,6 +282,8 @@ export function useRiotLive() {
     formattedGameTime,
     refreshAll,
     toggleMockMode,
+    startMockMode,
+    stopMockMode,
     togglePolling,
   }
 }

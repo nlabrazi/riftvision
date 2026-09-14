@@ -17,6 +17,8 @@ const {
   formattedGameTime,
   refreshAll,
   toggleMockMode,
+  startMockMode,
+  stopMockMode,
   togglePolling,
 } = useRiotLive()
 
@@ -79,7 +81,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 
         <!-- Controls -->
         <div class="flex items-center flex-wrap gap-2.5 font-rajdhani font-bold text-xs">
-          <button type="button" data-testid="mock-toggle-button" @click="toggleMockMode"
+          <button type="button" data-testid="mock-toggle-button" @click="status.isMock ? stopMockMode() : startMockMode()"
             class="px-3.5 py-1.5 rounded-lg transition border flex items-center gap-2 shadow-sm" :class="status.isMock
               ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 hover:bg-rose-900 hover:border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
               : 'bg-[#010a13] border-[#785a28]/60 text-[#c8aa6e] hover:border-[#c8aa6e] hover:text-[#f0e6d2]'">
@@ -133,7 +135,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                 <span v-if="status.status === 'IN_GAME'">Partie en cours détectée (Port 2999)</span>
                 <span v-else-if="status.status === 'MOCK'" class="flex items-center gap-3">
                   <span>Mode Simulation / Mock actif</span>
-                  <button type="button" @click="toggleMockMode"
+                  <button type="button" @click="stopMockMode"
                     class="px-2.5 py-0.5 rounded-md text-[11px] font-rajdhani font-bold bg-rose-900/80 hover:bg-rose-800 border border-rose-600 text-rose-200 transition flex items-center gap-1 shadow">
                     <span>⏹️</span>
                     <span>Arrêter la Démo</span>
@@ -177,7 +179,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
       <section v-if="currentView === 'tactical'" class="space-y-6">
         <TacticalDashboard v-if="isConnected" :game-data="gameData" :blue-economy="blueEconomy"
           :red-economy="redEconomy" :gold-difference="goldDifference" :diff-events="diffEvents"
-          :formatted-game-time="formattedGameTime" :is-mock="status.isMock" @stop-mock="toggleMockMode" />
+          :formatted-game-time="formattedGameTime" :is-mock="status.isMock" @stop-mock="stopMockMode" />
 
         <div v-else class="text-center py-20 hextech-card rounded-2xl p-8 space-y-4">
           <div class="text-5xl drop-shadow">⚔️</div>
@@ -188,7 +190,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
             Pour afficher le tableau de bord tactique en direct, lancez une partie dans League of Legends ou activez le
             mode simulation ci-dessus.
           </p>
-          <button type="button" @click="toggleMockMode"
+          <button type="button" @click="startMockMode"
             class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white transition shadow-lg shadow-purple-950/60 border border-purple-400/40 uppercase tracking-wider">
             Lancer le Mode Simulation (Démo)
           </button>

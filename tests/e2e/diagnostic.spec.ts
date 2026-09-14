@@ -53,5 +53,10 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     await page.locator('[data-testid="tab-events"]').click()
     await expect(page.getByText('FirstBlood', { exact: true })).toBeVisible()
     await expect(page.getByText('Chemtech')).toBeVisible()
+
+    // Stop mock mode and verify banner returns to waiting state
+    await mockBtn.click()
+    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(mockBtn).toContainText('Activer Simulation')
   })
 })
