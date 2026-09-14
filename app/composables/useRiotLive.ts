@@ -14,10 +14,11 @@ export function useRiotLive() {
 
   let timer: ReturnType<typeof setInterval> | null = null
 
-  async function fetchStatus(toggleMock = false) {
+  async function fetchStatus() {
     try {
-      const url = toggleMock ? '/api/riot/status?toggleMock=true' : '/api/riot/status'
-      const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(url)
+      const res = await $fetch<RiotStatusResponse & { globalMockEnabled: boolean }>(
+        '/api/riot/status',
+      )
       status.value = res
       lastError.value = res.error || null
       return res
@@ -39,7 +40,8 @@ export function useRiotLive() {
 
     try {
       isLoading.value = true
-      const res = await $fetch<{ success: boolean; data: RiotAllGameData }>('/api/riot/live')
+      const url = status.value.isMock ? '/api/riot/live?mock=true' : '/api/riot/live'
+      const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
       if (res?.success && res.data) {
         gameData.value = res.data
         events.value = res.data.events?.Events || []
@@ -53,7 +55,11 @@ export function useRiotLive() {
 
   async function refreshAll() {
     const currentStatus = await fetchStatus()
-    if (currentStatus.status === 'IN_GAME' || currentStatus.status === 'MOCK') {
+    if (
+      currentStatus.status === 'IN_GAME' ||
+      currentStatus.status === 'MOCK' ||
+      currentStatus.isMock
+    ) {
       await fetchLiveData()
     } else {
       gameData.value = null
@@ -62,8 +68,16 @@ export function useRiotLive() {
   }
 
   async function toggleMockMode() {
-    await fetchStatus(true)
-    await refreshAll()
+    const nextState = !status.value.isMock
+    try {
+      await $fetch('/api/riot/mock', {
+        method: 'POST',
+        body: { enabled: nextState },
+      })
+      await refreshAll()
+    } catch (err) {
+      lastError.value = (err as Error).message
+    }
   }
 
   function startPolling() {

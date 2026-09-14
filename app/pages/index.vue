@@ -366,6 +366,9 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                     <span class="font-semibold text-emerald-400">{{ e.KillerName }}</span> a tué <span class="font-semibold text-rose-400">{{ e.VictimName }}</span>
                     <span v-if="e.Assisters?.length" class="text-slate-400 text-[11px]"> (Assists: {{ e.Assisters.join(', ') }})</span>
                   </template>
+                  <template v-else-if="e.EventName === 'FirstBlood'">
+                    Premier Sang (First Blood) obtenu par <span class="font-semibold text-emerald-400">{{ e.Recipient }}</span>
+                  </template>
                   <template v-else-if="e.TurretKilled">
                     Tour détruite: <span class="font-semibold text-amber-300">{{ e.TurretKilled }}</span> par {{ e.KillerName }}
                   </template>
