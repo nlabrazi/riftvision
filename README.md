@@ -63,15 +63,32 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 - [x] **v1 — Expérience Second Screen Complète**
   - [x] Double vue ergonomique adaptée : **⚔️ Dashboard Global** vs **🎯 Focus Radar & Alertes** (`FocusRadarView.vue`)
   - [x] Moteur de projection & repères 2D de la Faille (`shared/utils/mapCoordinates.ts`)
-  - [x] Minimap interactive grand format avec 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
+  - [x] Minimap interactive grand format avec repères par rôle pour les 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
   - [x] Bannières Flash Alertes géantes d'impact maximal (slam, lueurs néon, progress bar 4s) (`FlashAlertOverlay.vue`)
   - [x] Alertes sonores contextuelles via Web Audio API native (aucun fichier MP3 externe, zéro latence)
   - [x] Suite de tests exhaustifs (31 tests Vitest, 7 tests Playwright)
+- [x] **v1.1 — Refonte UI / UX & Ergonomie**
+  - [x] Dashboard avec carte permanente, journal de combat filtrable et recherchable, scores et inventaires
+  - [x] Carte immersive adaptée à l'écran, journal escamotable et plein écran natif
+  - [x] Alertes compactes et repérage dynamique des événements localisables sur la carte
+  - [x] Sélection d'événements et détails des champions accessibles au clavier
+  - [x] Navigation simplifiée, affichage responsive et identité Hextech conservée
 - [ ] **v1.5 — Copilote Tactique & Intelligence Prédictive**
   - [ ] Détection des Power Spikes et alertes d'équipements légendaires complétés
   - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)
   - [ ] Graphique temps réel d'évolution de la courbe d'or ($\Delta$ Gold)
   - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
+
+---
+
+## Utiliser les deux vues
+
+- **Dashboard** : carte et journal de combat visibles ensemble, avec les scores, objectifs et inventaires des équipes. Filtrez le journal ou recherchez un champion, puis sélectionnez un événement pour afficher son repère lorsqu'il peut être localisé.
+- **Carte immersive** : la carte utilise la hauteur disponible. Le bouton **Journal** masque le panneau latéral ; **Plein écran** permet de consacrer l'écran à cette vue. Utilisez le même bouton ou `Échap` pour quitter le plein écran.
+- **Alertes** : les nouveaux événements apparaissent dans le panneau d'alertes et, lorsqu'ils sont localisables, sur la carte. En simulation, **Tester une alerte** permet de vérifier le rendu et le son.
+- **Connexion** : activez le Live pendant une partie ou explorez la simulation. La pause suspend la synchronisation ; le bouton audio coupe les sons. Le diagnostic et les données brutes restent disponibles via l'icône de réglages.
+
+**Lecture de la carte :** les données exploitées ne fournissent pas les coordonnées des champions. Leurs positions sont des repères indicatifs par rôle ; les alertes d'objectifs et de tourelles s'appuient sur les repères correspondants. La valeur des inventaires sert d'indicateur d'économie et ne représente pas l'or total gagné.
 
 ---
 

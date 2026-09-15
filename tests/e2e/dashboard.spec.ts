@@ -47,7 +47,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     // Verify Live Diff Event Feed is rendered
     const diffFeed = page.locator('[data-testid="live-diff-feed"]')
     await expect(diffFeed).toBeVisible()
-    await expect(diffFeed).toContainText('Journal des Détections en Direct')
+    await expect(diffFeed).toContainText('Journal de combat')
   })
 
   test('switches smoothly between Tactical Dashboard and Diagnostic Console', async ({ page }) => {
@@ -79,51 +79,59 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     await expect(page.locator('[data-testid="scoreboard-header"]')).toBeVisible()
   })
 
-  test('displays and toggles the interactive tactical minimap with champions and objectives', async ({ page }) => {
-    const initialStatusPromise = page.waitForResponse((res) =>
-      res.url().includes('/api/riot/status'),
-    )
+  test('keeps the map visible and opens the immersive view', async ({ page }) => {
+    const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
     await page.goto('/')
-    await initialStatusPromise
-
-    // Map view button in header should not be visible when disconnected in standby
-    const headerMapBtn = page.locator('[data-testid="view-map-btn"]')
-    await expect(headerMapBtn).toHaveCount(0)
-
-    // Activate mock simulation mode
-    await page.locator('[data-testid="mock-toggle-button"]').click()
-    await expect(page.locator('[data-testid="status-banner"]')).toContainText('Mode Simulation / Mock actif')
-
-    // Header map button is now visible once connected
-    await expect(headerMapBtn).toBeVisible()
-
-    // Dashboard in-page map toggle button is visible
-    const mapToggleBtn = page.locator('[data-testid="map-toggle-btn"]')
-    await expect(mapToggleBtn).toBeVisible()
-    await expect(mapToggleBtn).toContainText('Afficher la Carte')
-
-    // Click to display minimap
-    await mapToggleBtn.click()
-    const minimap = page.locator('[data-testid="tactical-minimap"]')
+    await initialStatus
+    await expect(page.getByTestId('view-map-btn')).toBeVisible()
+    await page.getByTestId('mock-toggle-button').click()
+    const minimap = page.getByTestId('tactical-minimap')
     await expect(minimap).toBeVisible()
-    await expect(minimap).toContainText("Faille de l'Invocateur")
-
-    // Verify 10 champion pins and objective markers
-    await expect(page.locator('[data-testid="champion-map-pin"]')).toHaveCount(10)
-    await expect(page.locator('[data-testid="baron-pit-marker"]')).toBeVisible()
-    await expect(page.locator('[data-testid="dragon-pit-marker"]')).toBeVisible()
-    await expect(page.locator('[data-testid="turret-pin"]').first()).toBeVisible()
-
-    // Close minimap via close button
-    await page.locator('[data-testid="close-map-btn"]').click()
-    await expect(minimap).toHaveCount(0)
-
-    // Switch to dedicated map view via header button
-    await headerMapBtn.click()
+    await expect(page.getByTestId('champion-map-pin')).toHaveCount(10)
+    await expect(page.getByTestId('baron-pit-marker')).toBeVisible()
+    await expect(page.getByTestId('dragon-pit-marker')).toBeVisible()
+    await expect(page.getByTestId('turret-pin').first()).toBeVisible()
+    await page.getByTestId('map-toggle-btn').click()
+    await expect(page.getByTestId('focus-radar-view')).toBeVisible()
     await expect(minimap).toBeVisible()
+    await page.getByTestId('view-tactical-btn').click()
+    await expect(page.getByTestId('scoreboard-header')).toBeVisible()
+    await expect(minimap).toBeVisible()
+  })
 
-    // Return to tactical view
-    await page.locator('[data-testid="view-tactical-btn"]').click()
-    await expect(page.locator('[data-testid="scoreboard-header"]')).toBeVisible()
+  test('filters the journal, searches and locates an objective without replaying alerts', async ({
+    page,
+  }) => {
+    const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
+    await page.goto('/')
+    await initialStatus
+    await page.getByTestId('mock-toggle-button').click()
+    const journal = page.getByTestId('live-diff-feed')
+    await expect(journal.getByTestId('combat-log-event').first()).toContainText('16:45')
+    await journal.getByRole('button', { name: 'Objectifs', exact: true }).click()
+    await journal.getByRole('searchbox').fill('dragon')
+    const dragonEvent = journal.getByTestId('combat-log-event')
+    await expect(dragonEvent).toHaveCount(1)
+    await expect(dragonEvent).toContainText('Dragon Chemtech')
+    await dragonEvent.click()
+    await expect(page.getByTestId('map-selected-event')).toContainText('Journal')
+    await expect(page.getByTestId('flash-alert-overlay')).toHaveCount(0)
+    await page.getByRole('button', { name: "Désélectionner l'événement" }).click()
+    await expect(page.getByTestId('map-selected-event')).toHaveCount(0)
+    await journal.getByRole('searchbox').fill('introuvable')
+    await expect(journal).toContainText('Aucun événement correspondant')
+  })
+
+  test('opens champion details with the keyboard and clears them with Escape', async ({ page }) => {
+    const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
+    await page.goto('/')
+    await initialStatus
+    await page.getByTestId('mock-toggle-button').click()
+    const champion = page.getByTestId('champion-map-pin').first()
+    await champion.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('champion-map-details')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('champion-map-details')).toHaveCount(0)
   })
 })

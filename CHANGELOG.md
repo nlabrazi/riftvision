@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-15
+
+### Interface & ergonomie
+- Nouvelle navigation à deux vues : **Dashboard** et **Carte immersive**. Le diagnostic API reste accessible depuis le bouton dédié.
+- Dashboard avec carte permanente, journal de combat filtrable et recherchable, scores et inventaires des deux équipes.
+- Carte immersive adaptée à la hauteur de l'écran, journal latéral escamotable et plein écran natif avec retour au dashboard.
+- Alertes compactes, repérage temporaire sur la carte des nouveaux événements localisables et sélection d'un événement depuis le journal.
+- Détails des champions accessibles au clic et au clavier, marqueurs de tourelles détruites et objectifs.
+- Commandes simplifiées, état de synchronisation visible, écrans d'attente et mise en page responsive. Palette Hextech, typographies et ressources existantes conservées.
+- Simulateur d'alertes réservé au mode démo. Suppression des alertes et de leur file d'attente lors d'un changement de session.
+
+### Précision des données
+- Les champions sont affichés sur des **repères par rôle**, explicitement indicatifs : les données utilisées ne fournissent pas leurs coordonnées réelles.
+- Les alertes d'objectifs utilisent leurs fosses et les alertes de tourelles utilisent les structures identifiées ; aucun déplacement de champion n'est simulé.
+- L'historique chargé à la connexion reste consultable sans déclencher d'alertes en direct.
+- L'économie affichée correspond à la valeur des inventaires, pas à l'or total gagné en partie.
+
+### Validation
+- Tests unitaires du repérage des événements et du nettoyage des alertes.
+- Parcours Playwright : dashboard, filtres, carte, alertes, diagnostic, responsive et plein écran.
+- Port du serveur E2E configurable via `PLAYWRIGHT_BASE_URL`.
+
 ## [1.0.0] - 2026-03-01
 
 ### ✨ Features

@@ -2,567 +2,241 @@
 import { computed, ref } from 'vue'
 import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
-import {
-  STAT_ICONS,
-  getChampionIconUrl,
-  getItemIconUrl,
-  getObjectiveIconUrl,
-  getRoleIconUrl,
-} from '#shared/utils/ddragon'
+import { getChampionIconUrl, getItemIconUrl, getRoleIconUrl } from '#shared/utils/ddragon'
+import CombatLog from './CombatLog.vue'
+import MatchScoreboard from './MatchScoreboard.vue'
 import TacticalMinimap from './TacticalMinimap.vue'
 
-const props = defineProps<{
-  gameData: RiotAllGameData | null
-  blueEconomy: TeamEconomySummary
-  redEconomy: TeamEconomySummary
-  goldDifference: number
-  diffEvents: GameDiffEvent[]
-  formattedGameTime: string
-  isMock?: boolean
+const props = withDefaults(
+  defineProps<{
+    gameData: RiotAllGameData | null
+    blueEconomy: TeamEconomySummary
+    redEconomy: TeamEconomySummary
+    goldDifference: number
+    diffEvents: GameDiffEvent[]
+    formattedGameTime: string
+    isMock?: boolean
+    isPolling?: boolean
+  }>(),
+  { isMock: false, isPolling: true },
+)
+
+defineEmits<{
+  'stop-mock': []
+  'switch-view': [view: 'radar']
 }>()
 
-const emit = defineEmits<(e: 'stop-mock') => void>()
-
-const showMinimap = ref(false)
-
-const roleOrder: Record<string, number> = {
-  TOP: 1,
-  JUNGLE: 2,
-  MIDDLE: 3,
-  BOTTOM: 4,
-  UTILITY: 5,
+const selectedEvent = ref<GameDiffEvent | null>(null)
+const roleOrder: Record<string, number> = { TOP: 1, JUNGLE: 2, MIDDLE: 3, BOTTOM: 4, UTILITY: 5 }
+const roleLabels: Record<string, string> = {
+  TOP: 'Top',
+  JUNGLE: 'Jungle',
+  MIDDLE: 'Mid',
+  BOTTOM: 'ADC',
+  UTILITY: 'Support',
 }
 
-function sortPlayersByRole(players: RiotPlayer[]): RiotPlayer[] {
-  return [...players].sort((a, b) => {
-    const orderA = roleOrder[a.position] || 99
-    const orderB = roleOrder[b.position] || 99
-    return orderA - orderB
-  })
+function playersFor(team: 'ORDER' | 'CHAOS'): RiotPlayer[] {
+  return (props.gameData?.allPlayers || [])
+    .filter((player) => player.team === team)
+    .sort((a, b) => (roleOrder[a.position] || 99) - (roleOrder[b.position] || 99))
 }
 
-const bluePlayers = computed(() => {
-  const players = props.gameData?.allPlayers?.filter((p) => p.team === 'ORDER') || []
-  return sortPlayersByRole(players)
-})
+const teams = computed(() => [
+  {
+    id: 'ORDER',
+    name: 'Équipe Bleue',
+    label: 'Order',
+    color: 'blue',
+    players: playersFor('ORDER'),
+  },
+  { id: 'CHAOS', name: 'Équipe Rouge', label: 'Chaos', color: 'red', players: playersFor('CHAOS') },
+])
 
-const redPlayers = computed(() => {
-  const players = props.gameData?.allPlayers?.filter((p) => p.team === 'CHAOS') || []
-  return sortPlayersByRole(players)
-})
+function inventory(player: RiotPlayer) {
+  return Array.from({ length: 7 }, (_, slot) => player.items.find((item) => item.slot === slot))
+}
 
-const totalGold = computed(
-  () => props.blueEconomy.totalItemGold + props.redEconomy.totalItemGold || 1,
-)
-
-const blueGoldPercent = computed(() =>
-  Math.min(90, Math.max(10, Math.round((props.blueEconomy.totalItemGold / totalGold.value) * 100))),
-)
-
-const feedFilter = ref<'ALL' | 'ITEMS' | 'KILLS' | 'OBJECTIVES'>('ALL')
-
-const filteredEvents = computed(() => {
-  if (feedFilter.value === 'ALL') return props.diffEvents
-  if (feedFilter.value === 'ITEMS') {
-    return props.diffEvents.filter((e) => e.type === 'ITEM_PURCHASE')
-  }
-  if (feedFilter.value === 'KILLS') {
-    return props.diffEvents.filter(
-      (e) =>
-        e.type === 'CHAMPION_KILL' || e.type === 'CHAMPION_DEATH' || e.type === 'CHAMPION_RESPAWN',
-    )
-  }
-  if (feedFilter.value === 'OBJECTIVES') {
-    return props.diffEvents.filter(
-      (e) => e.type === 'TURRET_DESTROYED' || e.type === 'DRAGON_KILL' || e.type === 'BARON_KILL',
-    )
-  }
-  return props.diffEvents
-})
+function onChampionError(event: Event) {
+  const image = event.target as HTMLImageElement
+  image.onerror = null
+  image.src = '/favicon.ico'
+}
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- Match Scoreboard Header -->
-    <section data-testid="scoreboard-header"
-      class="relative overflow-hidden rounded-2xl border border-[#785a28]/60 bg-[#091428]/90 p-5 shadow-2xl backdrop-blur-md"
-      style="background-image: radial-gradient(circle at 50% 0%, rgba(200, 170, 110, 0.1) 0%, transparent 70%);">
-      <!-- Decorative top golden border line -->
-      <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#c8aa6e] to-transparent">
-      </div>
+  <div class="tactical-dashboard" data-testid="tactical-dashboard">
+    <MatchScoreboard
+      :blue-economy="blueEconomy"
+      :red-economy="redEconomy"
+      :gold-difference="goldDifference"
+      :formatted-game-time="formattedGameTime"
+    />
 
-      <!-- Demo Banner Indicator (when in mock mode) -->
-      <div v-if="isMock"
-        class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-purple-600/50 bg-purple-950/60 px-4 py-2 text-xs font-rajdhani">
-        <div class="flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full bg-purple-400 animate-ping"></span>
-          <span class="font-bold text-purple-200">
-            🎮 Partie Simulée Active — Match test à 16:45 avec détection d'achats d'items et kills
-          </span>
+    <div class="overview-grid">
+      <section class="rv-panel map-panel" aria-labelledby="dashboard-map-title">
+        <header class="panel-heading">
+          <div>
+            <span class="rv-eyebrow">Vision tactique</span>
+            <h2 id="dashboard-map-title">La Faille</h2>
+          </div>
+          <button
+            type="button"
+            class="rv-button expand-map"
+            data-testid="map-toggle-btn"
+            @click="$emit('switch-view', 'radar')"
+          >
+            <RvIcon name="expand" :size="15" />
+            <span>Vue immersive</span>
+          </button>
+        </header>
+
+        <div class="dashboard-map">
+          <TacticalMinimap
+            :game-data="gameData"
+            :blue-economy="blueEconomy"
+            :red-economy="redEconomy"
+            :diff-events="diffEvents"
+            :selected-event="selectedEvent"
+            :is-mock="isMock"
+            variant="dashboard"
+          />
         </div>
 
-        <button type="button" @click="emit('stop-mock')"
-          class="flex items-center gap-1.5 rounded-lg border border-rose-500/80 bg-rose-950/90 px-3 py-1 font-bold text-rose-200 hover:bg-rose-900 hover:border-rose-400 transition shadow">
-          <span>⏹️</span>
-          <span>Arrêter le Mode Démo</span>
-        </button>
-      </div>
+        <footer class="map-caption">
+          <template v-if="selectedEvent">
+            <span class="selected-caption"><span>{{ selectedEvent.formattedTime }}</span> {{ selectedEvent.description }}</span>
+            <button
+              type="button"
+              class="rv-icon-button"
+              aria-label="Désélectionner l'événement"
+              @click="selectedEvent = null"
+            ><RvIcon name="close" :size="14" /></button>
+          </template>
+          <template v-else>
+            <RvIcon name="crosshair" :size="13" />
+            <span>Sélectionnez un événement dans le journal.</span>
+          </template>
+        </footer>
+      </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
-        <!-- Blue Team Summary -->
-        <div class="flex items-center gap-4">
-          <div
-            class="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border-2 border-cyan-500/60 bg-gradient-to-br from-cyan-950 via-[#0a1a2e] to-cyan-900/60 shadow-lg shadow-cyan-950/50">
-            <span class="font-rajdhani text-3xl font-black text-cyan-300 drop-shadow-[0_0_8px_rgba(10,203,230,0.6)]">
-              {{ blueEconomy.killCount }}
-            </span>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="font-cinzel text-base font-bold tracking-wider text-cyan-300 drop-shadow">
-                Équipe Bleue
-              </span>
-              <span
-                class="rounded border border-cyan-800/80 bg-cyan-950/80 px-2 py-0.5 font-rajdhani text-[11px] font-bold uppercase text-cyan-400">
-                Order
-              </span>
-            </div>
-
-            <!-- Objectives & Economy Row -->
-            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-              <div class="flex items-center gap-1 font-rajdhani font-bold text-[#c8aa6e]">
-                <img :src="STAT_ICONS.gold" alt="Gold" class="h-3.5 w-3.5 object-contain" />
-                <span>{{ blueEconomy.totalItemGold.toLocaleString('fr-FR') }}g</span>
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Tours détruites">
-                <img :src="getObjectiveIconUrl('tower', 'ORDER')" alt="Tours" class="h-3.5 w-3.5 object-contain" />
-                <span>{{ blueEconomy.turretCount }}</span>
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Dragons éliminés">
-                <img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="Dragons" class="h-3.5 w-3.5 object-contain" />
-                <span>{{ blueEconomy.dragonCount }}</span>
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Barons éliminés">
-                <img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="Barons" class="h-3.5 w-3.5 object-contain" />
-                <span>{{ blueEconomy.baronCount }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center Match Stats & Gold Tug-of-War -->
-        <div class="flex flex-col items-center justify-center space-y-2 text-center">
-          <!-- Game Time Clock -->
-          <div class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-[#c8aa6e] animate-ping"></span>
-            <div
-              class="font-rajdhani text-3xl font-black tracking-widest text-[#f0e6d2] drop-shadow-[0_0_10px_rgba(200,170,110,0.4)]">
-              {{ formattedGameTime }}
-            </div>
-            <span class="h-1.5 w-1.5 rounded-full bg-[#c8aa6e] animate-ping"></span>
-          </div>
-
-          <!-- Gold Lead Badge -->
-          <div
-            class="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-bold font-rajdhani uppercase tracking-wider shadow-inner"
-            :class="{
-              'bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 shadow-[0_0_12px_rgba(10,203,230,0.2)]': goldDifference > 0,
-              'bg-rose-950/80 border border-rose-500/60 text-rose-300 shadow-[0_0_12px_rgba(232,64,87,0.2)]': goldDifference < 0,
-              'bg-slate-900 border border-[#785a28]/60 text-[#c8aa6e]': goldDifference === 0,
-            }">
-            <span v-if="goldDifference > 0">
-              Avance Bleue : +{{ Math.abs(goldDifference).toLocaleString('fr-FR') }}g
-            </span>
-            <span v-else-if="goldDifference < 0">
-              Avance Rouge : +{{ Math.abs(goldDifference).toLocaleString('fr-FR') }}g
-            </span>
-            <span v-else>Égalité en or d'inventaire</span>
-          </div>
-
-          <!-- Gold Tug-of-War Progress Bar -->
-          <div class="w-full max-w-xs space-y-1">
-            <div
-              class="relative h-2 w-full overflow-hidden rounded-full bg-slate-950 border border-[#785a28]/40 shadow-inner">
-              <div
-                class="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-600 to-cyan-400 transition-all duration-500"
-                :style="{ width: `${blueGoldPercent}%` }"></div>
-              <div
-                class="absolute right-0 top-0 h-full bg-gradient-to-l from-rose-600 to-rose-400 transition-all duration-500"
-                :style="{ width: `${100 - blueGoldPercent}%` }"></div>
-              <!-- Center Marker -->
-              <div class="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-[#f0e6d2]/80"></div>
-            </div>
-            <div class="flex justify-between text-[10px] font-rajdhani font-semibold text-slate-400 px-1">
-              <span class="text-cyan-400">{{ blueGoldPercent }}%</span>
-              <span class="text-[#c8aa6e]">Économie d'Équipe</span>
-              <span class="text-rose-400">{{ 100 - blueGoldPercent }}%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Red Team Summary -->
-        <div class="flex items-center justify-end gap-4 text-right">
-          <div class="space-y-1">
-            <div class="flex items-center justify-end gap-2">
-              <span
-                class="rounded border border-rose-800/80 bg-rose-950/80 px-2 py-0.5 font-rajdhani text-[11px] font-bold uppercase text-rose-400">
-                Chaos
-              </span>
-              <span class="font-cinzel text-base font-bold tracking-wider text-rose-300 drop-shadow">
-                Équipe Rouge
-              </span>
-            </div>
-
-            <!-- Objectives & Economy Row -->
-            <div class="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-300">
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Barons éliminés">
-                <span>{{ redEconomy.baronCount }}</span>
-                <img :src="getObjectiveIconUrl('baron', 'CHAOS')" alt="Barons" class="h-3.5 w-3.5 object-contain" />
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Dragons éliminés">
-                <span>{{ redEconomy.dragonCount }}</span>
-                <img :src="getObjectiveIconUrl('dragon', 'CHAOS')" alt="Dragons" class="h-3.5 w-3.5 object-contain" />
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-semibold text-slate-300" title="Tours détruites">
-                <span>{{ redEconomy.turretCount }}</span>
-                <img :src="getObjectiveIconUrl('tower', 'CHAOS')" alt="Tours" class="h-3.5 w-3.5 object-contain" />
-              </div>
-              <div class="flex items-center gap-1 font-rajdhani font-bold text-[#c8aa6e]">
-                <span>{{ redEconomy.totalItemGold.toLocaleString('fr-FR') }}g</span>
-                <img :src="STAT_ICONS.gold" alt="Gold" class="h-3.5 w-3.5 object-contain" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border-2 border-rose-500/60 bg-gradient-to-br from-rose-950 via-[#2a0c14] to-rose-900/60 shadow-lg shadow-rose-950/50">
-            <span class="font-rajdhani text-3xl font-black text-rose-300 drop-shadow-[0_0_8px_rgba(232,64,87,0.6)]">
-              {{ redEconomy.killCount }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tactical Actions Bar (Map Toggle) -->
-    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#091428]/85 border border-[#785a28]/50 p-3 rounded-2xl shadow-xl backdrop-blur-md">
-      <div class="flex items-center gap-2.5 text-xs font-rajdhani font-semibold text-slate-300">
-        <span class="flex h-2 w-2 rounded-full bg-[#c8aa6e] animate-ping"></span>
-        <span class="font-bold text-gold-gradient uppercase tracking-wider">Radar de la Faille</span>
-        <span class="text-slate-600">|</span>
-        <span class="text-slate-400">Projection 2D des 10 champions, objectifs majeurs et tourelles</span>
-      </div>
-
-      <button type="button" data-testid="map-toggle-btn" @click="showMinimap = !showMinimap"
-        class="flex items-center gap-2 rounded-xl border px-4 py-2 font-rajdhani font-bold text-xs transition shadow-lg"
-        :class="showMinimap
-          ? 'bg-[#c8aa6e] border-[#f0e6d2] text-black shadow-[0_0_15px_rgba(200,170,110,0.5)]'
-          : 'bg-[#010a13] border-[#785a28] text-[#c8aa6e] hover:border-[#c8aa6e] hover:text-[#f0e6d2]'">
-        <span>🗺️</span>
-        <span>{{ showMinimap ? 'Masquer la Carte' : 'Afficher la Carte de la Faille' }}</span>
-      </button>
-    </div>
-
-    <!-- Minimap Display Section -->
-    <section v-if="showMinimap" class="transition-all duration-300">
-      <TacticalMinimap
-        :game-data="gameData"
-        :blue-economy="blueEconomy"
-        :red-economy="redEconomy"
-        :diff-events="diffEvents"
-        @close="showMinimap = false"
+      <CombatLog
+        :events="diffEvents"
+        :is-live="isPolling"
+        :selected-event-id="selectedEvent?.id"
+        @select-event="selectedEvent = $event"
       />
-    </section>
-
-    <!-- Side-by-Side Teams Tactical Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Blue Team Column -->
-      <section data-testid="blue-team-column"
-        class="rounded-2xl border border-cyan-800/40 bg-[#091428]/85 p-4.5 space-y-3 shadow-2xl backdrop-blur-md">
-        <div class="flex items-center justify-between pb-2.5 border-b border-cyan-900/40">
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#0acbe6]"></span>
-            <h3 class="font-cinzel text-xs font-bold uppercase tracking-wider text-cyan-300">
-              Équipe Bleue • Piltover & Order
-            </h3>
-          </div>
-          <span class="font-rajdhani text-xs font-bold text-slate-400">{{ bluePlayers.length }}/5 Joueurs</span>
-        </div>
-
-        <div class="space-y-2.5">
-          <div v-for="p in bluePlayers" :key="p.summonerName"
-            class="hextech-blue-card relative p-3 rounded-xl transition-all duration-200 flex items-center justify-between gap-3"
-            :class="p.isDead ? 'border-rose-900/80 opacity-70 bg-rose-950/20' : ''">
-            <!-- Avatar & Champ Info -->
-            <div class="flex items-center gap-3">
-              <!-- Champion Avatar with Level & Dead Overlay -->
-              <div
-                class="relative h-13 w-13 rounded-xl overflow-hidden border-2 border-[#785a28] flex-shrink-0 bg-[#010a13] shadow-md">
-                <img :src="getChampionIconUrl(p.championName)" :alt="p.championName" class="h-full w-full object-cover"
-                  :class="p.isDead ? 'grayscale brightness-75' : ''" loading="lazy"
-                  @error="(e) => ((e.target as HTMLImageElement).src = '/favicon.ico')" />
-
-                <!-- Role Icon Badge at Top-Left -->
-                <div v-if="getRoleIconUrl(p.position)"
-                  class="absolute top-0 left-0 bg-[#010a13]/90 rounded-br p-0.5 border-b border-r border-[#785a28]/60"
-                  :title="p.position">
-                  <img :src="getRoleIconUrl(p.position)" :alt="p.position" class="h-3.5 w-3.5 object-contain" />
-                </div>
-
-                <!-- Level Badge at Bottom-Right -->
-                <span
-                  class="absolute bottom-0 right-0 bg-[#010a13]/95 text-[#f0e6d2] font-rajdhani font-bold text-[10px] px-1 rounded-tl border-t border-l border-[#c8aa6e]">
-                  {{ p.level }}
-                </span>
-
-                <!-- Dead Respawn Overlay -->
-                <div v-if="p.isDead"
-                  class="absolute inset-0 bg-rose-950/85 backdrop-blur-[1px] flex flex-col items-center justify-center text-center">
-                  <span class="font-rajdhani text-[9px] font-bold text-rose-300 uppercase tracking-wider">MORT</span>
-                  <span class="font-rajdhani text-sm font-black text-rose-100 animate-pulse">
-                    {{ Math.ceil(p.respawnTimer) }}s
-                  </span>
-                </div>
-              </div>
-
-              <!-- Champion & Stats Text -->
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-cinzel font-bold text-sm text-white tracking-wide">{{ p.championName }}</span>
-                  <span
-                    class="font-rajdhani text-[10px] font-bold px-1.5 py-0.2 rounded bg-cyan-950/90 border border-cyan-800 text-cyan-300">
-                    {{ p.position || 'FLEX' }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2.5 text-xs text-slate-300 font-rajdhani font-semibold">
-                  <!-- KDA -->
-                  <div class="flex items-center gap-1">
-                    <img :src="STAT_ICONS.kills" alt="Kills" class="h-3 w-3 object-contain opacity-80" />
-                    <span>
-                      <span class="text-emerald-400 font-bold">{{ p.scores.kills }}</span>/
-                      <span class="text-rose-400 font-bold">{{ p.scores.deaths }}</span>/
-                      <span class="text-amber-300 font-bold">{{ p.scores.assists }}</span>
-                    </span>
-                  </div>
-                  <span>•</span>
-                  <!-- CS -->
-                  <div class="flex items-center gap-1">
-                    <img :src="STAT_ICONS.minions" alt="CS" class="h-3 w-3 object-contain opacity-80" />
-                    <span>{{ p.scores.creepScore }} CS</span>
-                  </div>
-                  <span>•</span>
-                  <!-- Summoner Name -->
-                  <span class="text-slate-400 truncate max-w-[110px] font-normal text-[11px]">
-                    {{ p.summonerName.split('#')[0] }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Items Inventory (6 slots + 1 trinket) -->
-            <div class="flex items-center gap-1">
-              <div v-for="idx in 7" :key="idx"
-                class="hextech-slot relative h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0"
-                :class="idx === 7 ? 'border-amber-600/60 bg-amber-950/30' : ''">
-                <img v-if="p.items[idx - 1]?.itemID" :src="getItemIconUrl(p.items[idx - 1].itemID)"
-                  :alt="p.items[idx - 1].displayName"
-                  :title="`${p.items[idx - 1].displayName} (${p.items[idx - 1].price}g)`"
-                  class="h-full w-full object-cover transition-transform hover:scale-110" loading="lazy" />
-                <span v-else class="text-[8px] text-[#785a28]/60">•</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Red Team Column -->
-      <section data-testid="red-team-column"
-        class="rounded-2xl border border-rose-800/40 bg-[#091428]/85 p-4.5 space-y-3 shadow-2xl backdrop-blur-md">
-        <div class="flex items-center justify-between pb-2.5 border-b border-rose-900/40">
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_#e84057]"></span>
-            <h3 class="font-cinzel text-xs font-bold uppercase tracking-wider text-rose-300">
-              Équipe Rouge • Noxus & Chaos
-            </h3>
-          </div>
-          <span class="font-rajdhani text-xs font-bold text-slate-400">{{ redPlayers.length }}/5 Joueurs</span>
-        </div>
-
-        <div class="space-y-2.5">
-          <div v-for="p in redPlayers" :key="p.summonerName"
-            class="hextech-red-card relative p-3 rounded-xl transition-all duration-200 flex items-center justify-between gap-3"
-            :class="p.isDead ? 'border-rose-900/80 opacity-70 bg-rose-950/20' : ''">
-            <!-- Avatar & Champ Info -->
-            <div class="flex items-center gap-3">
-              <!-- Champion Avatar with Level & Dead Overlay -->
-              <div
-                class="relative h-13 w-13 rounded-xl overflow-hidden border-2 border-[#785a28] flex-shrink-0 bg-[#010a13] shadow-md">
-                <img :src="getChampionIconUrl(p.championName)" :alt="p.championName" class="h-full w-full object-cover"
-                  :class="p.isDead ? 'grayscale brightness-75' : ''" loading="lazy"
-                  @error="(e) => ((e.target as HTMLImageElement).src = '/favicon.ico')" />
-
-                <!-- Role Icon Badge at Top-Left -->
-                <div v-if="getRoleIconUrl(p.position)"
-                  class="absolute top-0 left-0 bg-[#010a13]/90 rounded-br p-0.5 border-b border-r border-[#785a28]/60"
-                  :title="p.position">
-                  <img :src="getRoleIconUrl(p.position)" :alt="p.position" class="h-3.5 w-3.5 object-contain" />
-                </div>
-
-                <!-- Level Badge at Bottom-Right -->
-                <span
-                  class="absolute bottom-0 right-0 bg-[#010a13]/95 text-[#f0e6d2] font-rajdhani font-bold text-[10px] px-1 rounded-tl border-t border-l border-[#c8aa6e]">
-                  {{ p.level }}
-                </span>
-
-                <!-- Dead Respawn Overlay -->
-                <div v-if="p.isDead"
-                  class="absolute inset-0 bg-rose-950/85 backdrop-blur-[1px] flex flex-col items-center justify-center text-center">
-                  <span class="font-rajdhani text-[9px] font-bold text-rose-300 uppercase tracking-wider">MORT</span>
-                  <span class="font-rajdhani text-sm font-black text-rose-100 animate-pulse">
-                    {{ Math.ceil(p.respawnTimer) }}s
-                  </span>
-                </div>
-              </div>
-
-              <!-- Champion & Stats Text -->
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-cinzel font-bold text-sm text-white tracking-wide">{{ p.championName }}</span>
-                  <span
-                    class="font-rajdhani text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-950/90 border border-rose-800 text-rose-300">
-                    {{ p.position || 'FLEX' }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2.5 text-xs text-slate-300 font-rajdhani font-semibold">
-                  <!-- KDA -->
-                  <div class="flex items-center gap-1">
-                    <img :src="STAT_ICONS.kills" alt="Kills" class="h-3 w-3 object-contain opacity-80" />
-                    <span>
-                      <span class="text-emerald-400 font-bold">{{ p.scores.kills }}</span>/
-                      <span class="text-rose-400 font-bold">{{ p.scores.deaths }}</span>/
-                      <span class="text-amber-300 font-bold">{{ p.scores.assists }}</span>
-                    </span>
-                  </div>
-                  <span>•</span>
-                  <!-- CS -->
-                  <div class="flex items-center gap-1">
-                    <img :src="STAT_ICONS.minions" alt="CS" class="h-3 w-3 object-contain opacity-80" />
-                    <span>{{ p.scores.creepScore }} CS</span>
-                  </div>
-                  <span>•</span>
-                  <!-- Summoner Name -->
-                  <span class="text-slate-400 truncate max-w-[110px] font-normal text-[11px]">
-                    {{ p.summonerName.split('#')[0] }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Items Inventory (6 slots + 1 trinket) -->
-            <div class="flex items-center gap-1">
-              <div v-for="idx in 7" :key="idx"
-                class="hextech-slot relative h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0"
-                :class="idx === 7 ? 'border-amber-600/60 bg-amber-950/30' : ''">
-                <img v-if="p.items[idx - 1]?.itemID" :src="getItemIconUrl(p.items[idx - 1].itemID)"
-                  :alt="p.items[idx - 1].displayName"
-                  :title="`${p.items[idx - 1].displayName} (${p.items[idx - 1].price}g)`"
-                  class="h-full w-full object-cover transition-transform hover:scale-110" loading="lazy" />
-                <span v-else class="text-[8px] text-[#785a28]/60">•</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
 
-    <!-- Live Event Feed (Diff Stream) -->
-    <section data-testid="live-diff-feed" class="hextech-card rounded-2xl p-5 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#785a28]/30">
-        <div class="flex items-center gap-2.5">
-          <span class="h-2.5 w-2.5 rounded-full bg-[#c8aa6e] animate-pulse shadow-[0_0_8px_#c8aa6e]"></span>
-          <h3 class="font-cinzel text-sm font-bold uppercase tracking-wider text-[#f0e6d2]">
-            Journal des Détections en Direct
-          </h3>
-          <span
-            class="font-rajdhani text-xs px-2.5 py-0.5 rounded-full bg-[#010a13] border border-[#785a28]/60 text-[#c8aa6e] font-bold">
-            {{ diffEvents.length }} événements
-          </span>
-        </div>
-
-        <!-- Filter Buttons -->
-        <div class="flex items-center gap-1.5 text-xs font-rajdhani font-bold">
-          <button type="button" @click="feedFilter = 'ALL'" class="px-3 py-1 rounded-lg transition border"
-            :class="feedFilter === 'ALL' ? 'bg-[#c8aa6e] border-[#f0e6d2] text-black shadow' : 'bg-[#010a13] border-[#785a28]/50 text-slate-400 hover:text-white hover:border-[#c8aa6e]'">
-            Tous
-          </button>
-          <button type="button" @click="feedFilter = 'ITEMS'"
-            class="px-3 py-1 rounded-lg transition border flex items-center gap-1"
-            :class="feedFilter === 'ITEMS' ? 'bg-purple-600 border-purple-400 text-white shadow' : 'bg-[#010a13] border-[#785a28]/50 text-slate-400 hover:text-white hover:border-[#c8aa6e]'">
-            <img :src="STAT_ICONS.gold" alt="Items" class="h-3 w-3 object-contain" />
-            Achats d'Items
-          </button>
-          <button type="button" @click="feedFilter = 'KILLS'"
-            class="px-3 py-1 rounded-lg transition border flex items-center gap-1"
-            :class="feedFilter === 'KILLS' ? 'bg-rose-600 border-rose-400 text-white shadow' : 'bg-[#010a13] border-[#785a28]/50 text-slate-400 hover:text-white hover:border-[#c8aa6e]'">
-            <img :src="STAT_ICONS.kills" alt="Kills" class="h-3 w-3 object-contain" />
-            Kills & Morts
-          </button>
-          <button type="button" @click="feedFilter = 'OBJECTIVES'"
-            class="px-3 py-1 rounded-lg transition border flex items-center gap-1"
-            :class="feedFilter === 'OBJECTIVES' ? 'bg-amber-600 border-amber-400 text-white shadow' : 'bg-[#010a13] border-[#785a28]/50 text-slate-400 hover:text-white hover:border-[#c8aa6e]'">
-            <span>🏰</span>
-            Objectifs
-          </button>
-        </div>
+    <div class="rosters-heading">
+      <div>
+        <span class="rv-eyebrow">Les forces en présence</span>
+        <h2>Équipes & inventaires</h2>
       </div>
+      <span class="rosters-hint">KDA · CS · 6 objets + bijou</span>
+    </div>
 
-      <!-- Feed List -->
-      <div v-if="filteredEvents.length > 0" class="space-y-2 max-h-80 overflow-y-auto pr-1">
-        <div v-for="event in [...filteredEvents].reverse()" :key="event.id"
-          class="p-3 rounded-xl border text-xs flex items-center justify-between gap-3 transition-all bg-[#010a13]/80"
-          :class="{
-            'border-purple-800/60 hover:border-purple-500': event.type === 'ITEM_PURCHASE',
-            'border-rose-800/60 hover:border-rose-500': event.type === 'CHAMPION_KILL' || event.type === 'CHAMPION_DEATH',
-            'border-amber-800/60 hover:border-amber-500': event.type === 'TURRET_DESTROYED' || event.type === 'DRAGON_KILL' || event.type === 'BARON_KILL',
-            'border-emerald-800/60 hover:border-emerald-500': event.type === 'CHAMPION_RESPAWN',
-          }">
-          <div class="flex items-center gap-3">
-            <span class="font-rajdhani text-cyan-400 text-xs font-bold">{{ event.formattedTime }}</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-rajdhani uppercase tracking-wider border"
-              :class="{
-                'bg-purple-950/80 border-purple-700 text-purple-300': event.type === 'ITEM_PURCHASE',
-                'bg-rose-950/80 border-rose-700 text-rose-300': event.type === 'CHAMPION_KILL' || event.type === 'CHAMPION_DEATH',
-                'bg-amber-950/80 border-amber-700 text-amber-300': event.type === 'TURRET_DESTROYED' || event.type === 'DRAGON_KILL' || event.type === 'BARON_KILL',
-                'bg-emerald-950/80 border-emerald-700 text-emerald-300': event.type === 'CHAMPION_RESPAWN',
-              }">
-              {{
-                event.type === 'ITEM_PURCHASE'
-                  ? 'Item'
-                  : event.type === 'CHAMPION_KILL'
-                    ? 'Kill'
-                    : event.type === 'CHAMPION_DEATH'
-                      ? 'Mort'
-                      : event.type === 'CHAMPION_RESPAWN'
-                        ? 'Respawn'
-                        : 'Objectif'
-              }}
-            </span>
-            <span class="text-slate-200 font-medium font-sans">{{ event.description }}</span>
+    <div class="teams-grid">
+      <section
+        v-for="team in teams"
+        :key="team.id"
+        :data-testid="`${team.color}-team-column`"
+        :aria-label="team.name"
+        class="rv-panel team-panel"
+        :class="`team-${team.color}`"
+      >
+        <header class="team-heading">
+          <div class="team-name"><span class="team-dot" /><h3>{{ team.name }}</h3><span class="team-side">{{ team.label }}</span></div>
+          <span class="alive-count">{{ team.players.filter(player => !player.isDead).length }} / {{ team.players.length }} en vie</span>
+        </header>
+
+        <div class="roster-labels" aria-hidden="true">
+          <span class="champion-label">Champion</span><span>K / D / A</span><span>CS</span><span>Inventaire</span>
+        </div>
+
+        <div v-for="player in team.players" :key="player.summonerName" class="player-row" :class="{ 'player-dead': player.isDead }">
+          <div class="champion-portrait">
+            <img :src="getChampionIconUrl(player.championName)" :alt="player.championName" loading="lazy" @error="onChampionError" />
+            <span v-if="!player.isDead" class="champion-level" :aria-label="`Niveau ${player.level}`">{{ player.level }}</span>
+            <span v-else class="respawn-timer" :aria-label="`Mort, réapparition dans ${Math.ceil(player.respawnTimer)} secondes`">{{ Math.ceil(player.respawnTimer) }}s</span>
           </div>
 
-          <span v-if="event.team"
-            class="text-[10px] font-rajdhani px-2.5 py-0.5 rounded font-bold uppercase tracking-wider"
-            :class="event.team === 'ORDER' ? 'text-cyan-300 bg-cyan-950/80 border border-cyan-800' : 'text-rose-300 bg-rose-950/80 border border-rose-800'">
-            {{ event.team === 'ORDER' ? 'BLEU' : 'ROUGE' }}
+          <div class="champion-info">
+            <div class="champion-name"><strong>{{ player.championName }}</strong><img v-if="getRoleIconUrl(player.position)" :src="getRoleIconUrl(player.position)" :alt="roleLabels[player.position] || 'Rôle inconnu'" :title="roleLabels[player.position]" /></div>
+            <span class="summoner-name" :title="player.summonerName">{{ player.summonerName.split('#')[0] }}</span>
+          </div>
+
+          <span class="player-kda" :aria-label="`${player.scores.kills} éliminations, ${player.scores.deaths} morts, ${player.scores.assists} assistances`">
+            {{ player.scores.kills }} <span>/</span> <span class="deaths">{{ player.scores.deaths }}</span> <span>/</span> {{ player.scores.assists }}
           </span>
+          <span class="player-cs" :aria-label="`${player.scores.creepScore} sbires tués`">{{ player.scores.creepScore }}</span>
+
+          <div class="player-inventory" :aria-label="`Inventaire de ${player.championName}`">
+            <div v-for="(item, slot) in inventory(player)" :key="slot" class="item-slot" :class="{ 'trinket-slot': slot === 6 }" :title="item ? `${item.displayName} · ${item.price.toLocaleString('fr-FR')} or` : slot === 6 ? 'Bijou vide' : 'Emplacement vide'">
+              <img v-if="item?.itemID" :src="getItemIconUrl(item.itemID)" :alt="item.displayName" loading="lazy" />
+              <span v-else aria-hidden="true" />
+              <span v-if="item && item.count > 1" class="item-count">{{ item.count }}</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div v-else class="text-center py-10 text-xs text-slate-500 font-rajdhani">
-        Aucun événement détecté pour ce filtre.
-      </div>
-    </section>
+        <p v-if="team.players.length === 0" class="empty-team">En attente des joueurs…</p>
+      </section>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.tactical-dashboard { display: grid; gap: 18px; min-width: 0; }
+.overview-grid { display: grid; grid-template-columns: minmax(310px, .86fr) minmax(0, 1.4fr); gap: 18px; align-items: stretch; }
+.map-panel { min-width: 0; overflow: hidden; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 70px; padding: 14px 18px; border-bottom: 1px solid rgb(200 170 110 / 12%); }
+h2 { margin: 3px 0 0; font-family: 'Cinzel', serif; font-size: 16px; color: #e7e5dc; font-weight: 600; }
+.expand-map { padding: 7px 10px; white-space: nowrap; font-size: 12px; }
+.dashboard-map { padding: 10px; }
+.map-caption { min-height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 15px 10px; color: #879aa9; font-size: 11px; }
+.selected-caption { min-width: 0; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.selected-caption > span { color: #c8aa6e; margin-right: 5px; font-variant-numeric: tabular-nums; }
+.map-caption .rv-icon-button { flex-shrink: 0; width: 26px; height: 26px; }
+.rosters-heading { display: flex; justify-content: space-between; align-items: end; gap: 12px; padding: 6px 0 0; }
+.rosters-hint { color: #798c9c; font-family: 'Rajdhani', sans-serif; font-size: 13px; }
+.teams-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.team-panel { --team-color: #68d5e5; overflow: hidden; }
+.team-red { --team-color: #ef849b; }
+.team-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid rgb(200 170 110 / 12%); }
+.team-name { display: flex; align-items: center; gap: 8px; }
+.team-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--team-color); }
+h3 { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600; color: var(--team-color); }
+.team-side { color: #61768a; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; font-size: 11px; letter-spacing: .08em; margin-left: 4px; }
+.alive-count { color: #8da0b0; font-family: 'Rajdhani', sans-serif; font-size: 12px; }
+.roster-labels, .player-row { display: grid; grid-template-columns: 36px minmax(76px, 1fr) 64px 30px 186px; gap: 9px; align-items: center; padding: 10px 14px; }
+.roster-labels { padding-top: 10px; padding-bottom: 5px; color: #708798; font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.champion-label { grid-column: 1 / 3; }
+.roster-labels > span:nth-child(2), .roster-labels > span:nth-child(3) { text-align: center; }
+.player-row { min-height: 61px; border-bottom: 1px solid rgb(200 170 110 / 6%); transition: background .15s; }
+.player-row:last-child { border-bottom: 0; }
+.player-row:hover { background: rgb(200 170 110 / 3%); }
+.champion-portrait { position: relative; width: 36px; height: 36px; border: 1px solid rgb(200 170 110 / 25%); border-radius: 4px; }
+.champion-portrait > img { width: 100%; height: 100%; object-fit: cover; border-radius: 3px; }
+.champion-level { position: absolute; bottom: -4px; right: -4px; background: #102131; border: 1px solid #36434a; color: #e7e5dc; font-family: 'Rajdhani', sans-serif; font-size: 10px; line-height: 14px; min-width: 15px; text-align: center; border-radius: 2px; }
+.player-dead .champion-portrait > img { filter: grayscale(1) brightness(.45); }
+.respawn-timer { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Rajdhani', sans-serif; font-weight: 700; color: #ffafbd; font-size: 16px; }
+.champion-info { min-width: 0; }
+.champion-name { display: flex; align-items: center; gap: 6px; }
+.champion-name strong { font-size: 12px; color: #d5dee4; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.champion-name img { width: 12px; height: 12px; object-fit: contain; opacity: .6; flex-shrink: 0; }
+.summoner-name { display: block; font-size: 10px; color: #758c9e; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-top: 3px; }
+.player-kda, .player-cs { white-space: nowrap; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px; color: #cad7e0; text-align: center; font-variant-numeric: tabular-nums; }
+.player-kda > span:not(.deaths) { color: #536979; }
+.player-kda .deaths { color: #bf8391; }
+.player-cs { color: #94a8b7; }
+.player-inventory { display: flex; gap: 3px; }
+.item-slot { position: relative; width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid #203040; border-radius: 3px; background: #08111b; overflow: hidden; }
+.item-slot > img { width: 100%; height: 100%; object-fit: cover; }
+.item-slot > span:only-child { width: 3px; height: 3px; background: #253646; border-radius: 1px; }
+.trinket-slot { margin-left: 3px; border-color: rgb(200 170 110 / 35%); }
+.item-count { position: absolute; right: 1px; bottom: 0; font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700; line-height: 11px; color: white; text-shadow: 0 1px 2px black; }
+.empty-team { padding: 30px; color: #879aa9; text-align: center; font-size: 12px; }
+@media (max-width: 1230px) { .teams-grid { grid-template-columns: 1fr; } .roster-labels, .player-row { grid-template-columns: 36px minmax(76px, 1fr) 82px 60px 186px; } }
+@media (max-width: 850px) { .overview-grid { grid-template-columns: 1fr; } .dashboard-map { max-width: 510px; width: 100%; margin-inline: auto; } .overview-grid :deep(.combat-log) { min-height: 400px; max-height: 540px; } }
+@media (max-width: 540px) { .tactical-dashboard, .overview-grid, .teams-grid { gap: 12px; } .panel-heading { padding: 12px; } .rosters-hint { display: none; } .team-heading { padding: 12px; } .team-side { display: none; } .roster-labels { display: none; } .player-row { grid-template-columns: 36px minmax(80px, 1fr) 72px 28px; gap: 4px 10px; padding: 11px 12px; } .champion-portrait { grid-row: 1 / 3; align-self: start; } .player-inventory { grid-column: 2 / 5; margin-top: 2px; } .player-cs::after { content: ' CS'; font-size: 9px; } .team-name h3 { font-size: 11px; } }
+</style>
