@@ -36,7 +36,8 @@
             "useVueMultiWordComponentNames": "off"
           },
           "correctness": {
-            "noUnusedVariables": "off"
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
           }
         }
       }

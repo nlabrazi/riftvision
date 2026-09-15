@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Diagnostic Page & Riot Client Interface', () => {
+  test.beforeEach(async ({ request }) => {
+    await request.post('/api/riot/mock', {
+      data: { enabled: false },
+    })
+  })
   test('renders header, title, and mandatory Riot disclaimer', async ({ page }) => {
     await page.goto('/')
 
@@ -16,7 +21,12 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
   })
 
   test('toggles mock mode and displays simulated game data', async ({ page }) => {
+    // Wait for the client-side initial fetchStatus to know Vue is mounted
+    const initialStatusPromise = page.waitForResponse((res) =>
+      res.url().includes('/api/riot/status'),
+    )
     await page.goto('/')
+    await initialStatusPromise
 
     const mockBtn = page.locator('[data-testid="mock-toggle-button"]')
     await expect(mockBtn).toBeVisible()
@@ -27,6 +37,9 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     // Banner should indicate mock mode
     const banner = page.locator('[data-testid="status-banner"]')
     await expect(banner).toContainText('Mode Simulation / Mock actif')
+
+    // Switch to diagnostic view to inspect tabs
+    await page.locator('[data-testid="view-diagnostic-btn"]').click()
 
     // Navigate to Players tab using explicit test id
     await page.locator('[data-testid="tab-players"]').click()
@@ -40,5 +53,34 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     await page.locator('[data-testid="tab-events"]').click()
     await expect(page.getByText('FirstBlood', { exact: true })).toBeVisible()
     await expect(page.getByText('Chemtech')).toBeVisible()
+
+    // Stop mock mode and verify banner returns to waiting state
+    await mockBtn.click()
+    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(mockBtn).toContainText('Activer Simulation')
+  })
+
+  test('starts in clean standby mode and toggles live listening explicitly', async ({ page }) => {
+    const initialStatusPromise = page.waitForResponse((res) =>
+      res.url().includes('/api/riot/status'),
+    )
+    await page.goto('/')
+    await initialStatusPromise
+
+    const banner = page.locator('[data-testid="status-banner"]')
+    const liveBtn = page.locator('[data-testid="live-toggle-button"]')
+
+    // Standby banner should not display raw technical error box on tactical view
+    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(page.locator('text=Dernière erreur de connexion')).toHaveCount(0)
+
+    // Toggle live listening on
+    await liveBtn.click()
+    await expect(liveBtn).toContainText('Live')
+    await expect(banner).toContainText('Recherche de partie en cours')
+
+    // Toggle live listening off back to standby
+    await liveBtn.click()
+    await expect(banner).toContainText('En attente du client League of Legends')
   })
 })

@@ -22,11 +22,14 @@
 **RiftVision** est un copilote web « second screen » pour **League of Legends**, conçu pour afficher des alertes dynamiques et des informations tactiques en temps réel sur un second écran ou une tablette, **sans overlay intrusif en jeu**.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
+- 🎮 **3 Modes de fonctionnement** :
+  - **Veille (Standby)** : Démarrage propre et silencieux sans requêtes agressives ni erreurs de timeout dans le vide.
+  - **Mode Simulation (Démo)** : Instantané réel d'une partie (16:45) pour prototyper et tester sans client LoL actif.
+  - **Mode Live** : Écoute explicite et synchronisation automatique avec le jeu en cours.
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🧹 **Outillage performant** : **Biome** pour le linting et le formatage ultra-rapide.
 - 🧪 **Qualité & Tests** : Tests unitaires via **Vitest** et tests E2E via **Playwright**.
-- 🐳 **Docker ready** : Conteneurisé avec support réseau hôte pour joindre le client LoL (`host.docker.internal`).
-- 🎮 **Mode Simulation / Mock** : Jeu de données réel embarqué pour tester et développer sans partie active.
+- 🐳 **Docker ready** : Conteneurisé avec réseau hôte pour joindre le client LoL (`127.0.0.1:2999`) depuis WSL2 en mode mirrored.
 
 ---
 
@@ -49,15 +52,26 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Endpoints API (`/api/riot/status`, `/api/riot/live`, `/api/riot/events`, `/api/riot/mock`)
   - [x] Console de diagnostic second screen avec bascule Mode Simulation (Mock)
   - [x] Suite de tests unitaires Vitest et tests E2E Playwright
-- [ ] **v0.5 — Collecte, Moteur de Diff & Dashboard Brut**
-  - [ ] Moteur de diff temps réel (détection de nouveaux kills, items achetés, structures tombées)
-  - [ ] Tableau de bord comparatif Équipe Bleue vs Équipe Rouge (golds, KDA, items)
-  - [ ] Journal d'événements dynamique
-- [ ] **v1 — Expérience Second Screen Complète**
-  - [ ] Moteur d'inférence de zones (déduction Top/Mid/Bot/Jungle/Rivière)
-  - [ ] Minimap vectorielle interactive avec pins dynamiques
-  - [ ] Alertes visuelles grand format temporaires
-  - [ ] Alertes sonores contextuelles via Web Audio API
+- [x] **v0.5 — Collecte, Moteur de Diff & Dashboard Brut**
+  - [x] Moteur de diff temps réel pur (achats d'objets, kills, respawns, objectifs neutres & tourelles)
+  - [x] Calcul de l'économie d'équipe (valeur totale d'inventaire, $\Delta$ d'or Bleue vs Rouge)
+  - [x] Intégration CDN Riot Data Dragon (icônes d'items, portraits de champions officiels)
+  - [x] Tableau de bord tactique face-à-face (scoreboards, KDA, inventaires 6+1 slots, barres d'économie)
+  - [x] Journal d'événements et de détections dynamique filtrable par catégorie
+  - [x] Gestion explicite du mode Live et veille silencieuse (v0.2.1)
+  - [x] Tests unitaires et E2E exhaustifs (25 tests Vitest, 6 tests Playwright)
+- [x] **v1 — Expérience Second Screen Complète**
+  - [x] Double vue ergonomique adaptée : **⚔️ Dashboard Global** vs **🎯 Focus Radar & Alertes** (`FocusRadarView.vue`)
+  - [x] Moteur de projection & repères 2D de la Faille (`shared/utils/mapCoordinates.ts`)
+  - [x] Minimap interactive grand format avec 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
+  - [x] Bannières Flash Alertes géantes d'impact maximal (slam, lueurs néon, progress bar 4s) (`FlashAlertOverlay.vue`)
+  - [x] Alertes sonores contextuelles via Web Audio API native (aucun fichier MP3 externe, zéro latence)
+  - [x] Suite de tests exhaustifs (31 tests Vitest, 7 tests Playwright)
+- [ ] **v1.5 — Copilote Tactique & Intelligence Prédictive**
+  - [ ] Détection des Power Spikes et alertes d'équipements légendaires complétés
+  - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)
+  - [ ] Graphique temps réel d'évolution de la courbe d'or ($\Delta$ Gold)
+  - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
 
 ---
 
@@ -84,10 +98,22 @@ npm run dev
 
 ### Option B : Lancer avec Docker
 
+Cette configuration utilise **Docker Engine dans WSL2**, avec
+`networkingMode=mirrored` dans le fichier `.wslconfig` Windows. Le conteneur partage
+le réseau de WSL pour accéder à l'API du jeu sur `https://127.0.0.1:2999`.
+Nuxt écoute directement sur le port **3000** ; le mode réseau hôte ne nécessite
+pas de mapping `ports`.
+
+Dans `.env`, définir `LIVE_CLIENT_BASE_URL=https://127.0.0.1:2999` (voir
+`.env.example`). Ne pas lancer un autre serveur sur le port 3000 en parallèle.
+
 ```bash
 docker compose up --build
 # L'application est disponible sur http://localhost:3000
 ```
+
+Le dossier généré `.nuxt` et les dépendances du conteneur utilisent des volumes
+Docker dédiés pour ne pas modifier leurs équivalents locaux.
 
 ---
 

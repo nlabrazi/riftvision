@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-cinzel: 'Cinzel', serif;
+  --font-rajdhani: 'Rajdhani', sans-serif;
+
+  --color-lol-gold: #c8aa6e;
+  --color-lol-gold-light: #f0e6d2;
+  --color-lol-gold-dark: #785a28;
+  --color-lol-gold-muted: #463714;
+  --color-lol-gold-glow: rgba(200, 170, 110, 0.35);
+
+  --color-lol-blue: #0acbe6;
+  --color-lol-blue-light: #53e6ff;
+  --color-lol-blue-dark: #005a82;
+  --color-lol-blue-glow: rgba(10, 203, 230, 0.3);
+
+  --color-lol-red: #e84057;
+  --color-lol-red-light: #ff6b7e;
+  --color-lol-red-dark: #8c1d31;
+  --color-lol-red-glow: rgba(232, 64, 87, 0.3);
+
+  --color-lol-dark-950: #010a13;
+  --color-lol-dark-900: #040d1a;
+  --color-lol-dark-800: #091428;
+  --color-lol-dark-700: #0a1a2e;
+  --color-lol-dark-600: #10253f;
+  --color-lol-border: #1e282d;
+  --color-lol-border-gold: #785a28;
+}
+
+/* Custom League Hextech Typography */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-rajdhani {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Hextech Card Glassmorphism */
+.hextech-card {
+  background: rgba(9, 20, 40, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(120, 90, 40, 0.35);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.7);
+}
+
+.hextech-card:hover {
+  border-color: rgba(200, 170, 110, 0.6);
+}
+
+/* Blue Team Card */
+.hextech-blue-card {
+  background: linear-gradient(135deg, rgba(10, 26, 46, 0.9) 0%, rgba(5, 15, 28, 0.95) 100%);
+  border: 1px solid rgba(10, 203, 230, 0.3);
+  box-shadow: 0 0 15px rgba(10, 203, 230, 0.08);
+}
+
+.hextech-blue-card:hover {
+  border-color: rgba(10, 203, 230, 0.6);
+  box-shadow: 0 0 20px rgba(10, 203, 230, 0.15);
+}
+
+/* Red Team Card */
+.hextech-red-card {
+  background: linear-gradient(135deg, rgba(46, 12, 22, 0.9) 0%, rgba(26, 8, 14, 0.95) 100%);
+  border: 1px solid rgba(232, 64, 87, 0.3);
+  box-shadow: 0 0 15px rgba(232, 64, 87, 0.08);
+}
+
+.hextech-red-card:hover {
+  border-color: rgba(232, 64, 87, 0.6);
+  box-shadow: 0 0 20px rgba(232, 64, 87, 0.15);
+}
+
+/* Item Slot Frame */
+.hextech-slot {
+  background: rgba(1, 10, 19, 0.9);
+  border: 1px solid rgba(120, 90, 40, 0.4);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+  transition: all 0.2s ease;
+}
+
+.hextech-slot:hover {
+  border-color: #c8aa6e;
+  box-shadow: 0 0 8px rgba(200, 170, 110, 0.4);
+}
+
+/* Gold Gradient Text */
+.text-gold-gradient {
+  background: linear-gradient(180deg, #f0e6d2 0%, #c8aa6e 60%, #785a28 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hextech Blue Gradient Text */
+.text-blue-gradient {
+  background: linear-gradient(180deg, #53e6ff 0%, #0acbe6 60%, #005a82 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hextech Red Gradient Text */
+.text-red-gradient {
+  background: linear-gradient(180deg, #ff6b7e 0%, #e84057 60%, #8c1d31 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Metallic Bevel Button */
+.btn-hextech-gold {
+  background: linear-gradient(180deg, #1e2328 0%, #111417 100%);
+  border: 1px solid #785a28;
+  color: #c8aa6e;
+  transition: all 0.2s ease;
+}
+
+.btn-hextech-gold:hover {
+  background: linear-gradient(180deg, #1e282d 0%, #1e2328 100%);
+  border-color: #c8aa6e;
+  color: #f0e6d2;
+  box-shadow: 0 0 12px rgba(200, 170, 110, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #010a13;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e282d;
+  border-radius: 3px;
+  border: 1px solid #785a28;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #785a28;
+}
