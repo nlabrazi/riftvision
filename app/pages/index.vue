@@ -78,7 +78,9 @@ onUnmounted(clearAlerts)
       <div class="app-brand">
         <div class="brand-symbol" aria-hidden="true"><span>R</span><i></i></div>
         <div>
-          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.1</span></div>
+          <div class="brand-title">
+            <h1>RiftVision</h1><span class="version-tag">1.1</span>
+          </div>
           <p>VOTRE REGARD SUR LA FAILLE</p>
         </div>
       </div>
@@ -96,21 +98,22 @@ onUnmounted(clearAlerts)
 
       <div class="header-controls">
         <button type="button" data-testid="live-toggle-button" class="rv-button live-button"
-          :class="{ 'is-listening': isLiveActive }" :aria-pressed="isLiveActive"
-          :disabled="isChangingMode" @click="changeMode(toggleLiveMode)">
+          :class="{ 'is-listening': isLiveActive }" :aria-pressed="isLiveActive" :disabled="isChangingMode"
+          @click="changeMode(toggleLiveMode)">
           <span class="status-dot" :class="{ 'status-dot--live': isLiveActive }"></span>
           {{ isLiveActive ? 'Arrêter Live' : 'Activer Live' }}
         </button>
         <button type="button" data-testid="mock-toggle-button" class="rv-button demo-button"
-          :class="{ 'is-demo': status.isMock }" :aria-pressed="status.isMock"
-          :disabled="isChangingMode" @click="changeMode(toggleMockMode)">
+          :class="{ 'is-demo': status.isMock }" :aria-pressed="status.isMock" :disabled="isChangingMode"
+          @click="changeMode(toggleMockMode)">
           <RvIcon :name="status.isMock ? 'close' : 'flask'" :size="15" />
           {{ status.isMock ? 'Arrêter la démo' : 'Activer Simulation' }}
         </button>
         <span class="control-divider" aria-hidden="true"></span>
         <button type="button" data-testid="audio-toggle-btn" class="rv-icon-button" @click="toggleAudioMute"
           :aria-label="isAudioMuted ? 'Muet : activer les alertes sonores' : 'Audio : couper les alertes sonores'"
-          :title="isAudioMuted ? 'Activer les alertes sonores' : 'Couper les alertes sonores'" :aria-pressed="!isAudioMuted">
+          :title="isAudioMuted ? 'Activer les alertes sonores' : 'Couper les alertes sonores'"
+          :aria-pressed="!isAudioMuted">
           <RvIcon :name="isAudioMuted ? 'volume-off' : 'volume'" />
           <span class="sr-only">{{ isAudioMuted ? 'Muet' : 'Audio' }}</span>
         </button>
@@ -130,7 +133,8 @@ onUnmounted(clearAlerts)
         </div>
         <div class="session-toolbar">
           <div data-testid="status-banner" class="session-status" role="status">
-            <span class="status-dot" :class="{ 'status-dot--live': status.status === 'IN_GAME', 'status-dot--demo': status.isMock, 'status-dot--waiting': isLiveActive && !hasGame }"></span>
+            <span class="status-dot"
+              :class="{ 'status-dot--live': status.status === 'IN_GAME', 'status-dot--demo': status.isMock, 'status-dot--waiting': isLiveActive && !hasGame }"></span>
             <span>{{ statusText }}</span>
           </div>
           <span v-if="hasGame" class="sync-label" :class="{ 'is-paused': !isPolling }">
@@ -150,22 +154,23 @@ onUnmounted(clearAlerts)
         </div>
       </div>
 
-      <TacticalDashboard v-if="currentView === 'tactical' && hasGame"
-        :game-data="gameData" :blue-economy="blueEconomy" :red-economy="redEconomy"
-        :gold-difference="goldDifference" :diff-events="diffEvents" :formatted-game-time="formattedGameTime"
-        :is-mock="status.isMock" :is-polling="isPolling" @stop-mock="changeMode(stopMockMode)"
-        @switch-view="currentView = 'radar'" />
+      <TacticalDashboard v-if="currentView === 'tactical' && hasGame" :game-data="gameData" :blue-economy="blueEconomy"
+        :red-economy="redEconomy" :gold-difference="goldDifference" :diff-events="diffEvents"
+        :formatted-game-time="formattedGameTime" :is-mock="status.isMock" :is-polling="isPolling"
+        @stop-mock="changeMode(stopMockMode)" @switch-view="currentView = 'radar'" />
 
-      <FocusRadarView v-else-if="isImmersive"
-        :game-data="gameData" :blue-economy="blueEconomy" :red-economy="redEconomy"
-        :gold-difference="goldDifference" :diff-events="diffEvents" :formatted-game-time="formattedGameTime"
-        :is-mock="status.isMock" :is-polling="isPolling" @switch-view="currentView = $event" />
+      <FocusRadarView v-else-if="isImmersive" :game-data="gameData" :blue-economy="blueEconomy"
+        :red-economy="redEconomy" :gold-difference="goldDifference" :diff-events="diffEvents"
+        :formatted-game-time="formattedGameTime" :is-mock="status.isMock" :is-polling="isPolling"
+        @switch-view="currentView = $event" />
 
       <div v-else-if="currentView === 'diagnostic'" class="diagnostic-workspace">
         <div class="diagnostic-connection rv-panel">
           <span>Latence <strong>{{ status.latencyMs !== undefined ? `${status.latencyMs} ms` : '—' }}</strong></span>
           <span>Mode <strong>{{ gameData?.gameData.gameMode || 'Veille' }}</strong></span>
-          <button type="button" class="rv-button" :disabled="isRefreshing" @click="refresh"><RvIcon name="refresh" :size="15" />Actualiser</button>
+          <button type="button" class="rv-button" :disabled="isRefreshing" @click="refresh">
+            <RvIcon name="refresh" :size="15" />Actualiser
+          </button>
         </div>
         <p v-if="lastError" class="connection-error">Dernière erreur de connexion : {{ lastError }}</p>
         <DiagnosticPanel :game-data="gameData" :events="events" :status="status" />
@@ -173,26 +178,44 @@ onUnmounted(clearAlerts)
 
       <section v-else class="standby-panel rv-panel" aria-labelledby="standby-title">
         <div class="standby-copy">
-          <span class="standby-badge"><span class="status-dot" :class="{ 'status-dot--waiting': isLiveActive }"></span>{{ isLiveActive ? 'ÉCOUTE ACTIVE' : 'PRÊT POUR LA PROCHAINE PARTIE' }}</span>
+          <span class="standby-badge">
+            <span class="status-dot" :class="{ 'status-dot--waiting': isLiveActive }"></span>
+            <template v-if="isLiveActive">ÉCOUTE ACTIVE</template>
+            <template v-else>PRÊT POUR LA PROCHAINE PARTIE</template>
+          </span>
           <h3 id="standby-title">Gardez une longueur<br /><span>d’avance.</span></h3>
-          <p>La Faille, les combats et les moments décisifs.<br class="desktop-break" /> Toutes vos informations tactiques réunies sur un second écran.</p>
+          <p>La Faille, les combats et les moments décisifs.<br class="desktop-break" /> Toutes vos informations
+            tactiques
+            réunies sur un second écran.</p>
           <div class="standby-actions">
-            <button type="button" class="rv-button rv-button-primary" :disabled="isChangingMode" @click="changeMode(toggleLiveMode)">
+            <button type="button" class="rv-button rv-button-primary" :disabled="isChangingMode"
+              @click="changeMode(toggleLiveMode)">
               <RvIcon :name="isLiveActive ? 'pause' : 'signal'" :size="17" />
               {{ isLiveActive ? 'Arrêter la recherche' : 'Connecter ma partie' }}
             </button>
-            <button type="button" class="rv-button" :disabled="isChangingMode" @click="changeMode(startMockMode)">Explorer la démo<RvIcon name="arrow-up-right" :size="16" /></button>
+            <button type="button" class="rv-button" :disabled="isChangingMode"
+              @click="changeMode(startMockMode)">Explorer la
+              démo
+              <RvIcon name="arrow-up-right" :size="16" />
+            </button>
           </div>
-          <p class="standby-hint">{{ isLiveActive ? 'Lancez une partie : la connexion se fera automatiquement.' : 'Lancez une partie de League of Legends, puis activez le Live.' }}</p>
+          <p v-if="isLiveActive" class="standby-hint">Lancez une partie : la connexion se fera automatiquement.</p>
+          <p v-else class="standby-hint">Lancez une partie de League of Legends, puis activez le Live.</p>
           <div class="standby-features">
-            <div><RvIcon name="dashboard" /><span>Dashboard & combat log</span></div>
-            <div><RvIcon name="crosshair" /><span>Carte & alertes en direct</span></div>
+            <div>
+              <RvIcon name="dashboard" /><span>Dashboard & combat log</span>
+            </div>
+            <div>
+              <RvIcon name="crosshair" /><span>Carte & alertes en direct</span>
+            </div>
           </div>
         </div>
         <div class="standby-map" aria-hidden="true">
           <div class="standby-map-ring"></div>
           <img src="/assets/images/sr-map.png" alt="" />
-          <span class="standby-map-label"><RvIcon name="crosshair" :size="14" />FAILLE DE L’INVOCATEUR</span>
+          <span class="standby-map-label">
+            <RvIcon name="crosshair" :size="14" />FAILLE DE L’INVOCATEUR
+          </span>
           <span class="standby-map-point standby-map-point--blue"></span>
           <span class="standby-map-point standby-map-point--red"></span>
         </div>
@@ -203,7 +226,10 @@ onUnmounted(clearAlerts)
 
     <footer class="app-footer">
       <div class="footer-brand">RIFTVISION <span>SECOND SCREEN COMPANION</span></div>
-      <p>RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</p>
+      <p>RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone
+        officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties
+        are
+        trademarks or registered trademarks of Riot Games, Inc.</p>
     </footer>
   </div>
 </template>

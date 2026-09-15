@@ -1,7 +1,13 @@
 import { ref } from 'vue'
-import type { GameDiffEvent } from '#shared/types/diff'
+import type { GameDiffEvent, SoundEffectKey } from '#shared/types/diff'
 import type { TeamType } from '#shared/types/riot'
 import { getChampionIconUrl, getItemIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
+import {
+  isAudioMuted,
+  playGameSound,
+  playSynthesizedFallback,
+  toggleAudioMute,
+} from './useSoundEffects'
 
 export type FlashAlertType =
   | 'DRAGON'
@@ -12,6 +18,11 @@ export type FlashAlertType =
   | 'KILL'
   | 'ITEM'
   | 'TURRET'
+  | 'MULTIKILL'
+  | 'KILL_STREAK'
+  | 'DOMINATING'
+  | 'GAME_END'
+  | 'EXECUTE'
 
 export interface FlashAlert {
   id: string
@@ -25,134 +36,18 @@ export interface FlashAlert {
   targetName?: string
   durationMs: number
   soundType?: 'objective' | 'danger' | 'kill' | 'item' | 'ace'
+  soundKey?: SoundEffectKey
 }
 
 const activeAlert = ref<FlashAlert | null>(null)
-const isAudioMuted = ref(false)
 const alertQueue = ref<FlashAlert[]>([])
 
 let activeTimeout: ReturnType<typeof setTimeout> | null = null
-let audioCtx: AudioContext | null = null
-
-function getAudioContext(): AudioContext | null {
-  if (typeof window === 'undefined') return null
-  if (!audioCtx) {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    if (AudioCtx) {
-      audioCtx = new AudioCtx()
-    }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {})
-  }
-  return audioCtx
-}
 
 export function playSynthesizedSound(
   soundType: 'objective' | 'danger' | 'kill' | 'item' | 'ace' = 'kill',
 ) {
-  if (isAudioMuted.value) return
-  const ctx = getAudioContext()
-  if (!ctx) return
-
-  try {
-    const now = ctx.currentTime
-
-    if (soundType === 'objective') {
-      // Powerful brass-like dual tone (Major chord)
-      const osc1 = ctx.createOscillator()
-      const osc2 = ctx.createOscillator()
-      const gain = ctx.createGain()
-
-      osc1.type = 'triangle'
-      osc2.type = 'sine'
-      osc1.frequency.setValueAtTime(440, now) // A4
-      osc1.frequency.exponentialRampToValueAtTime(880, now + 0.3) // A5
-      osc2.frequency.setValueAtTime(554.37, now) // C#5
-
-      gain.gain.setValueAtTime(0.3, now)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6)
-
-      osc1.connect(gain)
-      osc2.connect(gain)
-      gain.connect(ctx.destination)
-
-      osc1.start(now)
-      osc2.start(now)
-      osc1.stop(now + 0.6)
-      osc2.stop(now + 0.6)
-    } else if (soundType === 'ace') {
-      // Fanfare ascending arpeggio
-      const notes = [523.25, 659.25, 783.99, 1046.5] // C5, E5, G5, C6
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.type = 'sawtooth'
-        osc.frequency.setValueAtTime(freq, now + idx * 0.1)
-
-        gain.gain.setValueAtTime(0.2, now + idx * 0.1)
-        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3)
-
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-
-        osc.start(now + idx * 0.1)
-        osc.stop(now + idx * 0.1 + 0.35)
-      })
-    } else if (soundType === 'item') {
-      // Crisp metallic coin ping (High chime)
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(1200, now)
-      osc.frequency.exponentialRampToValueAtTime(1800, now + 0.08)
-
-      gain.gain.setValueAtTime(0.25, now)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
-
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-
-      osc.start(now)
-      osc.stop(now + 0.4)
-    } else if (soundType === 'danger') {
-      // Deep ominous bass drone
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sawtooth'
-      osc.frequency.setValueAtTime(130, now)
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.5)
-
-      gain.gain.setValueAtTime(0.3, now)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7)
-
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-
-      osc.start(now)
-      osc.stop(now + 0.7)
-    } else {
-      // Standard punchy hit / kill chime
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(300, now)
-      osc.frequency.exponentialRampToValueAtTime(600, now + 0.15)
-
-      gain.gain.setValueAtTime(0.2, now)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35)
-
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-
-      osc.start(now)
-      osc.stop(now + 0.35)
-    }
-  } catch {
-    // Ignore audio failures if browser restricts autoplay
-  }
+  playSynthesizedFallback(soundType)
 }
 
 export function useFlashAlerts() {
@@ -187,15 +82,28 @@ export function useFlashAlerts() {
     }
 
     activeAlert.value = alert
-    playSynthesizedSound(alert.soundType || 'kill')
+    if (alert.soundKey) {
+      playGameSound(alert.soundKey)
+    } else {
+      playSynthesizedSound(alert.soundType || 'kill')
+    }
 
     activeTimeout = setTimeout(() => {
       dismissCurrentAlert()
     }, alert.durationMs || 4000)
   }
 
-  function toggleAudioMute() {
-    isAudioMuted.value = !isAudioMuted.value
+  interface EventAlertMeta {
+    killerChampion?: string
+    victimChampion?: string
+    killerChamp?: string
+    dragonType?: string
+    lane?: string
+    streak?: number
+    soundKey?: SoundEffectKey
+    isSoloKill?: boolean
+    item?: { price: number; displayName: string; iconUrl: string }
+    championName?: string
   }
 
   /**
@@ -203,8 +111,94 @@ export function useFlashAlerts() {
    */
   function ingestDiffEvents(events: GameDiffEvent[]) {
     for (const e of events) {
-      if (e.type === 'BARON_KILL') {
-        const killerChamp = (e.metadata as { killerChamp?: string })?.killerChamp || 'Équipe'
+      const meta = e.metadata as EventAlertMeta | undefined
+
+      if (e.type === 'FIRST_BLOOD') {
+        const killerChamp = meta?.killerChampion || 'Tueur'
+        const victimChamp = meta?.victimChampion
+        triggerAlert({
+          id: e.id,
+          type: 'FIRST_BLOOD',
+          title: 'PREMIER SANG ! (FIRST BLOOD)',
+          subtitle: victimChamp
+            ? `${killerChamp} élimine ${victimChamp} pour le Premier Sang`
+            : `${killerChamp} a versé le Premier Sang !`,
+          team: e.team,
+          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
+          durationMs: 4500,
+          soundKey: 'firstblood',
+        })
+      } else if (e.type === 'MULTIKILL') {
+        const killerChamp = meta?.killerChampion || 'Champion'
+        const streak = meta?.streak || 2
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'doublekill'
+        triggerAlert({
+          id: e.id,
+          type: 'MULTIKILL',
+          title: e.title,
+          subtitle: `${killerChamp} enchaîne ${streak} éliminations rapides !`,
+          team: e.team,
+          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          durationMs: 4500,
+          soundKey,
+        })
+      } else if (e.type === 'KILL_STREAK') {
+        const killerChamp = meta?.killerChampion || 'Champion'
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'killingspree'
+        triggerAlert({
+          id: e.id,
+          type: 'KILL_STREAK',
+          title: e.title,
+          subtitle: e.description,
+          team: e.team,
+          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          durationMs: 4500,
+          soundKey,
+        })
+      } else if (e.type === 'EXECUTE') {
+        const victimChamp = meta?.victimChampion || 'Champion'
+        triggerAlert({
+          id: e.id,
+          type: 'EXECUTE',
+          title: 'MORT HUMILIANTE',
+          subtitle: `${victimChamp} s'est fait exécuter par l'environnement !`,
+          team: e.team,
+          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
+          durationMs: 4000,
+          soundKey: 'humiliating_defeat',
+        })
+      } else if (e.type === 'DOMINATING') {
+        const soundKey =
+          (meta?.soundKey as SoundEffectKey) ||
+          (e.team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating')
+        triggerAlert({
+          id: e.id,
+          type: 'DOMINATING',
+          title: e.title,
+          subtitle: e.description,
+          team: e.team,
+          durationMs: 5000,
+          soundKey,
+        })
+      } else if (e.type === 'GAME_END') {
+        const soundKey =
+          (meta?.soundKey as SoundEffectKey) ||
+          (e.team === 'ORDER' ? 'blue_team_is_the_winner' : 'red_team_is_the_winner')
+        triggerAlert({
+          id: e.id,
+          type: 'GAME_END',
+          title: e.title,
+          subtitle: e.description,
+          team: e.team,
+          durationMs: 6000,
+          soundKey,
+        })
+      } else if (e.type === 'BARON_KILL') {
+        const killerChamp = meta?.killerChamp || 'Équipe'
+        const soundKey =
+          (meta?.soundKey as SoundEffectKey) ||
+          (e.team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating')
         triggerAlert({
           id: e.id,
           type: 'BARON',
@@ -213,10 +207,10 @@ export function useFlashAlerts() {
           team: e.team,
           iconUrl: getObjectiveIconUrl('baron', e.team || 'ORDER'),
           durationMs: 5000,
+          soundKey,
           soundType: 'objective',
         })
       } else if (e.type === 'DRAGON_KILL') {
-        const meta = e.metadata as { dragonType?: string; killerChamp?: string }
         const drakeType = meta?.dragonType || 'Élémentaire'
         const killerChamp = meta?.killerChamp || 'Équipe'
         triggerAlert({
@@ -240,48 +234,44 @@ export function useFlashAlerts() {
           durationMs: 4000,
           soundType: 'objective',
         })
-      } else if (e.type === 'FIRST_BLOOD') {
-        const meta = e.metadata as { killerChampion?: string; victimChampion?: string }
-        triggerAlert({
-          id: e.id,
-          type: 'FIRST_BLOOD',
-          title: 'PREMIER SANG ! (FIRST BLOOD)',
-          subtitle: `${meta?.killerChampion || 'Tueur'} élimine ${meta?.victimChampion || 'Victime'}`,
-          team: e.team,
-          iconUrl: meta?.killerChampion ? getChampionIconUrl(meta.killerChampion) : undefined,
-          victimIconUrl: meta?.victimChampion ? getChampionIconUrl(meta.victimChampion) : undefined,
-          durationMs: 4500,
-          soundType: 'kill',
-        })
       } else if (e.type === 'ACE') {
+        const soundKey =
+          (meta?.soundKey as SoundEffectKey) ||
+          (e.team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating')
         triggerAlert({
           id: e.id,
           type: 'ACE',
-          title: 'ACE ENNEMI ÉLIMINÉ !',
-          subtitle: 'Tous les champions adverses sont tombés !',
+          title: e.title || 'ACE ENNEMI ÉLIMINÉ !',
+          subtitle: e.description || 'Tous les champions adverses sont tombés !',
           team: e.team,
           durationMs: 4500,
+          soundKey,
           soundType: 'ace',
         })
       } else if (e.type === 'CHAMPION_KILL') {
-        const meta = e.metadata as { killerChampion?: string; victimChampion?: string }
+        const killerChamp = meta?.killerChampion
+        const victimChamp = meta?.victimChampion
+        const soundKey = meta?.soundKey as SoundEffectKey | undefined
         triggerAlert({
           id: e.id,
           type: 'KILL',
-          title: `${meta?.killerChampion || 'Champion'} ⚔️ ${meta?.victimChampion || 'Ennemi'}`,
-          subtitle: `${meta?.killerChampion || 'Le tueur'} a éliminé ${meta?.victimChampion || "l'adversaire"}`,
+          title: meta?.isSoloKill
+            ? `SOLO KILL : ${killerChamp || 'Champion'} ⚔️ ${victimChamp || 'Ennemi'}`
+            : `${killerChamp || 'Champion'} ⚔️ ${victimChamp || 'Ennemi'}`,
+          subtitle: `${killerChamp || 'Le tueur'} a éliminé ${victimChamp || "l'adversaire"}${meta?.isSoloKill ? ' en duel' : ''}`,
           team: e.team,
-          iconUrl: meta?.killerChampion ? getChampionIconUrl(meta.killerChampion) : undefined,
-          victimIconUrl: meta?.victimChampion ? getChampionIconUrl(meta.victimChampion) : undefined,
+          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
           durationMs: 3500,
+          soundKey,
           soundType: 'kill',
         })
       } else if (e.type === 'TURRET_DESTROYED') {
-        const meta = e.metadata as { lane?: string; killerChamp?: string }
+        const lane = meta?.lane || ''
         triggerAlert({
           id: e.id,
           type: 'TURRET',
-          title: `TOURELLE ${meta?.lane || ''} ANÉANTIE`,
+          title: `TOURELLE ${lane} ANÉANTIE`,
           subtitle: e.description,
           team: e.team,
           iconUrl: getObjectiveIconUrl('tower', e.team || 'ORDER'),
@@ -289,11 +279,6 @@ export function useFlashAlerts() {
           soundType: 'danger',
         })
       } else if (e.type === 'ITEM_PURCHASE') {
-        const meta = e.metadata as {
-          item?: { price: number; displayName: string; iconUrl: string }
-          championName?: string
-        }
-        // Only trigger prominent flash alerts for major items (>= 2500g)
         if (meta?.item && meta.item.price >= 2500) {
           triggerAlert({
             id: e.id,
@@ -311,10 +296,95 @@ export function useFlashAlerts() {
   }
 
   /**
-   * Helper to trigger a demo alert for testing visual impact
+   * Helper to trigger a demo alert for testing visual impact and audio
    */
-  function triggerDemoAlert(type: FlashAlertType) {
-    if (type === 'DRAGON') {
+  function triggerDemoAlert(type: FlashAlertType, customSoundKey?: SoundEffectKey) {
+    if (type === 'FIRST_BLOOD') {
+      triggerAlert({
+        id: `demo-fb-${Date.now()}`,
+        type: 'FIRST_BLOOD',
+        title: 'PREMIER SANG ! (FIRST BLOOD)',
+        subtitle: 'Darius a terrassé Garen pour le premier sang !',
+        team: 'ORDER',
+        iconUrl: getChampionIconUrl('Darius'),
+        victimIconUrl: getChampionIconUrl('Garen'),
+        durationMs: 4500,
+        soundKey: 'firstblood',
+      })
+    } else if (type === 'MULTIKILL') {
+      const soundKey = customSoundKey || 'doublekill'
+      const labels: Record<string, string> = {
+        doublekill: 'DOUBLE KILL !',
+        triplekill: 'TRIPLE KILL !',
+        multikill: 'MULTI KILL !',
+        megakill: 'QUADRA KILL (MEGA KILL) !',
+        ultrakill: 'PENTAKILL (ULTRA KILL) !',
+        monsterkill: 'MONSTER KILL !',
+      }
+      triggerAlert({
+        id: `demo-multi-${Date.now()}`,
+        type: 'MULTIKILL',
+        title: labels[soundKey] || 'DOUBLE KILL !',
+        subtitle: 'Jinx décime les rangs ennemis en quelques secondes !',
+        team: 'ORDER',
+        iconUrl: getChampionIconUrl('Jinx'),
+        durationMs: 4500,
+        soundKey,
+      })
+    } else if (type === 'KILL_STREAK') {
+      const soundKey = customSoundKey || 'killingspree'
+      const labels: Record<string, string> = {
+        killingspree: 'SÉRIE DE MEURTRES (KILLING SPREE)',
+        unstoppable: 'INARRÊTABLE (UNSTOPPABLE)',
+        godlike: 'LÉGENDAIRE (GODLIKE)',
+        ludicrouskill: 'CARNAGE TOTAL (LUDICROUS KILL)',
+      }
+      triggerAlert({
+        id: `demo-streak-${Date.now()}`,
+        type: 'KILL_STREAK',
+        title: labels[soundKey] || 'SÉRIE DE MEURTRES',
+        subtitle: 'Ahri enchaîne les victimes sans jamais tomber !',
+        team: 'ORDER',
+        iconUrl: getChampionIconUrl('Ahri'),
+        durationMs: 4500,
+        soundKey,
+      })
+    } else if (type === 'DOMINATING') {
+      const soundKey = customSoundKey || 'blue_team_dominating'
+      const isBlue = soundKey === 'blue_team_dominating'
+      triggerAlert({
+        id: `demo-dominating-${Date.now()}`,
+        type: 'DOMINATING',
+        title: isBlue ? "L'ÉQUIPE BLEUE DOMINE LA PARTIE !" : "L'ÉQUIPE ROUGE DOMINE LA PARTIE !",
+        subtitle: 'Contrôle écrasant de la carte et des objectifs !',
+        team: isBlue ? 'ORDER' : 'CHAOS',
+        durationMs: 5000,
+        soundKey,
+      })
+    } else if (type === 'GAME_END') {
+      const soundKey = customSoundKey || 'blue_team_is_the_winner'
+      const isBlue = soundKey === 'blue_team_is_the_winner'
+      triggerAlert({
+        id: `demo-gameend-${Date.now()}`,
+        type: 'GAME_END',
+        title: isBlue ? "VICTOIRE DE L'ÉQUIPE BLEUE !" : "VICTOIRE DE L'ÉQUIPE ROUGE !",
+        subtitle: "Le Nexus adverse est anéanti. Fin de l'affrontement !",
+        team: isBlue ? 'ORDER' : 'CHAOS',
+        durationMs: 6000,
+        soundKey,
+      })
+    } else if (type === 'EXECUTE') {
+      triggerAlert({
+        id: `demo-execute-${Date.now()}`,
+        type: 'EXECUTE',
+        title: 'MORT HUMILIANTE',
+        subtitle: 'Yasuo a été abattu par la tourelle sans adversaire !',
+        team: 'CHAOS',
+        victimIconUrl: getChampionIconUrl('Yasuo'),
+        durationMs: 4000,
+        soundKey: 'humiliating_defeat',
+      })
+    } else if (type === 'DRAGON') {
       triggerAlert({
         id: `demo-dragon-${Date.now()}`,
         type: 'DRAGON',
@@ -334,6 +404,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('baron', 'ORDER'),
         durationMs: 5000,
+        soundKey: 'blue_team_dominating',
         soundType: 'objective',
       })
     } else if (type === 'ITEM') {
@@ -355,18 +426,25 @@ export function useFlashAlerts() {
         subtitle: 'Tous les champions adverses sont en temps de réapparition !',
         team: 'ORDER',
         durationMs: 4500,
+        soundKey: 'blue_team_dominating',
         soundType: 'ace',
       })
     } else {
+      // Standard or Headshot Kill
+      const soundKey = customSoundKey === 'headshot' ? 'headshot' : undefined
       triggerAlert({
         id: `demo-kill-${Date.now()}`,
         type: 'KILL',
-        title: 'DARIUS ⚔️ GAREN',
-        subtitle: 'Darius a terrassé Garen sur la voie du haut !',
+        title: soundKey === 'headshot' ? 'SOLO KILL : CAITLYN ⚔️ JINX' : 'DARIUS ⚔️ GAREN',
+        subtitle:
+          soundKey === 'headshot'
+            ? 'Caitlyn a abattu Jinx en tir de précision solo !'
+            : 'Darius a terrassé Garen sur la voie du haut !',
         team: 'ORDER',
-        iconUrl: getChampionIconUrl('Darius'),
-        victimIconUrl: getChampionIconUrl('Garen'),
+        iconUrl: getChampionIconUrl(soundKey === 'headshot' ? 'Caitlyn' : 'Darius'),
+        victimIconUrl: getChampionIconUrl(soundKey === 'headshot' ? 'Jinx' : 'Garen'),
         durationMs: 3800,
+        soundKey,
         soundType: 'kill',
       })
     }

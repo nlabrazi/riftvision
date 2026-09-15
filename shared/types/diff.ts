@@ -13,6 +13,30 @@ export type DiffEventType =
   | 'HORDE_KILL'
   | 'FIRST_BLOOD'
   | 'ACE'
+  | 'MULTIKILL'
+  | 'KILL_STREAK'
+  | 'DOMINATING'
+  | 'GAME_END'
+  | 'EXECUTE'
+
+export type SoundEffectKey =
+  | 'firstblood'
+  | 'doublekill'
+  | 'triplekill'
+  | 'multikill'
+  | 'megakill'
+  | 'ultrakill'
+  | 'monsterkill'
+  | 'ludicrouskill'
+  | 'killingspree'
+  | 'unstoppable'
+  | 'godlike'
+  | 'headshot'
+  | 'blue_team_dominating'
+  | 'red_team_dominating'
+  | 'blue_team_is_the_winner'
+  | 'red_team_is_the_winner'
+  | 'humiliating_defeat'
 
 export interface DiffItemPurchase {
   summonerName: string

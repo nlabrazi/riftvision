@@ -259,8 +259,7 @@ export function useRiotLive() {
 
   function scheduleNextPoll() {
     const shouldPoll =
-      isPolling.value &&
-      (isLiveActive.value || clientMockMode.value || status.value.isMock)
+      isPolling.value && (isLiveActive.value || clientMockMode.value || status.value.isMock)
     if (!shouldPoll) return
     if (pollTimeout) {
       clearTimeout(pollTimeout)

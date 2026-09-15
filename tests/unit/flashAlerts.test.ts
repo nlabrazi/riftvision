@@ -182,11 +182,87 @@ describe('useFlashAlerts', () => {
   it('triggers demo alerts for each major event type', () => {
     const { activeAlert, triggerDemoAlert, dismissCurrentAlert } = useFlashAlerts()
 
-    const types = ['DRAGON', 'BARON', 'ITEM', 'ACE', 'KILL'] as const
+    const types = [
+      'DRAGON',
+      'BARON',
+      'ITEM',
+      'ACE',
+      'KILL',
+      'FIRST_BLOOD',
+      'MULTIKILL',
+      'KILL_STREAK',
+      'DOMINATING',
+      'GAME_END',
+      'EXECUTE',
+    ] as const
     for (const t of types) {
       triggerDemoAlert(t)
       expect(activeAlert.value?.type).toBe(t)
       dismissCurrentAlert()
     }
+  })
+
+  it('correctly ingests and maps sound keys for multikill, first blood, and streaks', () => {
+    const { activeAlert, ingestDiffEvents, dismissCurrentAlert } = useFlashAlerts()
+
+    const events: GameDiffEvent[] = [
+      {
+        id: 'diff-fb',
+        type: 'FIRST_BLOOD',
+        gameTime: 180,
+        formattedTime: '03:00',
+        title: 'PREMIER SANG !',
+        description: 'First blood',
+        team: 'ORDER',
+        metadata: { killerChampion: 'Darius', victimChampion: 'Garen', soundKey: 'firstblood' },
+      },
+      {
+        id: 'diff-multi',
+        type: 'MULTIKILL',
+        gameTime: 400,
+        formattedTime: '06:40',
+        title: 'DOUBLE KILL !',
+        description: 'Double kill',
+        team: 'ORDER',
+        metadata: { killerChampion: 'Jinx', streak: 2, soundKey: 'doublekill' },
+      },
+      {
+        id: 'diff-streak',
+        type: 'KILL_STREAK',
+        gameTime: 500,
+        formattedTime: '08:20',
+        title: 'SÉRIE DE MEURTRES',
+        description: 'Killing Spree',
+        team: 'ORDER',
+        metadata: { killerChampion: 'Ahri', streak: 3, soundKey: 'killingspree' },
+      },
+      {
+        id: 'diff-execute',
+        type: 'EXECUTE',
+        gameTime: 600,
+        formattedTime: '10:00',
+        title: 'MORT HUMILIANTE',
+        description: 'Executed',
+        team: 'CHAOS',
+        metadata: { victimChampion: 'Yasuo', soundKey: 'humiliating_defeat' },
+      },
+    ]
+
+    ingestDiffEvents(events)
+
+    expect(activeAlert.value?.type).toBe('FIRST_BLOOD')
+    expect(activeAlert.value?.soundKey).toBe('firstblood')
+
+    dismissCurrentAlert()
+    expect(activeAlert.value?.type).toBe('MULTIKILL')
+    expect(activeAlert.value?.soundKey).toBe('doublekill')
+
+    dismissCurrentAlert()
+    expect(activeAlert.value?.type).toBe('KILL_STREAK')
+    expect(activeAlert.value?.soundKey).toBe('killingspree')
+
+    dismissCurrentAlert()
+    expect(activeAlert.value?.type).toBe('EXECUTE')
+    expect(activeAlert.value?.soundKey).toBe('humiliating_defeat')
   })
 })

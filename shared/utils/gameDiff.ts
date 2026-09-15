@@ -1,4 +1,9 @@
-import type { GameDiffEvent, GameDiffResult, TeamEconomySummary } from '../types/diff'
+import type {
+  GameDiffEvent,
+  GameDiffResult,
+  SoundEffectKey,
+  TeamEconomySummary,
+} from '../types/diff'
 import type { RiotAllGameData, RiotEvent, RiotPlayer, TeamType } from '../types/riot'
 import { formatSecondsToTime, getItemIconUrl } from './ddragon'
 
@@ -86,6 +91,31 @@ export function calculateTeamEconomy(
     dragonCount,
     baronCount,
   }
+}
+
+/**
+ * Calculate kill streak for a summoner up to a given event timestamp
+ */
+export function calculateKillStreak(
+  allEvents: RiotEvent[],
+  summonerName: string,
+  upToEventTime: number,
+): number {
+  let streak = 0
+  const sorted = [...allEvents]
+    .filter((e) => e.EventTime <= upToEventTime)
+    .sort((a, b) => a.EventTime - b.EventTime)
+
+  for (const ev of sorted) {
+    if (ev.EventName === 'ChampionKill') {
+      if (ev.KillerName === summonerName) {
+        streak++
+      } else if (ev.VictimName === summonerName) {
+        streak = 0
+      }
+    }
+  }
+  return streak
 }
 
 /**
@@ -196,31 +226,169 @@ export function computeGameDiff(
         : allEvents
 
   for (const e of rawNewEvents) {
-    if (e.EventName === 'ChampionKill') {
-      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-      const victim = e.VictimName ? playerMap.get(e.VictimName) : undefined
-
-      const killerChamp = killer?.championName || e.KillerName?.split('#')[0] || 'Inconnu'
-      const victimChamp = victim?.championName || e.VictimName?.split('#')[0] || 'Inconnu'
-
+    if (e.EventName === 'FirstBlood') {
+      const recipient = e.Recipient ? playerMap.get(e.Recipient) : undefined
+      const killerChamp = recipient?.championName || e.Recipient?.split('#')[0] || 'Champion'
       newEvents.push({
-        id: `kill-${e.EventID}`,
-        type: 'CHAMPION_KILL',
+        id: `firstblood-${e.EventID}`,
+        type: 'FIRST_BLOOD',
         gameTime: e.EventTime,
         formattedTime: formatSecondsToTime(e.EventTime),
-        title: `Kill : ${killerChamp} ⚔️ ${victimChamp}`,
-        description: `${killerChamp} a éliminé ${victimChamp}`,
+        title: 'PREMIER SANG !',
+        description: `${killerChamp} a versé le Premier Sang !`,
+        team: recipient?.team,
+        metadata: {
+          recipientName: e.Recipient,
+          killerChampion: killerChamp,
+          team: recipient?.team,
+          soundKey: 'firstblood' as SoundEffectKey,
+        },
+      })
+    } else if (e.EventName === 'Multikill') {
+      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
+      const killerChamp = killer?.championName || e.KillerName?.split('#')[0] || 'Champion'
+      const streak = Number(e.KillStreak) || 2
+
+      let title = 'DOUBLE KILL !'
+      let soundKey: SoundEffectKey = 'doublekill'
+      if (streak === 2) {
+        title = 'DOUBLE KILL !'
+        soundKey = 'doublekill'
+      } else if (streak === 3) {
+        title = 'TRIPLE KILL !'
+        soundKey = 'triplekill'
+      } else if (streak === 4) {
+        title = 'QUADRA KILL (MEGA KILL) !'
+        soundKey = 'megakill'
+      } else if (streak === 5) {
+        title = 'PENTAKILL (ULTRA KILL) !'
+        soundKey = 'ultrakill'
+      } else {
+        title = 'MONSTER KILL !'
+        soundKey = 'monsterkill'
+      }
+
+      newEvents.push({
+        id: `multikill-${e.EventID}`,
+        type: 'MULTIKILL',
+        gameTime: e.EventTime,
+        formattedTime: formatSecondsToTime(e.EventTime),
+        title,
+        description: `${killerChamp} réalise un ${title}`,
         team: killer?.team,
         metadata: {
           killerName: e.KillerName,
           killerChampion: killerChamp,
-          killerTeam: killer?.team,
-          victimName: e.VictimName,
-          victimChampion: victimChamp,
-          victimTeam: victim?.team,
-          assisters: e.Assisters || [],
+          streak,
+          soundKey,
         },
       })
+    } else if (e.EventName === 'Ace') {
+      const acingTeamStr = typeof e.AcingTeam === 'string' ? e.AcingTeam.toUpperCase() : ''
+      const team: TeamType =
+        acingTeamStr.includes('ORDER') || acingTeamStr === 'BLUE' ? 'ORDER' : 'CHAOS'
+      const soundKey: SoundEffectKey =
+        team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating'
+      newEvents.push({
+        id: `ace-${e.EventID}`,
+        type: 'ACE',
+        gameTime: e.EventTime,
+        formattedTime: formatSecondsToTime(e.EventTime),
+        title: `ACE POUR L'ÉQUIPE ${team === 'ORDER' ? 'BLEUE' : 'ROUGE'} !`,
+        description: 'Tous les champions adverses sont éliminés !',
+        team,
+        metadata: {
+          acer: e.Acer,
+          team,
+          soundKey,
+        },
+      })
+    } else if (e.EventName === 'ChampionKill') {
+      const isExecution =
+        !e.KillerName || e.KillerName.startsWith('Turret_') || e.KillerName.startsWith('Minion_')
+      const victim = e.VictimName ? playerMap.get(e.VictimName) : undefined
+      const victimChamp = victim?.championName || e.VictimName?.split('#')[0] || 'Inconnu'
+
+      if (isExecution) {
+        newEvents.push({
+          id: `execute-${e.EventID}`,
+          type: 'EXECUTE',
+          gameTime: e.EventTime,
+          formattedTime: formatSecondsToTime(e.EventTime),
+          title: 'MORT HUMILIANTE',
+          description: `${victimChamp} s'est fait exécuter par l'environnement !`,
+          team: victim?.team,
+          metadata: {
+            victimName: e.VictimName,
+            victimChampion: victimChamp,
+            victimTeam: victim?.team,
+            soundKey: 'humiliating_defeat' as SoundEffectKey,
+          },
+        })
+      } else {
+        const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
+        const killerChamp = killer?.championName || e.KillerName?.split('#')[0] || 'Inconnu'
+        const isSoloKill = !e.Assisters || e.Assisters.length === 0
+        const streak = e.KillerName ? calculateKillStreak(allEvents, e.KillerName, e.EventTime) : 1
+
+        let soundKey: SoundEffectKey | undefined
+        if (streak >= 8) soundKey = 'ludicrouskill'
+        else if (streak >= 6) soundKey = 'godlike'
+        else if (streak >= 4) soundKey = 'unstoppable'
+        else if (streak === 3) soundKey = 'killingspree'
+        else if (isSoloKill) soundKey = 'headshot'
+
+        newEvents.push({
+          id: `kill-${e.EventID}`,
+          type: 'CHAMPION_KILL',
+          gameTime: e.EventTime,
+          formattedTime: formatSecondsToTime(e.EventTime),
+          title: isSoloKill
+            ? `Solo Kill : ${killerChamp} ⚔️ ${victimChamp}`
+            : `Kill : ${killerChamp} ⚔️ ${victimChamp}`,
+          description: `${killerChamp} a éliminé ${victimChamp}${isSoloKill ? ' en duel (Solo Kill)' : ''}`,
+          team: killer?.team,
+          metadata: {
+            killerName: e.KillerName,
+            killerChampion: killerChamp,
+            killerTeam: killer?.team,
+            victimName: e.VictimName,
+            victimChampion: victimChamp,
+            victimTeam: victim?.team,
+            assisters: e.Assisters || [],
+            isSoloKill,
+            streak,
+            soundKey,
+          },
+        })
+
+        if ([3, 4, 6, 8].includes(streak)) {
+          const streakMap: Record<number, { title: string; sound: SoundEffectKey }> = {
+            3: { title: 'SÉRIE DE MEURTRES (KILLING SPREE)', sound: 'killingspree' },
+            4: { title: 'INARRÊTABLE (UNSTOPPABLE)', sound: 'unstoppable' },
+            6: { title: 'LÉGENDAIRE (GODLIKE)', sound: 'godlike' },
+            8: { title: 'CARNAGE TOTAL (LUDICROUS KILL)', sound: 'ludicrouskill' },
+          }
+          const info = streakMap[streak]
+          if (info) {
+            newEvents.push({
+              id: `streak-${e.EventID}-${streak}`,
+              type: 'KILL_STREAK',
+              gameTime: e.EventTime,
+              formattedTime: formatSecondsToTime(e.EventTime),
+              title: info.title,
+              description: `${killerChamp} enchaîne ${streak} éliminations sans mourir !`,
+              team: killer?.team,
+              metadata: {
+                killerName: e.KillerName,
+                killerChampion: killerChamp,
+                streak,
+                soundKey: info.sound,
+              },
+            })
+          }
+        }
+      }
     } else if (e.EventName === 'TurretKilled') {
       const { destroyedTeam, lane } = parseTurretDetails(e.TurretKilled)
       const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
@@ -253,6 +421,9 @@ export function computeGameDiff(
     } else if (e.EventName === 'BaronKill') {
       const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
       const killerChamp = killer?.championName || e.KillerName || 'Inconnu'
+      const team: TeamType = killer?.team || 'ORDER'
+      const soundKey: SoundEffectKey =
+        team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating'
 
       newEvents.push({
         id: `baron-${e.EventID}`,
@@ -261,8 +432,61 @@ export function computeGameDiff(
         formattedTime: formatSecondsToTime(e.EventTime),
         title: 'Baron Nashor éliminé',
         description: `Baron Nashor sécurisé par ${killerChamp}`,
-        team: killer?.team,
-        metadata: { killerChamp },
+        team,
+        metadata: { killerChamp, soundKey },
+      })
+    } else if (e.EventName === 'GameEnd') {
+      const winner: TeamType = e.Result === 'Win' || e.Winner === 'ORDER' ? 'ORDER' : 'CHAOS'
+      const soundKey: SoundEffectKey =
+        winner === 'ORDER' ? 'blue_team_is_the_winner' : 'red_team_is_the_winner'
+      newEvents.push({
+        id: `gameend-${e.EventID}`,
+        type: 'GAME_END',
+        gameTime: e.EventTime,
+        formattedTime: formatSecondsToTime(e.EventTime),
+        title: `VICTOIRE DE L'ÉQUIPE ${winner === 'ORDER' ? 'BLEUE' : 'ROUGE'} !`,
+        description: `Fin de partie - Victoire de l'équipe ${winner === 'ORDER' ? 'Bleue' : 'Rouge'}`,
+        team: winner,
+        metadata: { winner, soundKey },
+      })
+    }
+  }
+
+  // 4. Check Gold Dominance threshold (+5000 / -5000)
+  if (prev) {
+    const prevBlueEco = calculateTeamEconomy(
+      prev.allPlayers || [],
+      prev.events?.Events || [],
+      'ORDER',
+    )
+    const prevRedEco = calculateTeamEconomy(
+      prev.allPlayers || [],
+      prev.events?.Events || [],
+      'CHAOS',
+    )
+    const prevGoldDiff = prevBlueEco.totalItemGold - prevRedEco.totalItemGold
+
+    if (prevGoldDiff < 5000 && goldDifference >= 5000) {
+      newEvents.push({
+        id: `dominating-order-${gameTime}`,
+        type: 'DOMINATING',
+        gameTime,
+        formattedTime: formatSecondsToTime(gameTime),
+        title: "L'ÉQUIPE BLEUE DOMINE LA FAILLE !",
+        description: "L'Équipe Bleue prend plus de 5 000 pièces d'or d'avance !",
+        team: 'ORDER',
+        metadata: { soundKey: 'blue_team_dominating' as SoundEffectKey },
+      })
+    } else if (prevGoldDiff > -5000 && goldDifference <= -5000) {
+      newEvents.push({
+        id: `dominating-chaos-${gameTime}`,
+        type: 'DOMINATING',
+        gameTime,
+        formattedTime: formatSecondsToTime(gameTime),
+        title: "L'ÉQUIPE ROUGE DOMINE LA FAILLE !",
+        description: "L'Équipe Rouge prend plus de 5 000 pièces d'or d'avance !",
+        team: 'CHAOS',
+        metadata: { soundKey: 'red_team_dominating' as SoundEffectKey },
       })
     }
   }

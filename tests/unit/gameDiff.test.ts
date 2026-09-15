@@ -140,4 +140,146 @@ describe('gameDiff utility & economy engine', () => {
     expect(killEvents[0].title).toContain('Ahri')
     expect(killEvents[0].title).toContain('Garen')
   })
+
+  it('should detect FirstBlood event and map firstblood sound key', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push({
+      EventID: 101,
+      EventName: 'FirstBlood',
+      EventTime: 120.0,
+      Recipient: 'DariusMaster#EUW',
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const fbEvents = result.newEvents.filter((e) => e.type === 'FIRST_BLOOD')
+    expect(fbEvents).toHaveLength(1)
+    expect(fbEvents[0].title).toBe('PREMIER SANG !')
+    expect(fbEvents[0].metadata).toMatchObject({
+      killerChampion: 'Darius',
+      soundKey: 'firstblood',
+    })
+  })
+
+  it('should detect Multikills (Double Kill, Penta Kill) and map correct sounds', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push({
+      EventID: 102,
+      EventName: 'Multikill',
+      EventTime: 500.0,
+      KillerName: 'GetExcited#EUW',
+      KillStreak: 2,
+    })
+    currState.events.Events.push({
+      EventID: 103,
+      EventName: 'Multikill',
+      EventTime: 505.0,
+      KillerName: 'GetExcited#EUW',
+      KillStreak: 5,
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const multiEvents = result.newEvents.filter((e) => e.type === 'MULTIKILL')
+    expect(multiEvents).toHaveLength(2)
+    expect(multiEvents[0].title).toBe('DOUBLE KILL !')
+    expect(multiEvents[0].metadata).toMatchObject({ soundKey: 'doublekill', streak: 2 })
+    expect(multiEvents[1].title).toBe('PENTAKILL (ULTRA KILL) !')
+    expect(multiEvents[1].metadata).toMatchObject({ soundKey: 'ultrakill', streak: 5 })
+  })
+
+  it('should detect Ace and Baron events with team dominating sound keys', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push({
+      EventID: 104,
+      EventName: 'Ace',
+      EventTime: 800.0,
+      Acer: 'FoxCharm#EUW',
+      AcingTeam: 'ORDER',
+    })
+    currState.events.Events.push({
+      EventID: 105,
+      EventName: 'BaronKill',
+      EventTime: 1200.0,
+      KillerName: 'FoxCharm#EUW',
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const aceEvent = result.newEvents.find((e) => e.type === 'ACE')
+    expect(aceEvent).toBeDefined()
+    expect(aceEvent?.metadata).toMatchObject({ soundKey: 'blue_team_dominating' })
+
+    const baronEvent = result.newEvents.find((e) => e.type === 'BARON_KILL')
+    expect(baronEvent).toBeDefined()
+    expect(baronEvent?.metadata).toMatchObject({ soundKey: 'blue_team_dominating' })
+  })
+
+  it('should detect environment execution and map humiliating_defeat sound', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push({
+      EventID: 106,
+      EventName: 'ChampionKill',
+      EventTime: 650.0,
+      KillerName: 'Turret_TOrder_L_01_A',
+      VictimName: 'ShadowNinja#EUW',
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const executeEvent = result.newEvents.find((e) => e.type === 'EXECUTE')
+    expect(executeEvent).toBeDefined()
+    expect(executeEvent?.title).toBe('MORT HUMILIANTE')
+    expect(executeEvent?.metadata).toMatchObject({
+      victimChampion: 'Zed',
+      soundKey: 'humiliating_defeat',
+    })
+  })
+
+  it('should detect solo kills and streak milestones (killing spree, godlike)', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    // Solo kill (0 assists)
+    currState.events.Events.push({
+      EventID: 107,
+      EventName: 'ChampionKill',
+      EventTime: 700.0,
+      KillerName: 'DariusMaster#EUW',
+      VictimName: 'DemaciaSpin#EUW',
+      Assisters: [],
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const soloKill = result.newEvents.find((e) => e.id === 'kill-107')
+    expect(soloKill).toBeDefined()
+    expect(soloKill?.title).toContain('Solo Kill')
+    expect(soloKill?.metadata).toMatchObject({
+      isSoloKill: true,
+      soundKey: 'headshot',
+    })
+  })
+
+  it('should detect GameEnd event and map victory sound', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push({
+      EventID: 108,
+      EventName: 'GameEnd',
+      EventTime: 1800.0,
+      Result: 'Win',
+      Winner: 'ORDER',
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const endEvent = result.newEvents.find((e) => e.type === 'GAME_END')
+    expect(endEvent).toBeDefined()
+    expect(endEvent?.title).toContain("VICTOIRE DE L'ÉQUIPE BLEUE")
+    expect(endEvent?.metadata).toMatchObject({ soundKey: 'blue_team_is_the_winner' })
+  })
 })
