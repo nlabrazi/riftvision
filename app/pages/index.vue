@@ -5,6 +5,7 @@ import { useRiotLive } from '../composables/useRiotLive'
 
 const {
   status,
+  isLiveActive,
   gameData,
   events,
   diffEvents,
@@ -19,6 +20,9 @@ const {
   toggleMockMode,
   startMockMode,
   stopMockMode,
+  toggleLiveMode,
+  startLiveMode,
+  stopLiveMode,
   togglePolling,
 } = useRiotLive()
 
@@ -81,6 +85,21 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 
         <!-- Controls -->
         <div class="flex items-center flex-wrap gap-2.5 font-rajdhani font-bold text-xs">
+          <!-- Live Mode Button -->
+          <button type="button" data-testid="live-toggle-button"
+            @click="toggleLiveMode"
+            class="px-3.5 py-1.5 rounded-lg transition border flex items-center gap-2 shadow-sm" :class="isLiveActive
+              ? (status.status === 'IN_GAME'
+                  ? 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 hover:bg-emerald-900 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                  : 'bg-amber-950/90 border-amber-500/80 text-amber-200 hover:bg-amber-900 shadow-[0_0_12px_rgba(245,158,11,0.3)]')
+              : 'bg-[#010a13] border-[#785a28]/60 text-slate-300 hover:border-[#c8aa6e] hover:text-[#f0e6d2]'">
+            <span class="w-2 h-2 rounded-full" :class="isLiveActive
+              ? (status.status === 'IN_GAME' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400 animate-ping')
+              : 'bg-slate-600'"></span>
+            {{ isLiveActive ? (status.status === 'IN_GAME' ? '🔴 Live Connecté' : '🟡 Recherche Live...') : '▶️ Activer Mode Live' }}
+          </button>
+
+          <!-- Mock Mode Button -->
           <button type="button" data-testid="mock-toggle-button"
             @click="status.isMock ? stopMockMode() : startMockMode()"
             class="px-3.5 py-1.5 rounded-lg transition border flex items-center gap-2 shadow-sm" :class="status.isMock
@@ -114,7 +133,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         class="rounded-2xl border p-4 transition-all duration-300 shadow-2xl backdrop-blur-md" :class="{
           'bg-gradient-to-r from-emerald-950/40 via-[#091428] to-slate-900 border-emerald-600/50 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.15)]': status.status === 'IN_GAME',
           'bg-gradient-to-r from-purple-950/40 via-[#091428] to-slate-900 border-[#c8aa6e]/60 text-[#f0e6d2] shadow-[0_0_20px_rgba(200,170,110,0.15)]': status.status === 'MOCK',
-          'bg-gradient-to-r from-rose-950/40 via-[#091428] to-slate-900 border-rose-800/50 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.1)]': status.status === 'DISCONNECTED',
+          'bg-gradient-to-r from-amber-950/20 via-[#091428] to-slate-900 border-[#785a28]/60 text-slate-200 shadow-[0_0_20px_rgba(200,170,110,0.08)]': status.status === 'DISCONNECTED',
         }">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
@@ -122,12 +141,14 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="{
                 'bg-emerald-400': status.status === 'IN_GAME',
                 'bg-purple-400': status.status === 'MOCK',
-                'bg-rose-500': status.status === 'DISCONNECTED',
+                'bg-amber-400': status.status === 'DISCONNECTED' && isLiveActive,
+                'hidden': status.status === 'DISCONNECTED' && !isLiveActive,
               }"></span>
               <span class="relative inline-flex rounded-full h-3.5 w-3.5" :class="{
                 'bg-emerald-500': status.status === 'IN_GAME',
                 'bg-purple-500': status.status === 'MOCK',
-                'bg-rose-600': status.status === 'DISCONNECTED',
+                'bg-amber-500': status.status === 'DISCONNECTED' && isLiveActive,
+                'bg-slate-500': status.status === 'DISCONNECTED' && !isLiveActive,
               }"></span>
             </span>
 
@@ -142,13 +163,14 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                     <span>Arrêter la Démo</span>
                   </button>
                 </span>
+                <span v-else-if="isLiveActive">Recherche de partie en cours (Port 2999)...</span>
                 <span v-else>En attente du client League of Legends</span>
               </div>
               <p class="text-xs opacity-80 mt-0.5 font-sans">
                 <span v-if="status.status === 'IN_GAME'">Synchronisation Live Client API active.</span>
-                <span v-else-if="status.status === 'MOCK'">Snapshot simulé (16:45) avec détection d'achats d'items et
-                  kills.</span>
-                <span v-else>Lancez une partie LoL (ou activez la Simulation ci-dessus pour tester).</span>
+                <span v-else-if="status.status === 'MOCK'">Snapshot simulé (16:45) avec détection d'achats d'items et kills.</span>
+                <span v-else-if="isLiveActive">Écoute active du client de jeu. Lancez une partie pour synchroniser automatiquement.</span>
+                <span v-else>Application en veille. Activez le Mode Live si vous êtes en partie, ou lancez la Simulation pour tester.</span>
               </p>
             </div>
           </div>
@@ -158,7 +180,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
             <div class="bg-[#010a13]/80 rounded-xl px-3 py-1.5 border border-[#785a28]/40 text-center">
               <div class="text-[10px] uppercase text-slate-400 font-semibold">Mode</div>
               <div class="font-bold text-white tracking-wider">
-                {{ gameData?.gameData?.gameMode || status.gameMode || '—' }}
+                {{ gameData?.gameData?.gameMode || status.gameMode || (isLiveActive ? 'Écoute Live' : 'Veille') }}
               </div>
             </div>
             <div class="bg-[#010a13]/80 rounded-xl px-3 py-1.5 border border-[#785a28]/40 text-center">
@@ -170,7 +192,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           </div>
         </div>
 
-        <div v-if="lastError && status.status === 'DISCONNECTED'"
+        <div v-if="lastError && currentView === 'diagnostic'"
           class="mt-2.5 text-xs text-rose-300 font-mono bg-rose-950/50 p-2.5 rounded-lg border border-rose-900/60">
           Dernière erreur de connexion : {{ lastError }}
         </div>
@@ -188,13 +210,22 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
             Aucune partie active détectée
           </h3>
           <p class="text-xs text-slate-400 max-w-md mx-auto">
-            Pour afficher le tableau de bord tactique en direct, lancez une partie dans League of Legends ou activez le
-            mode simulation ci-dessus.
+            Pour afficher le tableau de bord tactique en direct, lancez le Mode Live si vous êtes en jeu, ou activez la
+            simulation ci-dessus.
           </p>
-          <button type="button" @click="startMockMode"
-            class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white transition shadow-lg shadow-purple-950/60 border border-purple-400/40 uppercase tracking-wider">
-            Lancer le Mode Simulation (Démo)
-          </button>
+          <div class="flex items-center justify-center gap-3">
+            <button type="button" @click="toggleLiveMode"
+              class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani transition border flex items-center gap-2 uppercase tracking-wider"
+              :class="isLiveActive
+                ? 'bg-amber-900/60 border-amber-500 text-amber-200 shadow-lg shadow-amber-950/60'
+                : 'bg-[#010a13] border-[#785a28] hover:border-[#c8aa6e] text-[#c8aa6e]'">
+              {{ isLiveActive ? '⏹️ Couper l\'écoute Live' : '▶️ Activer le Mode Live' }}
+            </button>
+            <button type="button" @click="startMockMode"
+              class="px-5 py-2.5 rounded-xl text-xs font-bold font-rajdhani bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white transition shadow-lg shadow-purple-950/60 border border-purple-400/40 uppercase tracking-wider">
+              Lancer le Mode Simulation (Démo)
+            </button>
+          </div>
         </div>
       </section>
 

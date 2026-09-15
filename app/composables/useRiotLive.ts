@@ -5,6 +5,7 @@ import { computeGameDiff } from '#shared/utils/gameDiff'
 
 export function useRiotLive() {
   const clientMockMode = ref(false)
+  const isLiveActive = ref(false)
   const status = ref<RiotStatusResponse>({
     status: 'DISCONNECTED',
     isMock: false,
@@ -161,10 +162,12 @@ export function useRiotLive() {
     statusSeq++
     liveDataSeq++
     clientMockMode.value = false
+    isLiveActive.value = false
     status.value = {
       status: 'DISCONNECTED',
       isMock: false,
     }
+    lastError.value = null
     resetGameData()
 
     try {
@@ -177,10 +180,16 @@ export function useRiotLive() {
     }
 
     await refreshAll()
-    scheduleNextPoll()
+    if (pollTimeout) {
+      clearTimeout(pollTimeout)
+      pollTimeout = null
+    }
   }
 
   async function startMockMode() {
+    if (isLiveActive.value) {
+      isLiveActive.value = false
+    }
     statusSeq++
     liveDataSeq++
     clientMockMode.value = true
@@ -210,8 +219,42 @@ export function useRiotLive() {
     }
   }
 
+  async function startLiveMode() {
+    if (clientMockMode.value || status.value.isMock) {
+      await stopMockMode()
+    }
+    isLiveActive.value = true
+    await refreshAll()
+    scheduleNextPoll()
+  }
+
+  function stopLiveMode() {
+    isLiveActive.value = false
+    if (pollTimeout) {
+      clearTimeout(pollTimeout)
+      pollTimeout = null
+    }
+    resetGameData()
+    status.value = {
+      status: 'DISCONNECTED',
+      isMock: false,
+    }
+    lastError.value = null
+  }
+
+  async function toggleLiveMode() {
+    if (isLiveActive.value) {
+      stopLiveMode()
+    } else {
+      await startLiveMode()
+    }
+  }
+
   function scheduleNextPoll() {
-    if (!isPolling.value) return
+    const shouldPoll =
+      isPolling.value &&
+      (isLiveActive.value || clientMockMode.value || status.value.isMock)
+    if (!shouldPoll) return
     if (pollTimeout) {
       clearTimeout(pollTimeout)
       pollTimeout = null
@@ -257,9 +300,18 @@ export function useRiotLive() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   })
 
-  onMounted(() => {
-    refreshAll()
-    startPolling()
+  onMounted(async () => {
+    // Single passive check on mount to auto-detect active game or mock mode
+    const initial = await fetchStatus()
+    if (initial?.status === 'IN_GAME') {
+      isLiveActive.value = true
+      await fetchLiveData()
+      scheduleNextPoll()
+    } else if (initial?.status === 'MOCK' || initial?.isMock) {
+      clientMockMode.value = true
+      await fetchLiveData()
+      scheduleNextPoll()
+    }
   })
 
   onUnmounted(() => {
@@ -268,6 +320,7 @@ export function useRiotLive() {
 
   return {
     clientMockMode,
+    isLiveActive,
     status,
     gameData,
     events,
@@ -284,6 +337,9 @@ export function useRiotLive() {
     toggleMockMode,
     startMockMode,
     stopMockMode,
+    toggleLiveMode,
+    startLiveMode,
+    stopLiveMode,
     togglePolling,
   }
 }

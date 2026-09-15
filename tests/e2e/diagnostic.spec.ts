@@ -59,4 +59,28 @@ test.describe('Diagnostic Page & Riot Client Interface', () => {
     await expect(banner).toContainText('En attente du client League of Legends')
     await expect(mockBtn).toContainText('Activer Simulation')
   })
+
+  test('starts in clean standby mode and toggles live listening explicitly', async ({ page }) => {
+    const initialStatusPromise = page.waitForResponse((res) =>
+      res.url().includes('/api/riot/status'),
+    )
+    await page.goto('/')
+    await initialStatusPromise
+
+    const banner = page.locator('[data-testid="status-banner"]')
+    const liveBtn = page.locator('[data-testid="live-toggle-button"]')
+
+    // Standby banner should not display raw technical error box on tactical view
+    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(page.locator('text=Dernière erreur de connexion')).toHaveCount(0)
+
+    // Toggle live listening on
+    await liveBtn.click()
+    await expect(liveBtn).toContainText('Live')
+    await expect(banner).toContainText('Recherche de partie en cours')
+
+    // Toggle live listening off back to standby
+    await liveBtn.click()
+    await expect(banner).toContainText('En attente du client League of Legends')
+  })
 })

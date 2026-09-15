@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-03-01
+
+### ✨ Features
+- **Explicit Live Mode & Clean Standby UX**:
+  - Introduce dedicated Live listening toggle (`isLiveActive`) in header and empty state, preventing aggressive background polling loops when idle.
+  - Replace aggressive red disconnected banner with an elegant Hextech amber/gold standby indicator (*« En attente du client League of Legends »*).
+  - Relocate raw technical connection errors (`Riot API timeout after 1500ms`, socket errors) exclusively to the Diagnostic API view, keeping the tactical dashboard clean.
+
+### 🧪 Tests
+- Add unit tests for live mode lifecycle, clean standby state, and seamless mock/live transitions (`tests/unit/useRiotLive.test.ts`).
+- Add Playwright E2E test verifying clean standby rendering without raw technical error banners, followed by explicit live mode activation (`tests/e2e/diagnostic.spec.ts`).
+
+### 🛠️ Improvements & Bug Fixes
+- Fix Biome lint warnings on non-null assertions in tests.
+
 ## [0.2.0] - 2026-03-01
 
 ### ✨ Features

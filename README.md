@@ -22,11 +22,14 @@
 **RiftVision** est un copilote web « second screen » pour **League of Legends**, conçu pour afficher des alertes dynamiques et des informations tactiques en temps réel sur un second écran ou une tablette, **sans overlay intrusif en jeu**.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
+- 🎮 **3 Modes de fonctionnement** :
+  - **Veille (Standby)** : Démarrage propre et silencieux sans requêtes agressives ni erreurs de timeout dans le vide.
+  - **Mode Simulation (Démo)** : Instantané réel d'une partie (16:45) pour prototyper et tester sans client LoL actif.
+  - **Mode Live** : Écoute explicite et synchronisation automatique avec le jeu en cours.
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🧹 **Outillage performant** : **Biome** pour le linting et le formatage ultra-rapide.
 - 🧪 **Qualité & Tests** : Tests unitaires via **Vitest** et tests E2E via **Playwright**.
 - 🐳 **Docker ready** : Conteneurisé avec réseau hôte pour joindre le client LoL (`127.0.0.1:2999`) depuis WSL2 en mode mirrored.
-- 🎮 **Mode Simulation / Mock** : Jeu de données réel embarqué pour tester et développer sans partie active.
 
 ---
 
@@ -55,12 +58,18 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Intégration CDN Riot Data Dragon (icônes d'items, portraits de champions officiels)
   - [x] Tableau de bord tactique face-à-face (scoreboards, KDA, inventaires 6+1 slots, barres d'économie)
   - [x] Journal d'événements et de détections dynamique filtrable par catégorie
-  - [x] Tests unitaires et E2E exhaustifs (17 tests Vitest, 4 tests Playwright)
+  - [x] Gestion explicite du mode Live et veille silencieuse (v0.2.1)
+  - [x] Tests unitaires et E2E exhaustifs (20 tests Vitest, 5 tests Playwright)
 - [ ] **v1 — Expérience Second Screen Complète**
   - [ ] Moteur d'inférence de zones (déduction Top/Mid/Bot/Jungle/Rivière)
   - [ ] Minimap vectorielle interactive avec pins dynamiques
   - [ ] Alertes visuelles grand format temporaires (cartes flash)
   - [ ] Alertes sonores contextuelles via Web Audio API
+- [ ] **v1.5 — Copilote Tactique & Intelligence Prédictive**
+  - [ ] Détection des Power Spikes et alertes d'équipements légendaires complétés
+  - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)
+  - [ ] Graphique temps réel d'évolution de la courbe d'or ($\Delta$ Gold)
+  - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
 
 ---
 
