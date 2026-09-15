@@ -1,86 +1,74 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Diagnostic Page & Riot Client Interface', () => {
-  test.beforeEach(async ({ request }) => {
-    await request.post('/api/riot/mock', {
-      data: { enabled: false },
-    })
-  })
-  test('renders header, title, and mandatory Riot disclaimer', async ({ page }) => {
+test.describe('Connection controls and diagnostics', () => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('/api/riot/mock', { data: { enabled: false } })
+    const initialStatus = page.waitForResponse((response) =>
+      response.url().includes('/api/riot/status'),
+    )
     await page.goto('/')
+    await initialStatus
+  })
 
-    // Verify brand
-    await expect(page.locator('h1')).toContainText('RiftVision')
-
-    // Verify legal disclaimer footer mandated by Riot Developer Policy
-    const footer = page.locator('footer')
+  test('preserves the brand and Riot disclaimer', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('RiftVision')
+    const footer = page.locator('footer').filter({ hasText: "RiftVision isn't endorsed" })
     await expect(footer).toContainText("RiftVision isn't endorsed by Riot Games")
     await expect(footer).toContainText(
       'Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.',
     )
   })
 
-  test('toggles mock mode and displays simulated game data', async ({ page }) => {
-    // Wait for the client-side initial fetchStatus to know Vue is mounted
-    const initialStatusPromise = page.waitForResponse((res) =>
-      res.url().includes('/api/riot/status'),
+  test('opens diagnostics from standby and returns to either main view', async ({ page }) => {
+    await expect(page.getByTestId('view-tactical-btn')).toBeVisible()
+    await expect(page.getByTestId('view-map-btn')).toBeVisible()
+    await page.getByTestId('view-diagnostic-btn').click()
+    await expect(page.getByTestId('tab-overview')).toBeVisible()
+    await expect(page.getByTestId('tab-raw')).toBeVisible()
+
+    await page.getByTestId('view-map-btn').click()
+    await expect(page.getByTestId('tab-overview')).toBeHidden()
+    await expect(page.getByTestId('status-banner')).toContainText(
+      'En attente du client League of Legends',
     )
-    await page.goto('/')
-    await initialStatusPromise
 
-    const mockBtn = page.locator('[data-testid="mock-toggle-button"]')
-    await expect(mockBtn).toBeVisible()
+    await page.getByTestId('view-tactical-btn').click()
+    await expect(page.getByTestId('mock-toggle-button')).toBeVisible()
+  })
 
-    // Click to enable mock mode
-    await mockBtn.click()
-
-    // Banner should indicate mock mode
-    const banner = page.locator('[data-testid="status-banner"]')
+  test('retains simulated players and events in diagnostic tabs', async ({ page }) => {
+    const mockButton = page.getByTestId('mock-toggle-button')
+    const banner = page.getByTestId('status-banner')
+    await mockButton.click()
     await expect(banner).toContainText('Mode Simulation / Mock actif')
+    await page.getByTestId('view-diagnostic-btn').click()
 
-    // Switch to diagnostic view to inspect tabs
-    await page.locator('[data-testid="view-diagnostic-btn"]').click()
-
-    // Navigate to Players tab using explicit test id
-    await page.locator('[data-testid="tab-players"]').click()
-
-    // Verify champions from mock dataset are rendered
+    await page.getByTestId('tab-players').click()
     await expect(page.getByText('Darius', { exact: true })).toBeVisible()
     await expect(page.getByText('Ahri', { exact: true })).toBeVisible()
     await expect(page.getByText('Garen', { exact: true })).toBeVisible()
 
-    // Navigate to Events tab using explicit test id
-    await page.locator('[data-testid="tab-events"]').click()
+    await page.getByTestId('tab-events').click()
     await expect(page.getByText('FirstBlood', { exact: true })).toBeVisible()
     await expect(page.getByText('Chemtech')).toBeVisible()
 
-    // Stop mock mode and verify banner returns to waiting state
-    await mockBtn.click()
+    await mockButton.click()
     await expect(banner).toContainText('En attente du client League of Legends')
-    await expect(mockBtn).toContainText('Activer Simulation')
+    await page.getByTestId('view-tactical-btn').click()
+    await expect(page.getByTestId('scoreboard-header')).toBeHidden()
   })
 
-  test('starts in clean standby mode and toggles live listening explicitly', async ({ page }) => {
-    const initialStatusPromise = page.waitForResponse((res) =>
-      res.url().includes('/api/riot/status'),
-    )
-    await page.goto('/')
-    await initialStatusPromise
-
-    const banner = page.locator('[data-testid="status-banner"]')
-    const liveBtn = page.locator('[data-testid="live-toggle-button"]')
-
-    // Standby banner should not display raw technical error box on tactical view
+  test('starts in standby and enables live listening explicitly', async ({ page }) => {
+    const banner = page.getByTestId('status-banner')
+    const liveButton = page.getByTestId('live-toggle-button')
     await expect(banner).toContainText('En attente du client League of Legends')
-    await expect(page.locator('text=Dernière erreur de connexion')).toHaveCount(0)
+    await expect(page.getByText('Dernière erreur de connexion', { exact: false })).toHaveCount(0)
 
-    // Toggle live listening on
-    await liveBtn.click()
-    await expect(liveBtn).toContainText('Live')
+    await liveButton.click()
+    await expect(liveButton).toContainText('Live')
     await expect(banner).toContainText('Recherche de partie en cours')
 
-    // Toggle live listening off back to standby
-    await liveBtn.click()
+    await liveButton.click()
     await expect(banner).toContainText('En attente du client League of Legends')
   })
 })

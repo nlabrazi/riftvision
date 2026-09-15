@@ -161,6 +161,24 @@ describe('useFlashAlerts', () => {
     expect(isAudioMuted.value).toBe(false)
   })
 
+  it('clears active and queued alerts when leaving a game', () => {
+    const { activeAlert, alertQueue, triggerDemoAlert, clearAlerts } = useFlashAlerts()
+    triggerDemoAlert('BARON')
+    triggerDemoAlert('DRAGON')
+    expect(alertQueue.value).toHaveLength(1)
+
+    clearAlerts()
+    expect(activeAlert.value).toBeNull()
+    expect(alertQueue.value).toHaveLength(0)
+
+    // The old game timer must not dismiss a new session's alert.
+    vi.advanceTimersByTime(4000)
+    triggerDemoAlert('ITEM')
+    vi.advanceTimersByTime(1000)
+    expect(activeAlert.value?.type).toBe('ITEM')
+    clearAlerts()
+  })
+
   it('triggers demo alerts for each major event type', () => {
     const { activeAlert, triggerDemoAlert, dismissCurrentAlert } = useFlashAlerts()
 

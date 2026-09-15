@@ -1,249 +1,406 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
+import { getChampionIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
 import {
-  getChampionIconUrl,
-  getObjectiveIconUrl,
-  getRoleIconUrl,
-} from '#shared/utils/ddragon'
-import {
-  OBJECTIVE_COORDINATES,
-  TURRET_LANDMARKS,
   getChampionMapPosition,
   getDestroyedTurretIds,
+  OBJECTIVE_COORDINATES,
+  TURRET_LANDMARKS,
 } from '#shared/utils/mapCoordinates'
+import {
+  getMapEventLocation,
+  isRecentMapEvent,
+  type MapEventLocation,
+  normalizeMapTurretId,
+} from '#shared/utils/mapEvents'
+import { useFlashAlerts } from '../composables/useFlashAlerts'
 
-const props = defineProps<{
-  gameData: RiotAllGameData | null
-  blueEconomy?: TeamEconomySummary
-  redEconomy?: TeamEconomySummary
-  diffEvents?: GameDiffEvent[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    gameData: RiotAllGameData | null
+    blueEconomy?: TeamEconomySummary
+    redEconomy?: TeamEconomySummary
+    diffEvents?: GameDiffEvent[]
+    variant?: 'dashboard' | 'immersive'
+    selectedEvent?: GameDiffEvent | null
+    isMock?: boolean
+  }>(),
+  { variant: 'dashboard', selectedEvent: null, isMock: false },
+)
 
-const emit = defineEmits<(e: 'close') => void>()
+const { activeAlert } = useFlashAlerts()
+const players = computed(() => props.gameData?.allPlayers || [])
+const gameTime = computed(() => props.gameData?.gameData.gameTime ?? 0)
+const focusedChampion = ref<string | null>(null)
+const championDetailsId = `champion-map-details-${useId()}`
+const selectedChampion = computed(() =>
+  players.value.find((player) => player.summonerName === focusedChampion.value),
+)
+const destroyedTurretIds = computed(
+  () =>
+    new Set(
+      [...getDestroyedTurretIds(props.gameData?.events?.Events || [])].map(normalizeMapTurretId),
+    ),
+)
+const selectedLocation = computed(() =>
+  props.selectedEvent ? getMapEventLocation(props.selectedEvent, players.value) : null,
+)
 
-const destroyedTurretIds = computed(() => {
-  const events = props.gameData?.events?.Events || []
-  return getDestroyedTurretIds(events)
+interface MapPing {
+  id: string
+  title: string
+  location: MapEventLocation
+  source: 'live' | 'demo'
+  team?: string
+}
+
+const livePings = ref<MapPing[]>([])
+const pingTimers = new Map<string, ReturnType<typeof setTimeout>>()
+let seenEventIds = new Set((props.diffEvents || []).map((event) => event.id))
+let hasSnapshot = !!props.gameData
+let previousGameTime = gameTime.value
+
+function clearPings() {
+  for (const timer of pingTimers.values()) clearTimeout(timer)
+  pingTimers.clear()
+  livePings.value = []
+}
+
+function addPing(ping: MapPing, duration = 6000) {
+  const existingTimer = pingTimers.get(ping.id)
+  if (existingTimer) clearTimeout(existingTimer)
+  // Keep the board legible when several events arrive in the same poll.
+  livePings.value = [...livePings.value.filter((entry) => entry.id !== ping.id), ping].slice(-3)
+  pingTimers.set(
+    ping.id,
+    setTimeout(() => {
+      livePings.value = livePings.value.filter((entry) => entry.id !== ping.id)
+      pingTimers.delete(ping.id)
+    }, duration),
+  )
+}
+
+watch(
+  [() => props.diffEvents, gameTime],
+  ([events]) => {
+    const currentEvents = events || []
+    const currentIds = new Set(currentEvents.map((event) => event.id))
+    // Loading an existing match (or restarting the demo) establishes a baseline.
+    // Its historical events must never animate as though they just happened.
+    if (!hasSnapshot || gameTime.value < previousGameTime) {
+      hasSnapshot = !!props.gameData
+      seenEventIds = currentIds
+      previousGameTime = gameTime.value
+      clearPings()
+      return
+    }
+    for (const event of currentEvents) {
+      if (seenEventIds.has(event.id) || !isRecentMapEvent(event, gameTime.value)) continue
+      const location = getMapEventLocation(event, players.value)
+      if (location)
+        addPing({
+          id: event.id,
+          title: event.title,
+          location,
+          source: props.isMock ? 'demo' : 'live',
+          team: event.team,
+        })
+    }
+    seenEventIds = currentIds
+    previousGameTime = gameTime.value
+  },
+  { deep: true },
+)
+
+watch(
+  activeAlert,
+  (alert, previousAlert) => {
+    if (previousAlert?.id.startsWith('demo-')) {
+      livePings.value = livePings.value.filter((entry) => entry.id !== previousAlert.id)
+      const timer = pingTimers.get(previousAlert.id)
+      if (timer) clearTimeout(timer)
+      pingTimers.delete(previousAlert.id)
+    }
+    if (!alert) return
+
+    const event = props.diffEvents?.find((entry) => entry.id === alert.id)
+    if (event) {
+      if (!isRecentMapEvent(event, gameTime.value)) return
+      const location = getMapEventLocation(event, players.value)
+      if (location)
+        addPing(
+          {
+            id: alert.id,
+            title: alert.title,
+            location,
+            source: props.isMock ? 'demo' : 'live',
+            team: alert.team,
+          },
+          alert.durationMs,
+        )
+      return
+    }
+
+    // Demo objectives have a known landmark. Demo kills have no spatial data.
+    if (!alert.id.startsWith('demo-')) return
+    const location: MapEventLocation | null =
+      alert.type === 'DRAGON'
+        ? {
+            ...OBJECTIVE_COORDINATES.DRAGON_PIT,
+            kind: 'objective',
+            label: 'Fosse du dragon',
+            indicative: false,
+          }
+        : ['BARON', 'HERALD'].includes(alert.type)
+          ? {
+              ...OBJECTIVE_COORDINATES.BARON_PIT,
+              kind: 'objective',
+              label: 'Fosse du Baron / Héraut',
+              indicative: false,
+            }
+          : null
+    if (location)
+      addPing(
+        { id: alert.id, title: alert.title, location, source: 'demo', team: alert.team },
+        alert.durationMs,
+      )
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(clearPings)
+
+const visiblePings = computed(() =>
+  livePings.value.filter((ping) => ping.id !== props.selectedEvent?.id),
+)
+const roleNames: Record<string, string> = {
+  TOP: 'Top',
+  JUNGLE: 'Jungle',
+  MIDDLE: 'Mid',
+  BOTTOM: 'Bot',
+  UTILITY: 'Support',
+}
+const roleName = (player: RiotPlayer) => roleNames[player.position] || 'Rôle inconnu'
+const pointStyle = (point: { x: number; y: number }) => ({
+  left: `${point.x}%`,
+  top: `${point.y}%`,
 })
+const cleanTitle = (title: string) =>
+  title
+    .replace(/\p{Extended_Pictographic}\uFE0F?/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 
-const players = computed<RiotPlayer[]>(() => {
-  return props.gameData?.allPlayers || []
-})
-
-const lastDragonKill = computed(() => {
-  const events = props.gameData?.events?.Events || []
-  return [...events].reverse().find((e) => e.EventName === 'DragonKill')
-})
-
-const lastBaronKill = computed(() => {
-  const events = props.gameData?.events?.Events || []
-  return [...events].reverse().find((e) => e.EventName === 'BaronKill')
-})
+function championLabel(player: RiotPlayer) {
+  return `${player.championName}, ${roleName(player)}, équipe ${player.team === 'ORDER' ? 'bleue' : 'rouge'}, niveau ${player.level}${player.isDead ? ', éliminé' : ''}. Afficher les détails.`
+}
 </script>
 
 <template>
-  <div data-testid="tactical-minimap"
-    class="relative overflow-hidden rounded-2xl border border-[#785a28]/70 bg-[#091428]/95 p-5 shadow-2xl backdrop-blur-md space-y-4">
-    <!-- Header Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#785a28]/40 pb-3">
-      <div class="flex items-center gap-2.5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#010a13] border border-[#785a28] text-base">
-          🗺️
-        </div>
-        <div>
-          <h2 class="font-cinzel text-base font-bold text-gold-gradient tracking-wide">
-            Faille de l'Invocateur — Carte Tactique
-          </h2>
-          <p class="font-rajdhani text-xs font-semibold text-slate-400">
-            Projection 2D temps réel des positions, tourelles et objectifs neutres
-          </p>
-        </div>
-      </div>
+  <div
+    data-testid="tactical-minimap"
+    class="tactical-map"
+    :class="`tactical-map--${variant}`"
+    role="region"
+    aria-label="Carte tactique de la Faille de l'Invocateur"
+    @keydown.esc="focusedChampion = null"
+  >
+    <img class="map-background" src="/assets/images/sr-map.png" alt="" draggable="false" />
+    <div class="map-texture" aria-hidden="true"></div>
 
-      <div class="flex items-center gap-2">
-        <span
-          class="text-xs px-2.5 py-1 rounded-lg font-rajdhani font-bold bg-[#010a13] border border-cyan-700/60 text-cyan-300">
-          ● 10 Champions en jeu
-        </span>
-        <button type="button" data-testid="close-map-btn" @click="emit('close')"
-          class="flex items-center gap-1 px-3 py-1 text-xs font-rajdhani font-bold rounded-lg border border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white transition shadow">
-          <span>✕</span> Masquer la Carte
-        </button>
-      </div>
+    <div class="map-coordinates" aria-hidden="true"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span></div>
+    <span v-if="isMock" class="map-demo">Simulation</span>
+
+    <div class="map-nexus team-blue" :style="pointStyle(OBJECTIVE_COORDINATES.BLUE_NEXUS)" aria-label="Nexus bleu">
+      <span></span><small>BLUE</small>
+    </div>
+    <div class="map-nexus team-red" :style="pointStyle(OBJECTIVE_COORDINATES.RED_NEXUS)" aria-label="Nexus rouge">
+      <span></span><small>RED</small>
     </div>
 
-    <!-- Map Board Container -->
-    <div class="relative mx-auto w-full max-w-[560px] aspect-square select-none overflow-hidden rounded-2xl border-2 border-[#785a28]/60 shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-black">
-      <!-- Summoner's Rift Map Background Image -->
-      <img src="/assets/images/sr-map.png" alt="Summoner's Rift Map"
-        class="h-full w-full object-cover pointer-events-none opacity-90" />
+    <div data-testid="baron-pit-marker" class="map-objective map-objective--baron" :style="pointStyle(OBJECTIVE_COORDINATES.BARON_PIT)">
+      <span class="objective-token"><img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="" /></span>
+      <span class="objective-name">Baron / Héraut</span>
+    </div>
+    <div data-testid="dragon-pit-marker" class="map-objective map-objective--dragon" :style="pointStyle(OBJECTIVE_COORDINATES.DRAGON_PIT)">
+      <span class="objective-token"><img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="" /></span>
+      <span class="objective-name">Dragon</span>
+    </div>
 
-      <!-- Subtle Hextech Vignette & Grid Lines -->
-      <div class="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-black/50"></div>
-      <div class="absolute inset-0 pointer-events-none border border-[#c8aa6e]/20 rounded-2xl"></div>
+    <div
+      v-for="turret in TURRET_LANDMARKS"
+      :key="turret.id"
+      data-testid="turret-pin"
+      class="map-turret"
+      :class="[turret.team === 'ORDER' ? 'team-blue' : 'team-red', { 'is-destroyed': destroyedTurretIds.has(turret.id) }]"
+      :style="pointStyle(turret)"
+      :title="`Tour ${turret.lane} ${turret.team === 'ORDER' ? 'bleue' : 'rouge'}${destroyedTurretIds.has(turret.id) ? ' détruite' : ''}`"
+    >
+      <RvIcon v-if="destroyedTurretIds.has(turret.id)" name="close" :size="9" />
+      <img v-else :src="getObjectiveIconUrl('tower', turret.team)" alt="" />
+    </div>
 
-      <!-- Blue Base (Order Nexus) -->
-      <div class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none group z-10"
-        :style="{ left: `${OBJECTIVE_COORDINATES.BLUE_NEXUS.x}%`, top: `${OBJECTIVE_COORDINATES.BLUE_NEXUS.y}%` }">
-        <div class="h-6 w-6 rounded-full border border-cyan-400/80 bg-cyan-950/90 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.8)]">
-          <span class="text-[10px] font-bold text-cyan-300">⚔️</span>
-        </div>
-        <span class="text-[9px] font-rajdhani font-bold text-cyan-300 bg-black/80 px-1 rounded mt-0.5 border border-cyan-900">
-          Nexus Bleu
-        </span>
-      </div>
+    <button
+      v-for="player in players"
+      :key="player.summonerName"
+      type="button"
+      data-testid="champion-map-pin"
+      class="champion-pin"
+      :class="[player.team === 'ORDER' ? 'team-blue' : 'team-red', { 'is-dead': player.isDead, 'is-selected': focusedChampion === player.summonerName }]"
+      :style="pointStyle(getChampionMapPosition(player.team, player.position))"
+      :aria-label="championLabel(player)"
+      :aria-pressed="focusedChampion === player.summonerName"
+      :aria-controls="championDetailsId"
+      @click="focusedChampion = player.summonerName"
+      @focus="focusedChampion = player.summonerName"
+    >
+      <span class="champion-portrait">
+        <img :src="getChampionIconUrl(player.championName)" alt="" />
+        <span v-if="player.isDead" class="respawn-timer">{{ player.respawnTimer > 0 ? `${Math.ceil(player.respawnTimer)}s` : 'KO' }}</span>
+      </span>
+      <span v-if="!player.isDead" class="champion-level">{{ player.level }}</span>
+      <span class="champion-name">{{ player.championName }}</span>
+    </button>
 
-      <!-- Red Base (Chaos Nexus) -->
-      <div class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none group z-10"
-        :style="{ left: `${OBJECTIVE_COORDINATES.RED_NEXUS.x}%`, top: `${OBJECTIVE_COORDINATES.RED_NEXUS.y}%` }">
-        <div class="h-6 w-6 rounded-full border border-rose-500/80 bg-rose-950/90 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.8)]">
-          <span class="text-[10px] font-bold text-rose-300">⚔️</span>
-        </div>
-        <span class="text-[9px] font-rajdhani font-bold text-rose-300 bg-black/80 px-1 rounded mt-0.5 border border-rose-900">
-          Nexus Rouge
-        </span>
-      </div>
-
-      <!-- Baron / Herald Pit Landmark -->
-      <div data-testid="baron-pit-marker"
-        class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group z-15 cursor-pointer"
-        :style="{ left: `${OBJECTIVE_COORDINATES.BARON_PIT.x}%`, top: `${OBJECTIVE_COORDINATES.BARON_PIT.y}%` }">
-        <div class="relative h-7 w-7 rounded-full border-2 border-purple-400 bg-purple-950/90 flex items-center justify-center shadow-[0_0_14px_rgba(168,85,247,0.7)] group-hover:scale-110 transition-transform">
-          <img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="Baron" class="h-4 w-4 object-contain" />
-          <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
-          </span>
-        </div>
-        <span class="text-[8px] font-rajdhani font-bold text-purple-200 bg-black/85 px-1 py-0.2 rounded border border-purple-800 shadow mt-0.5 whitespace-nowrap">
-          {{ lastBaronKill ? 'Baron Éliminé' : 'Baron / Héraut' }}
-        </span>
-      </div>
-
-      <!-- Dragon Pit Landmark -->
-      <div data-testid="dragon-pit-marker"
-        class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group z-15 cursor-pointer"
-        :style="{ left: `${OBJECTIVE_COORDINATES.DRAGON_PIT.x}%`, top: `${OBJECTIVE_COORDINATES.DRAGON_PIT.y}%` }">
-        <div class="relative h-7 w-7 rounded-full border-2 border-amber-400 bg-amber-950/90 flex items-center justify-center shadow-[0_0_14px_rgba(245,158,11,0.7)] group-hover:scale-110 transition-transform">
-          <img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="Dragon" class="h-4 w-4 object-contain" />
-          <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-          </span>
-        </div>
-        <span class="text-[8px] font-rajdhani font-bold text-amber-200 bg-black/85 px-1 py-0.2 rounded border border-amber-800 shadow mt-0.5 whitespace-nowrap">
-          {{ lastDragonKill?.DragonType ? `Dragon ${lastDragonKill.DragonType}` : 'Fosse Dragon' }}
-        </span>
-      </div>
-
-      <!-- Turrets Landmarks -->
-      <div v-for="turret in TURRET_LANDMARKS" :key="turret.id" data-testid="turret-pin"
-        class="absolute -translate-x-1/2 -translate-y-1/2 z-10 transition-opacity"
-        :style="{ left: `${turret.x}%`, top: `${turret.y}%` }"
-        :class="destroyedTurretIds.has(turret.id) ? 'opacity-30' : 'opacity-90'">
-        <div class="relative flex items-center justify-center h-4 w-4 rounded-full border shadow"
-          :class="turret.team === 'ORDER'
-            ? (destroyedTurretIds.has(turret.id) ? 'border-slate-600 bg-slate-900' : 'border-cyan-400 bg-cyan-950 shadow-cyan-500/50')
-            : (destroyedTurretIds.has(turret.id) ? 'border-slate-600 bg-slate-900' : 'border-rose-500 bg-rose-950 shadow-rose-500/50')">
-          <span v-if="destroyedTurretIds.has(turret.id)" class="text-[8px] text-slate-500">✕</span>
-          <img v-else :src="getObjectiveIconUrl('tower', turret.team)" alt="Tour" class="h-3 w-3 object-contain" />
-        </div>
-      </div>
-
-      <!-- Champion Pins (10 Players) -->
-      <div v-for="player in players" :key="player.summonerName" data-testid="champion-map-pin"
-        class="absolute -translate-x-1/2 -translate-y-1/2 z-20 group cursor-pointer"
-        :style="{
-          left: `${getChampionMapPosition(player.team, player.position).x}%`,
-          top: `${getChampionMapPosition(player.team, player.position).y}%`,
-        }">
-        <div class="relative flex flex-col items-center">
-          <!-- Champion Circle Token -->
-          <div class="relative h-9 w-9 rounded-full border-2 overflow-hidden shadow-lg transition-transform group-hover:scale-125"
-            :class="[
-              player.team === 'ORDER'
-                ? 'border-cyan-400 shadow-cyan-900/80'
-                : 'border-rose-500 shadow-rose-900/80',
-              player.isDead ? 'grayscale filter brightness-50 border-slate-600' : ''
-            ]">
-            <img :src="getChampionIconUrl(player.championName)" :alt="player.championName"
-              class="h-full w-full object-cover" />
-
-            <!-- Death Overlay with skull and timer -->
-            <div v-if="player.isDead"
-              class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white">
-              <span class="text-[10px]">💀</span>
-              <span v-if="player.respawnTimer > 0" class="text-[8px] font-bold text-rose-300 font-rajdhani leading-none">
-                {{ Math.ceil(player.respawnTimer) }}s
-              </span>
-            </div>
-          </div>
-
-          <!-- Level Badge (when alive) -->
-          <span v-if="!player.isDead"
-            class="absolute -bottom-1 -right-1 rounded-full px-1 text-[8px] font-bold font-rajdhani border"
-            :class="player.team === 'ORDER'
-              ? 'bg-cyan-950 text-cyan-300 border-cyan-500'
-              : 'bg-rose-950 text-rose-300 border-rose-500'">
-            {{ player.level }}
-          </span>
-
-          <!-- Role Icon Badge -->
-          <span v-if="player.position"
-            class="absolute -top-1 -left-1 h-3.5 w-3.5 rounded-full bg-[#010a13] border border-[#785a28] p-[1px] flex items-center justify-center">
-            <img :src="getRoleIconUrl(player.position)" :alt="player.position" class="h-2.5 w-2.5 object-contain" />
-          </span>
-
-          <!-- Champion Name Label -->
-          <span class="mt-0.5 text-[9px] font-rajdhani font-bold px-1 py-0.2 rounded border shadow whitespace-nowrap bg-black/80"
-            :class="player.team === 'ORDER'
-              ? 'border-cyan-900 text-cyan-200'
-              : 'border-rose-900 text-rose-200'">
-            {{ player.championName }}
-          </span>
-
-          <!-- Hover Tooltip Card -->
-          <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col rounded-lg border border-[#785a28] bg-[#010a13]/95 p-2 shadow-xl z-30 pointer-events-none min-w-[130px]">
-            <div class="flex items-center justify-between border-b border-[#785a28]/40 pb-1">
-              <span class="font-bold text-xs text-[#c8aa6e]">{{ player.championName }}</span>
-              <span class="text-[10px] font-rajdhani font-bold" :class="player.team === 'ORDER' ? 'text-cyan-400' : 'text-rose-400'">
-                Niv. {{ player.level }}
-              </span>
-            </div>
-            <div class="text-[10px] text-slate-300 mt-1 font-rajdhani space-y-0.5">
-              <div>KDA : <span class="font-bold text-white">{{ player.scores.kills }}/{{ player.scores.deaths }}/{{ player.scores.assists }}</span></div>
-              <div>CS : <span class="font-bold text-amber-300">{{ player.scores.creepScore }}</span></div>
-              <div>Rôle : <span class="font-bold text-slate-200">{{ player.position || '—' }}</span></div>
-            </div>
-          </div>
+    <div class="map-events" aria-live="polite" aria-atomic="false">
+      <div
+        v-for="ping in visiblePings"
+        :key="ping.id"
+        data-testid="map-event-ping"
+        :data-event-kind="ping.location.kind"
+        :data-event-source="ping.source"
+        class="map-event"
+        :class="[ping.team === 'CHAOS' ? 'team-red' : 'team-blue', { 'event-align-left': ping.location.x > 70, 'event-align-right': ping.location.x < 30, 'event-align-below': ping.location.y < 28 }]"
+        :style="pointStyle(ping.location)"
+        :aria-label="`${cleanTitle(ping.title)} · ${ping.location.label}`"
+      >
+        <span class="event-ring" aria-hidden="true"></span>
+        <div class="event-label">
+          <small><i></i>{{ ping.source === 'demo' ? 'Simulation' : 'À l’instant' }}</small>
+          <strong>{{ cleanTitle(ping.title) }}</strong>
+          <span v-if="ping.location.indicative">Repère par rôle · indicatif</span>
         </div>
       </div>
     </div>
 
-    <!-- Map Legend Bar -->
-    <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-rajdhani border-t border-[#785a28]/40 pt-3 text-slate-400">
-      <div class="flex items-center gap-1.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-cyan-400 border border-cyan-200 shadow-[0_0_6px_rgba(6,182,212,0.8)]"></span>
-        <span class="font-bold text-cyan-300">Équipe Bleue (Order)</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-rose-500 border border-rose-200 shadow-[0_0_6px_rgba(244,63,94,0.8)]"></span>
-        <span class="font-bold text-rose-300">Équipe Rouge (Chaos)</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="Baron" class="h-3 w-3 object-contain" />
-        <span class="font-semibold text-purple-300">Baron / Héraut</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="Dragon" class="h-3 w-3 object-contain" />
-        <span class="font-semibold text-amber-300">Dragons</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <span class="text-[10px]">💀</span>
-        <span class="font-semibold text-slate-300">Mort / En attente de réapparition</span>
+    <div
+      v-if="selectedLocation && selectedEvent"
+      data-testid="map-selected-event"
+      class="map-event map-event--selected"
+      :class="{ 'event-align-left': selectedLocation.x > 70, 'event-align-right': selectedLocation.x < 30, 'event-align-below': selectedLocation.y < 28 }"
+      :style="pointStyle(selectedLocation)"
+    >
+      <span class="event-ring" aria-hidden="true"></span>
+      <div class="event-label">
+        <small>Journal · {{ selectedEvent.formattedTime }}</small>
+        <strong>{{ cleanTitle(selectedEvent.title) }}</strong>
+        <span v-if="selectedLocation.indicative">Repère par rôle · indicatif</span>
       </div>
     </div>
+
+    <div v-if="selectedEvent && !selectedLocation" class="map-unlocated-event" role="status">
+      <strong>{{ cleanTitle(selectedEvent.title) }}</strong>
+      <span>Aucune position disponible pour cet événement.</span>
+    </div>
+
+    <Transition name="map-details">
+      <section v-if="selectedChampion" :id="championDetailsId" data-testid="champion-map-details" class="champion-details" aria-label="Détails du champion sélectionné">
+        <div class="details-heading">
+          <img :src="getChampionIconUrl(selectedChampion.championName)" alt="" />
+          <div><strong>{{ selectedChampion.championName }}</strong><span>{{ roleName(selectedChampion) }} · Niveau {{ selectedChampion.level }}</span></div>
+          <button type="button" class="details-close" aria-label="Fermer les détails du champion" @click="focusedChampion = null"><RvIcon name="close" :size="14" /></button>
+        </div>
+        <dl class="details-stats">
+          <div><dt>K / D / A</dt><dd>{{ selectedChampion.scores.kills }} / {{ selectedChampion.scores.deaths }} / {{ selectedChampion.scores.assists }}</dd></div>
+          <div><dt>CS</dt><dd>{{ selectedChampion.scores.creepScore }}</dd></div>
+          <div><dt>État</dt><dd :class="selectedChampion.isDead ? 'text-dead' : 'text-alive'">{{ selectedChampion.isDead ? `${Math.ceil(selectedChampion.respawnTimer)}s` : 'En vie' }}</dd></div>
+        </dl>
+      </section>
+    </Transition>
+
+    <div class="map-position-note"><RvIcon name="crosshair" :size="12" /><span>Repères par rôle · positions indicatives</span></div>
   </div>
 </template>
+
+<style scoped>
+.tactical-map {
+  --blue: #5ad6e0;
+  --red: #ee8396;
+  --map-gold: #c5ab73;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #081416;
+  color: #dbe5e7;
+  user-select: none;
+}
+.map-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .78; filter: saturate(.48) brightness(.67); pointer-events: none; }
+.map-texture { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 32%, #050e16a6 100%), linear-gradient(#6aa6a509 1px, transparent 1px), linear-gradient(90deg, #6aa6a509 1px, transparent 1px); background-size: auto, 20% 20%, 20% 20%; box-shadow: inset 0 0 45px #04101980; }
+.map-coordinates { position: absolute; inset: 9px 9% auto; display: flex; justify-content: space-between; font: 9px monospace; color: #b7c4c440; }
+.map-demo { position: absolute; top: 13px; right: 13px; color: #c5ab73; background: #101719df; border: 1px solid #c5ab7340; border-radius: 4px; padding: 3px 6px; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.team-blue { --team-color: var(--blue); }
+.team-red { --team-color: var(--red); }
+.map-nexus, .map-objective, .map-turret, .champion-pin, .map-event { position: absolute; transform: translate(-50%, -50%); }
+.map-nexus { display: flex; align-items: center; flex-direction: column; color: var(--team-color); gap: 5px; }
+.map-nexus > span { width: clamp(15px, 3.5cqw, 25px); aspect-ratio: 1; border: 1px solid var(--team-color); transform: rotate(45deg); background: color-mix(in srgb, var(--team-color) 12%, #07101a); box-shadow: 0 0 18px color-mix(in srgb, var(--team-color) 12%, transparent); }
+.map-nexus small { font-size: clamp(7px, 1.35cqw, 10px); letter-spacing: .15em; }
+.map-objective { z-index: 2; display: flex; align-items: center; flex-direction: column; gap: 5px; }
+.map-objective--baron { --objective-color: #bcabe0; }
+.map-objective--dragon { --objective-color: #ddba75; }
+.objective-token { display: grid; place-items: center; width: clamp(25px, 5.5cqw, 40px); aspect-ratio: 1; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--objective-color) 55%, transparent); background: #101922ec; box-shadow: 0 3px 14px #0009; }
+.objective-token img { width: 63%; height: 63%; object-fit: contain; }
+.objective-name { padding: 2px 6px; border-radius: 3px; background: #091219e6; color: var(--objective-color); font-size: clamp(8px, 1.5cqw, 11px); font-weight: 600; white-space: nowrap; }
+.map-turret { z-index: 1; width: clamp(11px, 2.2cqw, 17px); aspect-ratio: 1; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--team-color) 65%, transparent); color: var(--team-color); background: #0a1723; border-radius: 3px; box-shadow: 0 1px 5px #0008; }
+.map-turret img { width: 75%; height: 75%; object-fit: contain; }
+.map-turret.is-destroyed { opacity: .36; border-style: dashed; background: #09121b; }
+.champion-pin { z-index: 4; width: clamp(25px, 5.8cqw, 43px); aspect-ratio: 1; border: 0; border-radius: 50%; padding: 0; background: none; color: var(--team-color); cursor: pointer; transition: filter .18s, box-shadow .18s; outline-offset: 4px; }
+.champion-portrait { display: block; width: 100%; height: 100%; overflow: hidden; border: 2px solid var(--team-color); border-radius: 50%; background: #10212c; box-shadow: 0 2px 8px #000c; }
+.champion-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.champion-pin:hover, .champion-pin:focus-visible, .champion-pin.is-selected { z-index: 6; outline: 2px solid #e6d5a9; }
+.champion-pin.is-dead .champion-portrait { border-color: #6b7280; }
+.champion-pin.is-dead img { filter: grayscale(1) brightness(.45); }
+.respawn-timer { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: clamp(9px, 1.8cqw, 13px); font-weight: 700; text-shadow: 0 1px 4px #000; }
+.champion-level { position: absolute; right: -3px; bottom: -2px; display: grid; place-items: center; min-width: 14px; height: 14px; padding: 0 2px; font-size: 9px; line-height: 1; color: #dcebed; background: #0c1a25; border: 1px solid var(--team-color); border-radius: 4px; }
+.champion-name { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); padding: 1px 4px; background: #08131bd9; color: #e3eef1; border-radius: 3px; font-size: clamp(8px, 1.45cqw, 11px); line-height: 1.35; white-space: nowrap; }
+.map-events { position: absolute; inset: 0; pointer-events: none; }
+.map-event { z-index: 8; width: 1px; height: 1px; pointer-events: none; }
+.event-ring { position: absolute; width: clamp(55px, 14cqw, 95px); aspect-ratio: 1; border: 2px solid var(--team-color, var(--map-gold)); border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, transparent 30%, color-mix(in srgb, var(--team-color, var(--map-gold)) 15%, transparent)); box-shadow: 0 0 30px color-mix(in srgb, var(--team-color, var(--map-gold)) 25%, transparent); animation: event-pulse 1.8s ease-out infinite; }
+.event-label { position: absolute; bottom: clamp(25px, 6cqw, 43px); left: 0; transform: translateX(-50%); display: flex; flex-direction: column; gap: 4px; width: max-content; max-width: min(225px, 55cqw); padding: 9px 12px; border: 1px solid color-mix(in srgb, var(--team-color, var(--map-gold)) 50%, transparent); border-radius: 6px; color: #ecf2f5; background: #08141df5; box-shadow: 0 8px 24px #0007; }
+.event-label small { display: flex; align-items: center; gap: 5px; font-size: 8px; text-transform: uppercase; letter-spacing: .12em; color: var(--team-color, var(--map-gold)); }
+.event-label small i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.event-label strong { font-size: clamp(10px, 2cqw, 13px); line-height: 1.3; font-weight: 600; }
+.event-label > span { font-size: 9px; color: #a8b8c4; }
+.event-align-left .event-label { transform: translateX(-85%); }
+.event-align-right .event-label { transform: translateX(-15%); }
+.event-align-below .event-label { bottom: auto; top: clamp(25px, 6cqw, 43px); }
+.map-event--selected { z-index: 7; }
+.map-event--selected .event-ring { animation: none; border-style: dashed; box-shadow: none; }
+.champion-details { position: absolute; left: 13px; bottom: 47px; z-index: 12; width: min(253px, calc(100% - 26px)); padding: 13px; border: 1px solid #ad966240; border-radius: 9px; background: #0a1723f5; box-shadow: 0 8px 28px #0008; backdrop-filter: blur(12px); }
+.details-heading { display: flex; gap: 9px; align-items: center; }
+.details-heading > img { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #697780; }
+.details-heading > div { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.details-heading strong { font-size: 13px; font-weight: 600; }
+.details-heading span { font-size: 10px; color: #9eacba; }
+.details-close { display: grid; place-items: center; align-self: flex-start; width: 27px; height: 27px; padding: 0; border: 1px solid #ffffff12; border-radius: 5px; color: #aab6c0; background: #ffffff05; cursor: pointer; }
+.details-close:hover { color: #fff; background: #ffffff10; }
+.details-close:focus-visible { outline: 2px solid #c5ab73; outline-offset: 2px; }
+.details-stats { display: flex; justify-content: space-between; gap: 14px; margin: 12px 0 0; padding-top: 9px; border-top: 1px solid #ffffff0c; }
+.details-stats dt { font-size: 8px; text-transform: uppercase; letter-spacing: .08em; color: #8f9dad; }
+.details-stats dd { margin: 4px 0 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+.text-dead { color: var(--red); }
+.text-alive { color: var(--blue); }
+.map-position-note { position: absolute; left: 12px; bottom: 11px; display: flex; align-items: center; gap: 6px; max-width: calc(100% - 24px); padding: 6px 8px; border: 1px solid #ffffff0a; border-radius: 5px; background: #08121beb; color: #a5b3bd; font-size: clamp(8px, 1.65cqw, 11px); pointer-events: none; }
+.map-position-note svg { color: var(--map-gold); flex: none; }
+.map-unlocated-event { position: absolute; z-index: 12; top: 34px; left: 12px; right: 12px; display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #c8aa6e40; border-radius: 4px; background: #0a1723f5; font-size: 11px; color: #b6c3ce; }
+.map-unlocated-event strong { color: #ddc99f; font-family: 'Rajdhani', sans-serif; font-size: 13px; }
+.map-details-enter-active, .map-details-leave-active { transition: opacity .15s, transform .15s; }
+.map-details-enter-from, .map-details-leave-to { opacity: 0; transform: translateY(5px); }
+@keyframes event-pulse { 0% { opacity: .95; transform: translate(-50%, -50%) scale(.72); } 75%, 100% { opacity: .2; transform: translate(-50%, -50%) scale(1.15); } }
+@container (max-width: 360px) { .champion-name { display: none; } .champion-level { min-width: 12px; height: 12px; font-size: 8px; } .objective-name { font-size: 8px; } .map-demo { top: 9px; right: 9px; font-size: 8px; } }
+@media (prefers-reduced-motion: reduce) { .event-ring { animation: none; } .champion-pin, .map-details-enter-active, .map-details-leave-active { transition: none; } }
+</style>

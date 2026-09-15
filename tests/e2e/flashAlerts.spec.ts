@@ -1,65 +1,60 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Focus Radar View & High-Impact Flash Alerts', () => {
-  test.beforeEach(async ({ request }) => {
-    await request.post('/api/riot/mock', {
-      data: { enabled: false },
-    })
-  })
-
-  test('switches to Focus Radar view, renders large map and triggers high-impact flash alerts', async ({
-    page,
-  }) => {
-    // Wait for hydration
-    const initialStatusPromise = page.waitForResponse((res) =>
-      res.url().includes('/api/riot/status'),
+test.describe('Live alerts and map feedback', () => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('/api/riot/mock', { data: { enabled: false } })
+    const initialStatus = page.waitForResponse((response) =>
+      response.url().includes('/api/riot/status'),
     )
     await page.goto('/')
-    await initialStatusPromise
+    await initialStatus
+    await page.getByTestId('mock-toggle-button').click()
+    await expect(page.getByTestId('status-banner')).toContainText('Mode Simulation / Mock actif')
+    await page.getByTestId('view-map-btn').click()
+    await expect(page.getByTestId('radar-large-map')).toBeVisible()
+  })
 
-    // Activate mock mode
-    await page.locator('[data-testid="mock-toggle-button"]').click()
-    await expect(page.locator('[data-testid="status-banner"]')).toContainText('Mode Simulation / Mock actif')
+  test('shows objective alerts on the map and allows dismissing them', async ({ page }) => {
+    const radar = page.getByTestId('focus-radar-view')
+    const simulator = radar.locator('summary').filter({ hasText: 'Tester une alerte' })
 
-    // Switch to Radar & Flash Alert view
-    const radarBtn = page.locator('[data-testid="view-map-btn"]')
-    await expect(radarBtn).toBeVisible()
-    await radarBtn.click()
+    await expect(radar.getByTestId('test-alert-baron')).toBeHidden()
+    await simulator.click()
+    await radar.getByTestId('test-alert-baron').click()
 
-    // Focus Radar view should be displayed
-    const radarView = page.locator('[data-testid="focus-radar-view"]')
-    await expect(radarView).toBeVisible()
-
-    // Large map should be visible
-    const largeMap = page.locator('[data-testid="radar-large-map"]')
-    await expect(largeMap).toBeVisible()
-
-    // Trigger Baron Flash Alert via simulator
-    await page.locator('[data-testid="test-alert-baron"]').click()
-
-    const overlay = page.locator('[data-testid="flash-alert-overlay"]')
+    const overlay = radar.getByTestId('flash-alert-overlay')
     await expect(overlay).toBeVisible()
     await expect(overlay).toContainText('BARON NASHOR')
     await expect(overlay).toContainText('ALERTE ÉVÉNEMENT MAJEUR')
+    await expect(radar.getByTestId('map-event-ping').first()).toBeVisible()
 
-    // Dismiss alert manually
-    await page.locator('[data-testid="dismiss-alert-btn"]').click()
-    await expect(overlay).toHaveCount(0)
+    await overlay.getByTestId('dismiss-alert-btn').click()
+    await expect(overlay).toBeHidden()
 
-    // Trigger Dragon Flash Alert
-    await page.locator('[data-testid="test-alert-dragon"]').click()
-    await expect(overlay).toBeVisible()
+    await radar.getByTestId('test-alert-dragon').click()
     await expect(overlay).toContainText('DRAGON')
+    await expect(
+      radar.locator('[data-testid="map-event-ping"][aria-label*="dragon" i]'),
+    ).toBeVisible()
 
-    // Dismiss again
-    await page.locator('[data-testid="dismiss-alert-btn"]').click()
-    await expect(overlay).toHaveCount(0)
+    // An active alert must leave the navigation usable.
+    await page.getByTestId('view-tactical-btn').click()
+    await expect(page.getByTestId('scoreboard-header')).toBeVisible()
+    const dashboardAlert = page.getByTestId('flash-alert-overlay')
+    await expect(dashboardAlert).toContainText('DRAGON')
+    await dashboardAlert.getByTestId('dismiss-alert-btn').click()
+    await expect(dashboardAlert).toBeHidden()
+  })
 
-    // Test Audio Mute Button in Header
-    const audioBtn = page.locator('[data-testid="audio-toggle-btn"]')
-    await expect(audioBtn).toBeVisible()
-    await expect(audioBtn).toContainText('Audio')
-    await audioBtn.click()
-    await expect(audioBtn).toContainText('Muet')
+  test('keeps the audio setting while switching between the two views', async ({ page }) => {
+    const audioButton = page.getByTestId('audio-toggle-btn')
+    await expect(audioButton).toContainText('Audio')
+    await audioButton.click()
+    await expect(audioButton).toContainText('Muet')
+
+    await page.getByTestId('view-tactical-btn').click()
+    await expect(audioButton).toContainText('Muet')
+    await audioButton.click()
+    await expect(audioButton).toContainText('Audio')
   })
 })

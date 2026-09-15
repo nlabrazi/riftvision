@@ -1,11 +1,7 @@
 import { ref } from 'vue'
 import type { GameDiffEvent } from '#shared/types/diff'
 import type { TeamType } from '#shared/types/riot'
-import {
-  getChampionIconUrl,
-  getItemIconUrl,
-  getObjectiveIconUrl,
-} from '#shared/utils/ddragon'
+import { getChampionIconUrl, getItemIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
 
 export type FlashAlertType =
   | 'DRAGON'
@@ -49,7 +45,7 @@ function getAudioContext(): AudioContext | null {
     }
   }
   if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => { })
+    audioCtx.resume().catch(() => {})
   }
   return audioCtx
 }
@@ -160,6 +156,13 @@ export function playSynthesizedSound(
 }
 
 export function useFlashAlerts() {
+  function clearAlerts() {
+    if (activeTimeout) clearTimeout(activeTimeout)
+    activeTimeout = null
+    alertQueue.value = []
+    activeAlert.value = null
+  }
+
   function dismissCurrentAlert() {
     if (activeTimeout) {
       clearTimeout(activeTimeout)
@@ -255,7 +258,7 @@ export function useFlashAlerts() {
           id: e.id,
           type: 'ACE',
           title: 'ACE ENNEMI ÉLIMINÉ !',
-          subtitle: "Tous les champions adverses sont tombés !",
+          subtitle: 'Tous les champions adverses sont tombés !',
           team: e.team,
           durationMs: 4500,
           soundType: 'ace',
@@ -348,7 +351,7 @@ export function useFlashAlerts() {
       triggerAlert({
         id: `demo-ace-${Date.now()}`,
         type: 'ACE',
-        title: 'ACE ! TOUTE L\'ÉQUIPE ENNEMIE EST DÉTRUITE',
+        title: "ACE ! TOUTE L'ÉQUIPE ENNEMIE EST DÉTRUITE",
         subtitle: 'Tous les champions adverses sont en temps de réapparition !',
         team: 'ORDER',
         durationMs: 4500,
@@ -374,6 +377,7 @@ export function useFlashAlerts() {
     isAudioMuted,
     alertQueue,
     dismissCurrentAlert,
+    clearAlerts,
     triggerAlert,
     toggleAudioMute,
     ingestDiffEvents,
