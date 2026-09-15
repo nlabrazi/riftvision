@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
+import FocusRadarView from '../components/FocusRadarView.vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
 import TacticalMinimap from '../components/TacticalMinimap.vue'
+import { useFlashAlerts } from '../composables/useFlashAlerts'
 import { useRiotLive } from '../composables/useRiotLive'
 
 const {
@@ -10,6 +13,7 @@ const {
   gameData,
   events,
   diffEvents,
+  latestLiveEvents,
   blueEconomy,
   redEconomy,
   goldDifference,
@@ -27,8 +31,20 @@ const {
   togglePolling,
 } = useRiotLive()
 
-const currentView = ref<'tactical' | 'map' | 'diagnostic'>('tactical')
+const { isAudioMuted, toggleAudioMute, ingestDiffEvents } = useFlashAlerts()
+
+const currentView = ref<'tactical' | 'radar' | 'diagnostic'>('tactical')
 const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
+
+watch(
+  () => latestLiveEvents.value,
+  (fresh) => {
+    if (fresh && fresh.length > 0) {
+      ingestDiffEvents(fresh)
+    }
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -39,6 +55,9 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
       style="background-image: url('/assets/images/background.jpg');"></div>
     <div class="fixed inset-0 pointer-events-none bg-gradient-to-b from-[#010a13]/85 via-[#010a13]/90 to-[#010a13] z-0">
     </div>
+
+    <!-- High-Impact Global Flash Alert Overlay -->
+    <FlashAlertOverlay />
 
     <!-- Header -->
     <header
@@ -60,7 +79,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
               </h1>
               <span
                 class="text-xs px-2 py-0.5 rounded font-rajdhani font-bold bg-[#010a13] border border-[#785a28] text-[#c8aa6e]">
-                v0.3.0
+                v1.0.0
               </span>
             </div>
             <p class="text-xs font-rajdhani font-semibold text-[#c8aa6e]/80 tracking-wide">
@@ -75,12 +94,12 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
           <button type="button" data-testid="view-tactical-btn" @click="currentView = 'tactical'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
             :class="currentView === 'tactical' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
-            <span>⚔️</span> Tableau Tactique
+            <span>⚔️</span> Dashboard
           </button>
-          <button v-if="isConnected" type="button" data-testid="view-map-btn" @click="currentView = 'map'"
+          <button v-if="isConnected" type="button" data-testid="view-map-btn" @click="currentView = 'radar'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
-            :class="currentView === 'map' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
-            <span>🗺️</span> Carte Faille
+            :class="currentView === 'radar' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
+            <span>🎯</span> Radar & Alertes
           </button>
           <button type="button" data-testid="view-diagnostic-btn" @click="currentView = 'diagnostic'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
@@ -91,6 +110,16 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 
         <!-- Controls -->
         <div class="flex items-center flex-wrap gap-2.5 font-rajdhani font-bold text-xs">
+          <!-- Audio Mute Toggle Button -->
+          <button type="button" data-testid="audio-toggle-btn" @click="toggleAudioMute"
+            class="px-2.5 py-1.5 rounded-lg transition border flex items-center gap-1.5 shadow-sm"
+            :class="isAudioMuted
+              ? 'bg-slate-900 border-slate-700 text-slate-400'
+              : 'bg-[#010a13] border-[#785a28]/60 text-amber-300 hover:border-[#c8aa6e]'">
+            <span>{{ isAudioMuted ? '🔇' : '🔊' }}</span>
+            <span class="hidden md:inline">{{ isAudioMuted ? 'Muet' : 'Audio ON' }}</span>
+          </button>
+
           <!-- Live Mode Button -->
           <button type="button" data-testid="live-toggle-button"
             @click="toggleLiveMode"
@@ -235,14 +264,16 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         </div>
       </section>
 
-      <!-- VIEW 2: Dedicated Interactive Minimap -->
-      <section v-if="currentView === 'map'" class="space-y-6">
-        <TacticalMinimap
+      <!-- VIEW 2: Focus Radar & Flash Alerts View -->
+      <section v-if="currentView === 'radar'" class="space-y-6">
+        <FocusRadarView
           :game-data="gameData"
           :blue-economy="blueEconomy"
           :red-economy="redEconomy"
+          :gold-difference="goldDifference"
           :diff-events="diffEvents"
-          @close="currentView = 'tactical'"
+          :formatted-game-time="formattedGameTime"
+          @switch-view="(v) => currentView = v"
         />
       </section>
 

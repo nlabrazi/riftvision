@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-01
+
+### ✨ Features
+- **Dual-View Ergonomics (Dashboard vs Focus Radar)**:
+  - Add dedicated **Focus Radar & Alertes** view (`FocusRadarView.vue`) designed specifically for active in-game second-screen usage with zero cognitive overload.
+  - Large-scale centered Summoner's Rift tactical map (460x460) with real-time champion positioning, alive/dead statuses, neutral objectives, and turret states.
+  - Minimalist top HUD displaying only critical match vitals: game clock, team kill scoreboards, and dynamic gold difference lead badge.
+  - Interactive Flash Alert demo test bar (`⚔️ Kill`, `🐉 Dragon`, `👑 Baron`, `🛍️ Power Spike`, `💀 Ace`) for real-time testing and tuning.
+- **High-Impact Flash Alert Engine (`useFlashAlerts.ts` & `FlashAlertOverlay.vue`)**:
+  - High-visibility visual notifications with distinct color themes (Purple for Baron/Ace, Gold/Red for Dragons, Crimson for Kills, Emerald for Legendary Power Spikes).
+  - Queue-based management with auto-dismiss progress bar (3.5s to 5.0s depending on alert priority).
+  - Actor vs Victim avatars with champion portraits, item icons, and gold values.
+  - Non-blocking layout positioned at `top-24` with `pointer-events-none` wrapper to ensure zero UI interception.
+  - Delta-filtered live ingestion (`latestLiveEvents`): historical events on match connection are filtered out, only triggering real-time alerts.
+- **Native Web Audio API Sound Synthesizer**:
+  - Contextual procedural audio cues for Baron, Dragon, Kills, Power Spikes, and Aces.
+  - Zero external MP3/audio assets required, guaranteed zero network latency.
+  - Global audio mute toggle (`🔊 Audio ON` / `🔇 Muet`) persisted in state with visual indicator in header.
+
+### 🧪 Tests
+- Add comprehensive Vitest unit tests for flash alert queueing, auto-dismiss, diff ingestion, item filtering, and mute states (`tests/unit/flashAlerts.test.ts`).
+- Add Playwright E2E tests validating the Focus Radar view, large map rendering, alert trigger & dismiss flow, and audio toggle (`tests/e2e/flashAlerts.spec.ts`).
+
 ## [0.3.0] - 2026-03-01
 
 ### ✨ Features

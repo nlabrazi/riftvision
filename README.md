@@ -60,11 +60,13 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Journal d'événements et de détections dynamique filtrable par catégorie
   - [x] Gestion explicite du mode Live et veille silencieuse (v0.2.1)
   - [x] Tests unitaires et E2E exhaustifs (25 tests Vitest, 6 tests Playwright)
-- [ ] **v1 — Expérience Second Screen Complète**
+- [x] **v1 — Expérience Second Screen Complète**
+  - [x] Double vue ergonomique adaptée : **⚔️ Dashboard Global** vs **🎯 Focus Radar & Alertes** (`FocusRadarView.vue`)
   - [x] Moteur de projection & repères 2D de la Faille (`shared/utils/mapCoordinates.ts`)
-  - [x] Minimap interactive avec pins dynamiques des 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
-  - [ ] Alertes visuelles grand format temporaires (cartes flash)
-  - [ ] Alertes sonores contextuelles via Web Audio API
+  - [x] Minimap interactive grand format avec 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
+  - [x] Bannières Flash Alertes géantes d'impact maximal (slam, lueurs néon, progress bar 4s) (`FlashAlertOverlay.vue`)
+  - [x] Alertes sonores contextuelles via Web Audio API native (aucun fichier MP3 externe, zéro latence)
+  - [x] Suite de tests exhaustifs (31 tests Vitest, 7 tests Playwright)
 - [ ] **v1.5 — Copilote Tactique & Intelligence Prédictive**
   - [ ] Détection des Power Spikes et alertes d'équipements légendaires complétés
   - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)

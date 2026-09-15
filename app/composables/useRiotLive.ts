@@ -14,6 +14,7 @@ export function useRiotLive() {
   const previousGameData = ref<RiotAllGameData | null>(null)
   const events = ref<RiotEvent[]>([])
   const allDiffEvents = ref<GameDiffEvent[]>([])
+  const latestLiveEvents = ref<GameDiffEvent[]>([])
 
   const blueEconomy = ref<TeamEconomySummary>({
     totalItemGold: 0,
@@ -84,6 +85,7 @@ export function useRiotLive() {
       const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
       if (seq !== liveDataSeq) return
       if (res?.success && res.data) {
+        const isFirstSnapshot = previousGameData.value === null
         const diff = computeGameDiff(previousGameData.value, res.data)
         blueEconomy.value = diff.blueEconomy
         redEconomy.value = diff.redEconomy
@@ -94,6 +96,10 @@ export function useRiotLive() {
           const existingIds = new Set(allDiffEvents.value.map((e) => e.id))
           const freshEvents = diff.newEvents.filter((e) => !existingIds.has(e.id))
           allDiffEvents.value = [...freshEvents, ...allDiffEvents.value].slice(0, 100)
+
+          if (!isFirstSnapshot && freshEvents.length > 0) {
+            latestLiveEvents.value = freshEvents
+          }
         }
 
         previousGameData.value = res.data
@@ -138,6 +144,7 @@ export function useRiotLive() {
     gameData.value = null
     events.value = []
     allDiffEvents.value = []
+    latestLiveEvents.value = []
     blueEconomy.value = {
       totalItemGold: 0,
       killCount: 0,
@@ -325,6 +332,7 @@ export function useRiotLive() {
     gameData,
     events,
     diffEvents: allDiffEvents,
+    latestLiveEvents,
     blueEconomy,
     redEconomy,
     goldDifference,
