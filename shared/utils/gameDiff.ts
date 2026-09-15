@@ -193,7 +193,7 @@ export function computeGameDiff(
       ? allEvents.filter((e) => e.EventID > lastSeenEventId)
       : prev === null
         ? allEvents.slice(-5) // On initial load, take last 5 events
-        : []
+        : allEvents
 
   for (const e of rawNewEvents) {
     if (e.EventName === 'ChampionKill') {

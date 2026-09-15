@@ -25,7 +25,7 @@
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🧹 **Outillage performant** : **Biome** pour le linting et le formatage ultra-rapide.
 - 🧪 **Qualité & Tests** : Tests unitaires via **Vitest** et tests E2E via **Playwright**.
-- 🐳 **Docker ready** : Conteneurisé avec support réseau hôte pour joindre le client LoL (`host.docker.internal`).
+- 🐳 **Docker ready** : Conteneurisé avec réseau hôte pour joindre le client LoL (`127.0.0.1:2999`) depuis WSL2 en mode mirrored.
 - 🎮 **Mode Simulation / Mock** : Jeu de données réel embarqué pour tester et développer sans partie active.
 
 ---
@@ -87,10 +87,22 @@ npm run dev
 
 ### Option B : Lancer avec Docker
 
+Cette configuration utilise **Docker Engine dans WSL2**, avec
+`networkingMode=mirrored` dans le fichier `.wslconfig` Windows. Le conteneur partage
+le réseau de WSL pour accéder à l'API du jeu sur `https://127.0.0.1:2999`.
+Nuxt écoute directement sur le port **3000** ; le mode réseau hôte ne nécessite
+pas de mapping `ports`.
+
+Dans `.env`, définir `LIVE_CLIENT_BASE_URL=https://127.0.0.1:2999` (voir
+`.env.example`). Ne pas lancer un autre serveur sur le port 3000 en parallèle.
+
 ```bash
 docker compose up --build
 # L'application est disponible sur http://localhost:3000
 ```
+
+Le dossier généré `.nuxt` et les dépendances du conteneur utilisent des volumes
+Docker dédiés pour ne pas modifier leurs équivalents locaux.
 
 ---
 

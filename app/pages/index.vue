@@ -81,7 +81,8 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 
         <!-- Controls -->
         <div class="flex items-center flex-wrap gap-2.5 font-rajdhani font-bold text-xs">
-          <button type="button" data-testid="mock-toggle-button" @click="status.isMock ? stopMockMode() : startMockMode()"
+          <button type="button" data-testid="mock-toggle-button"
+            @click="status.isMock ? stopMockMode() : startMockMode()"
             class="px-3.5 py-1.5 rounded-lg transition border flex items-center gap-2 shadow-sm" :class="status.isMock
               ? 'bg-rose-950/90 border-rose-500/80 text-rose-200 hover:bg-rose-900 hover:border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
               : 'bg-[#010a13] border-[#785a28]/60 text-[#c8aa6e] hover:border-[#c8aa6e] hover:text-[#f0e6d2]'">
@@ -410,11 +411,11 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
                   </template>
                   <template v-else-if="e.TurretKilled">
                     Tour détruite: <span class="font-semibold text-amber-300">{{ e.TurretKilled }}</span> par {{
-                    e.KillerName }}
+                      e.KillerName }}
                   </template>
                   <template v-else-if="e.DragonType">
                     Dragon <span class="font-semibold text-indigo-300">{{ e.DragonType }}</span> éliminé par {{
-                    e.KillerName }}
+                      e.KillerName }}
                   </template>
                   <template v-else>
                     {{ JSON.stringify(e) }}

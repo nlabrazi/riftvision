@@ -79,7 +79,7 @@ export function useRiotLive() {
     const seq = ++liveDataSeq
     try {
       isLoading.value = true
-      const url = isMockActive ? '/api/riot/live?mock=true' : '/api/riot/live'
+      const url = isMockActive ? '/api/riot/live?mock=true' : '/api/riot/live?mock=false'
       const res = await $fetch<{ success: boolean; data: RiotAllGameData }>(url)
       if (seq !== liveDataSeq) return
       if (res?.success && res.data) {
