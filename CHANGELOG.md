@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-01
+
+### ✨ Features
+- **Interactive Tactical Minimap (Summoner's Rift 2D)**:
+  - Add interactive minimap component (`TacticalMinimap.vue`) on official Summoner's Rift 512x512 canvas (`sr-map.png`).
+  - Real-time 10-champion pin projection with DDragon circular portraits, team borders, level badges, and death/respawn timers.
+  - Interactive neutral objective markers for Dragon pit and Baron/Herald pit with live kill event statuses.
+  - Interactive outer and inner turret landmarks with destroyed/alive state detection based on Riot game events.
+  - Quick action toggle button on tactical dashboard (`data-testid="map-toggle-btn"`) and dedicated header view button (`data-testid="view-map-btn"`) accessible whenever connected in Demo or Live mode.
+  - Standardized 2D map landmark and role coordinate system (`shared/utils/mapCoordinates.ts`).
+
+### 🧪 Tests
+- Add unit tests for 2D role coordinates, objective landmarks, and turret state extraction (`tests/unit/tacticalMap.test.ts`).
+- Add Playwright E2E tests verifying minimap button appearance upon connection, interactive toggle, 10-champion pin rendering, and view switching (`tests/e2e/dashboard.spec.ts`).
+
 ## [0.2.1] - 2026-03-01
 
 ### ✨ Features

@@ -9,6 +9,7 @@ import {
   getObjectiveIconUrl,
   getRoleIconUrl,
 } from '#shared/utils/ddragon'
+import TacticalMinimap from './TacticalMinimap.vue'
 
 const props = defineProps<{
   gameData: RiotAllGameData | null
@@ -21,6 +22,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<(e: 'stop-mock') => void>()
+
+const showMinimap = ref(false)
 
 const roleOrder: Record<string, number> = {
   TOP: 1,
@@ -240,6 +243,36 @@ const filteredEvents = computed(() => {
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Tactical Actions Bar (Map Toggle) -->
+    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#091428]/85 border border-[#785a28]/50 p-3 rounded-2xl shadow-xl backdrop-blur-md">
+      <div class="flex items-center gap-2.5 text-xs font-rajdhani font-semibold text-slate-300">
+        <span class="flex h-2 w-2 rounded-full bg-[#c8aa6e] animate-ping"></span>
+        <span class="font-bold text-gold-gradient uppercase tracking-wider">Radar de la Faille</span>
+        <span class="text-slate-600">|</span>
+        <span class="text-slate-400">Projection 2D des 10 champions, objectifs majeurs et tourelles</span>
+      </div>
+
+      <button type="button" data-testid="map-toggle-btn" @click="showMinimap = !showMinimap"
+        class="flex items-center gap-2 rounded-xl border px-4 py-2 font-rajdhani font-bold text-xs transition shadow-lg"
+        :class="showMinimap
+          ? 'bg-[#c8aa6e] border-[#f0e6d2] text-black shadow-[0_0_15px_rgba(200,170,110,0.5)]'
+          : 'bg-[#010a13] border-[#785a28] text-[#c8aa6e] hover:border-[#c8aa6e] hover:text-[#f0e6d2]'">
+        <span>🗺️</span>
+        <span>{{ showMinimap ? 'Masquer la Carte' : 'Afficher la Carte de la Faille' }}</span>
+      </button>
+    </div>
+
+    <!-- Minimap Display Section -->
+    <section v-if="showMinimap" class="transition-all duration-300">
+      <TacticalMinimap
+        :game-data="gameData"
+        :blue-economy="blueEconomy"
+        :red-economy="redEconomy"
+        :diff-events="diffEvents"
+        @close="showMinimap = false"
+      />
     </section>
 
     <!-- Side-by-Side Teams Tactical Grid -->

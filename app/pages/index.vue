@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
+import TacticalMinimap from '../components/TacticalMinimap.vue'
 import { useRiotLive } from '../composables/useRiotLive'
 
 const {
@@ -26,7 +27,7 @@ const {
   togglePolling,
 } = useRiotLive()
 
-const currentView = ref<'tactical' | 'diagnostic'>('tactical')
+const currentView = ref<'tactical' | 'map' | 'diagnostic'>('tactical')
 const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
 </script>
 
@@ -59,7 +60,7 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
               </h1>
               <span
                 class="text-xs px-2 py-0.5 rounded font-rajdhani font-bold bg-[#010a13] border border-[#785a28] text-[#c8aa6e]">
-                v0.2.0
+                v0.3.0
               </span>
             </div>
             <p class="text-xs font-rajdhani font-semibold text-[#c8aa6e]/80 tracking-wide">
@@ -75,6 +76,11 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
             :class="currentView === 'tactical' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
             <span>⚔️</span> Tableau Tactique
+          </button>
+          <button v-if="isConnected" type="button" data-testid="view-map-btn" @click="currentView = 'map'"
+            class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
+            :class="currentView === 'map' ? 'bg-[#c8aa6e] text-black shadow font-black' : 'text-slate-400 hover:text-white'">
+            <span>🗺️</span> Carte Faille
           </button>
           <button type="button" data-testid="view-diagnostic-btn" @click="currentView = 'diagnostic'"
             class="px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
@@ -229,7 +235,18 @@ const activeTab = ref<'overview' | 'players' | 'events' | 'raw'>('overview')
         </div>
       </section>
 
-      <!-- VIEW 2: Raw Diagnostic Console -->
+      <!-- VIEW 2: Dedicated Interactive Minimap -->
+      <section v-if="currentView === 'map'" class="space-y-6">
+        <TacticalMinimap
+          :game-data="gameData"
+          :blue-economy="blueEconomy"
+          :red-economy="redEconomy"
+          :diff-events="diffEvents"
+          @close="currentView = 'tactical'"
+        />
+      </section>
+
+      <!-- VIEW 3: Raw Diagnostic Console -->
       <section v-if="currentView === 'diagnostic'" class="space-y-4">
         <!-- Navigation Tabs -->
         <div class="flex border-b border-[#785a28]/40 gap-2 font-rajdhani font-bold text-sm">

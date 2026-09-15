@@ -78,4 +78,52 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     await page.locator('[data-testid="view-tactical-btn"]').click()
     await expect(page.locator('[data-testid="scoreboard-header"]')).toBeVisible()
   })
+
+  test('displays and toggles the interactive tactical minimap with champions and objectives', async ({ page }) => {
+    const initialStatusPromise = page.waitForResponse((res) =>
+      res.url().includes('/api/riot/status'),
+    )
+    await page.goto('/')
+    await initialStatusPromise
+
+    // Map view button in header should not be visible when disconnected in standby
+    const headerMapBtn = page.locator('[data-testid="view-map-btn"]')
+    await expect(headerMapBtn).toHaveCount(0)
+
+    // Activate mock simulation mode
+    await page.locator('[data-testid="mock-toggle-button"]').click()
+    await expect(page.locator('[data-testid="status-banner"]')).toContainText('Mode Simulation / Mock actif')
+
+    // Header map button is now visible once connected
+    await expect(headerMapBtn).toBeVisible()
+
+    // Dashboard in-page map toggle button is visible
+    const mapToggleBtn = page.locator('[data-testid="map-toggle-btn"]')
+    await expect(mapToggleBtn).toBeVisible()
+    await expect(mapToggleBtn).toContainText('Afficher la Carte')
+
+    // Click to display minimap
+    await mapToggleBtn.click()
+    const minimap = page.locator('[data-testid="tactical-minimap"]')
+    await expect(minimap).toBeVisible()
+    await expect(minimap).toContainText("Faille de l'Invocateur")
+
+    // Verify 10 champion pins and objective markers
+    await expect(page.locator('[data-testid="champion-map-pin"]')).toHaveCount(10)
+    await expect(page.locator('[data-testid="baron-pit-marker"]')).toBeVisible()
+    await expect(page.locator('[data-testid="dragon-pit-marker"]')).toBeVisible()
+    await expect(page.locator('[data-testid="turret-pin"]').first()).toBeVisible()
+
+    // Close minimap via close button
+    await page.locator('[data-testid="close-map-btn"]').click()
+    await expect(minimap).toHaveCount(0)
+
+    // Switch to dedicated map view via header button
+    await headerMapBtn.click()
+    await expect(minimap).toBeVisible()
+
+    // Return to tactical view
+    await page.locator('[data-testid="view-tactical-btn"]').click()
+    await expect(page.locator('[data-testid="scoreboard-header"]')).toBeVisible()
+  })
 })

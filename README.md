@@ -59,10 +59,10 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Tableau de bord tactique face-à-face (scoreboards, KDA, inventaires 6+1 slots, barres d'économie)
   - [x] Journal d'événements et de détections dynamique filtrable par catégorie
   - [x] Gestion explicite du mode Live et veille silencieuse (v0.2.1)
-  - [x] Tests unitaires et E2E exhaustifs (20 tests Vitest, 5 tests Playwright)
+  - [x] Tests unitaires et E2E exhaustifs (25 tests Vitest, 6 tests Playwright)
 - [ ] **v1 — Expérience Second Screen Complète**
-  - [ ] Moteur d'inférence de zones (déduction Top/Mid/Bot/Jungle/Rivière)
-  - [ ] Minimap vectorielle interactive avec pins dynamiques
+  - [x] Moteur de projection & repères 2D de la Faille (`shared/utils/mapCoordinates.ts`)
+  - [x] Minimap interactive avec pins dynamiques des 10 champions, objectifs et tourelles (`TacticalMinimap.vue`)
   - [ ] Alertes visuelles grand format temporaires (cartes flash)
   - [ ] Alertes sonores contextuelles via Web Audio API
 - [ ] **v1.5 — Copilote Tactique & Intelligence Prédictive**
