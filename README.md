@@ -134,6 +134,20 @@ docker compose up --build
 Le dossier généré `.nuxt` et les dépendances du conteneur utilisent des volumes
 Docker dédiés pour ne pas modifier leurs équivalents locaux.
 
+Le hot reload est actif : les modifications des composants Vue et des styles
+sont appliquées dans le navigateur sans reconstruire l'image. La détection des
+fichiers utilise le polling toutes les 300 ms pour fonctionner sous Docker / WSL2.
+Après une modification de `docker-compose.yml`, appliquer la configuration avec
+`docker compose up -d app`.
+
+L'ajout d'une dépendance nécessite de mettre à jour le volume `node_modules` du
+conteneur, puis de redémarrer Nuxt :
+
+```bash
+docker compose exec app npm ci
+docker compose restart app
+```
+
 ---
 
 ## 🛠️ Scripts Disponibles
