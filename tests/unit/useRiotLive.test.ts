@@ -8,7 +8,10 @@ vi.mock('vue', async (importOriginal) => ({
   onUnmounted: vi.fn(),
 }))
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
 
 describe('useRiotLive', () => {
   it('loads live data and updates the event feed across refreshes without duplicates', async () => {
@@ -113,5 +116,65 @@ describe('useRiotLive', () => {
     expect(live.clientMockMode.value).toBe(false)
     expect(live.isLiveActive.value).toBe(false)
     expect(live.status.value.status).toBe('DISCONNECTED')
+  })
+  it('ignores game data arriving after the user disconnects', async () => {
+    vi.useFakeTimers()
+    let resolveData = (_value: { success: boolean; data: typeof mockGameData }) => {}
+    const pendingData = new Promise<{ success: boolean; data: typeof mockGameData }>((resolve) => {
+      resolveData = resolve
+    })
+    const fetch = vi.fn(async (url: string) =>
+      url.includes('/status') ? { status: 'IN_GAME', isMock: false } : pendingData,
+    )
+    vi.stubGlobal('$fetch', fetch)
+    const live = useRiotLive()
+    const starting = live.startLiveMode()
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/riot/live?mock=false'))
+    live.stopLiveMode()
+    resolveData({ success: true, data: structuredClone(mockGameData) })
+    await starting
+    expect(live.gameData.value).toBeNull()
+    expect(live.status.value.status).toBe('DISCONNECTED')
+    expect(live.isLoading.value).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('resumes automatic updates when starting a new session after a pause', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal(
+      '$fetch',
+      vi.fn(async (url: string) =>
+        url.includes('/status') ? { status: 'DISCONNECTED', isMock: false } : { success: true },
+      ),
+    )
+    const live = useRiotLive()
+    await live.startLiveMode()
+    live.togglePolling()
+    expect(live.isPolling.value).toBe(false)
+    live.stopLiveMode()
+    await live.startLiveMode()
+    expect(live.isPolling.value).toBe(true)
+    expect(vi.getTimerCount()).toBe(1)
+    live.stopLiveMode()
+  })
+
+  it('returns to standby when leaving the demo even if a real game is available', async () => {
+    vi.useFakeTimers()
+    const fetch = vi.fn(async (url: string) => {
+      if (url.includes('/status'))
+        return url.includes('mock=true')
+          ? { status: 'MOCK', isMock: true }
+          : { status: 'IN_GAME', isMock: false }
+      return { success: true, data: structuredClone(mockGameData) }
+    })
+    vi.stubGlobal('$fetch', fetch)
+    const live = useRiotLive()
+    await live.startMockMode()
+    expect(live.gameData.value).not.toBeNull()
+    await live.stopMockMode()
+    expect(live.gameData.value).toBeNull()
+    expect(live.status.value.status).toBe('DISCONNECTED')
+    expect(live.isLiveActive.value).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
   })
 })

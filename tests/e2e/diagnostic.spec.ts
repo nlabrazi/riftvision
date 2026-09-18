@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mockGameData } from '../../server/data/mockGame'
 
 test.describe('Connection controls and diagnostics', () => {
   test.beforeEach(async ({ page, request }) => {
@@ -6,7 +7,7 @@ test.describe('Connection controls and diagnostics', () => {
     const initialStatus = page.waitForResponse((response) =>
       response.url().includes('/api/riot/status'),
     )
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatus
   })
 
@@ -26,7 +27,7 @@ test.describe('Connection controls and diagnostics', () => {
     // Portfolio link
     const portfolioLink = footer.locator('a[href="https://nabster.dev"]').first()
     await expect(portfolioLink).toBeVisible()
-    await expect(footer).toContainText('nabster.dev')
+    await expect(portfolioLink).toContainText('Nabster')
 
     // GitHub Repo link
     const repoLink = footer.locator('a[href="https://github.com/nlabrazi/riftvision"]')
@@ -41,20 +42,21 @@ test.describe('Connection controls and diagnostics', () => {
     await expect(mailLink).toBeVisible()
   })
 
-  test('opens diagnostics from standby and returns to either main view', async ({ page }) => {
-    await expect(page.getByTestId('view-tactical-btn')).toBeVisible()
-    await expect(page.getByTestId('view-map-btn')).toBeVisible()
+  test('guides the first visit and keeps diagnostics behind help', async ({ page }) => {
+    await expect(
+      page.getByRole('button', { name: 'Connecter ma partie', exact: true }),
+    ).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Explorer la démo' })).toHaveCount(1)
+    await expect(page.getByTestId('view-map-btn')).toHaveCount(0)
+    await expect(page.getByTestId('audio-toggle-btn')).toHaveCount(0)
     await page.getByTestId('view-diagnostic-btn').click()
+    await expect(page.getByRole('heading', { name: 'Connecter votre partie' })).toBeVisible()
+    await expect(page.getByTestId('tab-overview')).toBeHidden()
+    await page.getByText('Diagnostic technique', { exact: false }).click()
     await expect(page.getByTestId('tab-overview')).toBeVisible()
     await expect(page.getByTestId('tab-raw')).toBeVisible()
-
-    await page.getByTestId('view-map-btn').click()
-    await expect(page.getByTestId('tab-overview')).toBeHidden()
-    await expect(page.getByTestId('status-banner')).toContainText(
-      'En attente du client League of Legends',
-    )
-
-    await page.getByTestId('view-tactical-btn').click()
+    await page.getByTestId('close-help-btn').click()
+    await expect(page.getByTestId('status-banner')).toContainText('Aucune partie connectée')
     await expect(page.getByTestId('mock-toggle-button')).toBeVisible()
   })
 
@@ -62,8 +64,9 @@ test.describe('Connection controls and diagnostics', () => {
     const mockButton = page.getByTestId('mock-toggle-button')
     const banner = page.getByTestId('status-banner')
     await mockButton.click()
-    await expect(banner).toContainText('Mode Simulation / Mock actif')
+    await expect(banner).toContainText('Démo · exemple de partie à 16:45')
     await page.getByTestId('view-diagnostic-btn').click()
+    await page.getByText('Diagnostic technique', { exact: false }).click()
 
     await page.getByTestId('tab-players').click()
     await expect(page.getByText('Darius', { exact: true })).toBeVisible()
@@ -74,23 +77,61 @@ test.describe('Connection controls and diagnostics', () => {
     await expect(page.getByText('FirstBlood', { exact: true })).toBeVisible()
     await expect(page.getByText('Chemtech')).toBeVisible()
 
+    await page.getByTestId('close-help-btn').click()
     await mockButton.click()
-    await expect(banner).toContainText('En attente du client League of Legends')
-    await page.getByTestId('view-tactical-btn').click()
+    await expect(banner).toContainText('Aucune partie connectée')
     await expect(page.getByTestId('scoreboard-header')).toBeHidden()
   })
 
   test('starts in standby and enables live listening explicitly', async ({ page }) => {
     const banner = page.getByTestId('status-banner')
     const liveButton = page.getByTestId('live-toggle-button')
-    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(banner).toContainText('Aucune partie connectée')
     await expect(page.getByText('Dernière erreur de connexion', { exact: false })).toHaveCount(0)
 
     await liveButton.click()
-    await expect(liveButton).toContainText('Live')
-    await expect(banner).toContainText('Recherche de partie en cours')
+    await expect(liveButton).toContainText('Annuler la recherche')
+    await expect(banner).toContainText('Recherche de votre partie')
 
     await liveButton.click()
-    await expect(banner).toContainText('En attente du client League of Legends')
+    await expect(banner).toContainText('Aucune partie connectée')
   })
+})
+
+test('connects a match, makes a paused session recoverable and disconnects', async ({ page }) => {
+  let gameAvailable = false
+  let snapshots = 0
+  await page.route('**/api/riot/status?mock=false', (route) =>
+    route.fulfill({
+      json: { status: gameAvailable ? 'IN_GAME' : 'DISCONNECTED', isMock: false },
+    }),
+  )
+  await page.route('**/api/riot/live?mock=false', (route) => {
+    snapshots++
+    return route.fulfill({ json: { success: true, data: mockGameData } })
+  })
+  const initial = page.waitForResponse((response) => response.url().includes('/api/riot/status'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await initial
+  gameAvailable = true
+  await page.getByRole('button', { name: 'Connecter ma partie', exact: true }).click()
+  await expect(page.getByTestId('scoreboard-header')).toBeVisible()
+  await expect(page.getByTestId('status-banner')).toContainText('mise à jour automatique')
+  await expect(page.getByTestId('mock-toggle-button')).toHaveCount(0)
+  await expect(page.getByTestId('polling-toggle-btn')).toHaveCount(0)
+
+  await page.getByTestId('view-diagnostic-btn').click()
+  await page.getByText('Diagnostic technique', { exact: false }).click()
+  await page.getByRole('button', { name: 'Mettre le suivi en pause' }).click()
+  await page.getByTestId('close-help-btn').click()
+  await expect(page.getByTestId('status-banner')).toContainText('Suivi en pause')
+  const pausedSnapshots = snapshots
+  await page.getByRole('button', { name: 'Reprendre le suivi' }).click()
+  await expect.poll(() => snapshots).toBeGreaterThan(pausedSnapshots)
+  await expect(page.getByTestId('status-banner')).toContainText('mise à jour automatique')
+
+  await page.getByRole('button', { name: 'Déconnecter', exact: true }).click()
+  await expect(page.getByTestId('status-banner')).toContainText('Aucune partie connectée')
+  await expect(page.getByTestId('scoreboard-header')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Connecter ma partie', exact: true })).toBeVisible()
 })

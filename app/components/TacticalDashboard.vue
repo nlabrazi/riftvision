@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
+import { computed } from 'vue'
+import type { CombatLogFilter, GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
 import { getChampionIconUrl, getItemIconUrl, getRoleIconUrl } from '#shared/utils/ddragon'
 import CombatLog from './CombatLog.vue'
@@ -22,11 +22,12 @@ const props = withDefaults(
 )
 
 defineEmits<{
-  'stop-mock': []
   'switch-view': [view: 'radar']
 }>()
 
-const selectedEvent = ref<GameDiffEvent | null>(null)
+const selectedEvent = defineModel<GameDiffEvent | null>('selectedEvent', { default: null })
+const filter = defineModel<CombatLogFilter>('filter', { default: 'all' })
+const search = defineModel<string>('search', { default: '' })
 const roleOrder: Record<string, number> = { TOP: 1, JUNGLE: 2, MIDDLE: 3, BOTTOM: 4, UTILITY: 5 }
 const roleLabels: Record<string, string> = {
   TOP: 'Top',
@@ -46,11 +47,10 @@ const teams = computed(() => [
   {
     id: 'ORDER',
     name: 'Équipe Bleue',
-    label: 'Order',
     color: 'blue',
     players: playersFor('ORDER'),
   },
-  { id: 'CHAOS', name: 'Équipe Rouge', label: 'Chaos', color: 'red', players: playersFor('CHAOS') },
+  { id: 'CHAOS', name: 'Équipe Rouge', color: 'red', players: playersFor('CHAOS') },
 ])
 
 function inventory(player: RiotPlayer) {
@@ -83,11 +83,11 @@ function onChampionError(event: Event) {
           <button
             type="button"
             class="rv-button expand-map"
-            data-testid="map-toggle-btn"
+            data-testid="view-map-btn"
             @click="$emit('switch-view', 'radar')"
           >
             <RvIcon name="expand" :size="15" />
-            <span>Vue immersive</span>
+            <span>Agrandir la carte</span>
           </button>
         </header>
 
@@ -115,12 +115,15 @@ function onChampionError(event: Event) {
           </template>
           <template v-else>
             <RvIcon name="crosshair" :size="13" />
-            <span>Sélectionnez un événement dans le journal.</span>
+            <span>Sélectionnez un champion ou un événement du journal pour en savoir plus.</span>
           </template>
         </footer>
       </section>
 
       <CombatLog
+        v-model:filter="filter"
+        v-model:search="search"
+        :is-mock="isMock"
         :events="diffEvents"
         :is-live="isPolling"
         :selected-event-id="selectedEvent?.id"
@@ -133,7 +136,7 @@ function onChampionError(event: Event) {
         <span class="rv-eyebrow">Les forces en présence</span>
         <h2>Équipes & inventaires</h2>
       </div>
-      <span class="rosters-hint">KDA · CS · 6 objets + bijou</span>
+      <span class="rosters-hint">Éliminations / morts / assistances · Sbires · Objets</span>
     </div>
 
     <div class="teams-grid">
@@ -146,7 +149,7 @@ function onChampionError(event: Event) {
         :class="`team-${team.color}`"
       >
         <header class="team-heading">
-          <div class="team-name"><span class="team-dot" /><h3>{{ team.name }}</h3><span class="team-side">{{ team.label }}</span></div>
+          <div class="team-name"><span class="team-dot" /><h3>{{ team.name }}</h3></div>
           <span class="alive-count">{{ team.players.filter(player => !player.isDead).length }} / {{ team.players.length }} en vie</span>
         </header>
 

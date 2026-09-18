@@ -81,12 +81,14 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 
 ---
 
-## Utiliser les deux vues
+## Suivre une partie
 
-- **Dashboard** : carte et journal de combat visibles ensemble, avec les scores, objectifs et inventaires des équipes. Filtrez le journal ou recherchez un champion, puis sélectionnez un événement pour afficher son repère lorsqu'il peut être localisé.
-- **Carte immersive** : la carte utilise la hauteur disponible. Le bouton **Journal** masque le panneau latéral ; **Plein écran** permet de consacrer l'écran à cette vue. Utilisez le même bouton ou `Échap` pour quitter le plein écran.
-- **Alertes** : les nouveaux événements apparaissent dans le panneau d'alertes et, lorsqu'ils sont localisables, sur la carte. En simulation, **Tester une alerte** permet de vérifier le rendu et le son.
-- **Connexion** : activez le Live pendant une partie ou explorez la simulation. La pause suspend la synchronisation ; le bouton audio coupe les sons. Le diagnostic et les données brutes restent disponibles via l'icône de réglages.
+1. **Connecter ma partie** : lancez une partie de League of Legends sur l’ordinateur où RiftVision est installé, puis connectez-la depuis l’accueil. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
+2. **Explorer la démo** : sans partie en cours, découvrez un exemple figé à 16:45. Le bandeau permet de tester une alerte, de connecter votre propre partie ou de quitter la démo.
+3. **Suivre le tableau de bord** : consultez la carte, les événements, les scores et les inventaires. Sélectionnez un champion ou un événement pour afficher son détail.
+4. **Agrandir la carte** : depuis la carte, passez à un affichage plus large, masquez le journal ou activez le plein écran. Revenez au tableau de bord avec le bouton de retour. La recherche, le filtre et l’événement sélectionné sont conservés entre ces affichages et lors d’un passage dans l’aide.
+
+**Son et aide :** le bouton audio indique si le son est activé. **Aide et réglages** explique la connexion et la lecture des données. Le volet **Diagnostic technique** regroupe les données brutes, la vérification de connexion, la pause du suivi et les tests détaillés d’alertes en démo. Si le suivi est en pause, le bandeau de partie permet de le reprendre directement.
 
 **Lecture de la carte :** les données exploitées ne fournissent pas les coordonnées des champions. Leurs positions sont des repères indicatifs par rôle ; les alertes d'objectifs et de tourelles s'appuient sur les repères correspondants. La valeur des inventaires sert d'indicateur d'économie et ne représente pas l'or total gagné.
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import type { GameDiffEvent, SoundEffectKey, TeamEconomySummary } from '#shared/types/diff'
+import type { CombatLogFilter, GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData } from '#shared/types/riot'
-import { type FlashAlertType, useFlashAlerts } from '../composables/useFlashAlerts'
+import { useFlashAlerts } from '../composables/useFlashAlerts'
 import CombatLog from './CombatLog.vue'
 import FlashAlertOverlay from './FlashAlertOverlay.vue'
 import MatchScoreboard from './MatchScoreboard.vue'
@@ -23,61 +23,16 @@ withDefaults(
   { isMock: false, isPolling: true },
 )
 
-const emit = defineEmits<(e: 'switch-view', view: 'tactical' | 'diagnostic') => void>()
-const { triggerDemoAlert, activeAlert, isAudioMuted, toggleAudioMute } = useFlashAlerts()
+const emit = defineEmits<(e: 'switch-view', view: 'tactical') => void>()
+const { activeAlert, isAudioMuted, toggleAudioMute } = useFlashAlerts()
 const radarRoot = ref<HTMLElement | null>(null)
 const showJournal = ref(true)
 const isFullscreen = ref(false)
 const fullscreenAvailable = ref(false)
 const fullscreenError = ref('')
-const selectedEvent = ref<GameDiffEvent | null>(null)
-const demoTypes: Array<{
-  type: FlashAlertType
-  id: string
-  label: string
-  soundKey?: SoundEffectKey
-}> = [
-  { type: 'FIRST_BLOOD', id: 'firstblood', label: 'First Blood', soundKey: 'firstblood' },
-  { type: 'MULTIKILL', id: 'doublekill', label: 'Double Kill', soundKey: 'doublekill' },
-  { type: 'MULTIKILL', id: 'triplekill', label: 'Triple Kill', soundKey: 'triplekill' },
-  { type: 'MULTIKILL', id: 'megakill', label: 'Quadra (Mega)', soundKey: 'megakill' },
-  { type: 'MULTIKILL', id: 'ultrakill', label: 'Penta (Ultra)', soundKey: 'ultrakill' },
-  { type: 'MULTIKILL', id: 'monsterkill', label: 'Monster Kill', soundKey: 'monsterkill' },
-  { type: 'KILL_STREAK', id: 'killingspree', label: 'Killing Spree', soundKey: 'killingspree' },
-  { type: 'KILL_STREAK', id: 'godlike', label: 'Godlike', soundKey: 'godlike' },
-  { type: 'KILL_STREAK', id: 'ludicrouskill', label: 'Ludicrous Kill', soundKey: 'ludicrouskill' },
-  { type: 'KILL', id: 'headshot', label: 'Solo Kill (Headshot)', soundKey: 'headshot' },
-  {
-    type: 'DOMINATING',
-    id: 'blue_dominating',
-    label: 'Blue Dominating',
-    soundKey: 'blue_team_dominating',
-  },
-  {
-    type: 'DOMINATING',
-    id: 'red_dominating',
-    label: 'Red Dominating',
-    soundKey: 'red_team_dominating',
-  },
-  {
-    type: 'GAME_END',
-    id: 'blue_winner',
-    label: 'Victoire Bleue',
-    soundKey: 'blue_team_is_the_winner',
-  },
-  {
-    type: 'GAME_END',
-    id: 'red_winner',
-    label: 'Victoire Rouge',
-    soundKey: 'red_team_is_the_winner',
-  },
-  { type: 'EXECUTE', id: 'humiliating', label: 'Mort humiliante', soundKey: 'humiliating_defeat' },
-  { type: 'KILL', id: 'kill', label: 'Combat standard' },
-  { type: 'DRAGON', id: 'dragon', label: 'Dragon' },
-  { type: 'BARON', id: 'baron', label: 'Baron' },
-  { type: 'ITEM', id: 'item', label: 'Power spike' },
-  { type: 'ACE', id: 'ace', label: 'Ace' },
-]
+const selectedEvent = defineModel<GameDiffEvent | null>('selectedEvent', { default: null })
+const filter = defineModel<CombatLogFilter>('filter', { default: 'all' })
+const search = defineModel<string>('search', { default: '' })
 
 function syncFullscreen() {
   isFullscreen.value = document.fullscreenElement === radarRoot.value
@@ -123,19 +78,20 @@ onUnmounted(() => {
     :class="{ 'radar-workspace--fullscreen': isFullscreen }">
     <div class="radar-toolbar">
       <div class="radar-title">
-        <button type="button" class="rv-icon-button" aria-label="Retour au dashboard" title="Retour au dashboard"
+        <button type="button" class="rv-button" data-testid="view-tactical-btn"
           @click="returnToDashboard">
-          <RvIcon name="arrow-left" :size="17" />
+          <RvIcon name="arrow-left" :size="17" /><span>Revenir au tableau de bord</span>
         </button>
-        <h2>Carte immersive</h2><span class="rv-eyebrow">FAILLE DE L’INVOCATEUR</span>
+        <h2 class="sr-only">Carte agrandie</h2>
       </div>
       <div class="radar-tools">
-        <span v-if="!isPolling" class="paused-label">Synchronisation en pause</span>
-        <button type="button" data-testid="radar-journal-toggle" class="rv-button" :aria-pressed="showJournal"
+        <span v-if="isFullscreen && isMock" class="paused-label">Démo · données figées</span>
+        <span v-else-if="isFullscreen && !isPolling" class="paused-label">Suivi en pause</span>
+        <button type="button" data-testid="radar-journal-toggle" class="rv-button" :aria-expanded="showJournal"
           aria-controls="radar-journal" @click="showJournal = !showJournal">
-          <RvIcon name="activity" :size="16" /><span>Journal</span>
+          <RvIcon name="activity" :size="16" /><span>{{ showJournal ? 'Masquer le journal' : 'Afficher le journal' }}</span>
         </button>
-        <button type="button" data-testid="radar-audio-toggle" class="rv-icon-button" :aria-pressed="!isAudioMuted"
+        <button v-if="isFullscreen" type="button" data-testid="radar-audio-toggle" class="rv-icon-button" :aria-pressed="!isAudioMuted"
           :aria-label="isAudioMuted ? 'Activer les alertes sonores' : 'Couper les alertes sonores'"
           :title="isAudioMuted ? 'Activer le son' : 'Couper le son'" @click="toggleAudioMute">
           <RvIcon :name="isAudioMuted ? 'volume-off' : 'volume'" :size="17" />
@@ -168,22 +124,24 @@ onUnmounted(() => {
           aria-hidden="true"></span>
       </div>
 
-      <aside v-if="showJournal" id="radar-journal" data-testid="radar-alert-panel" class="radar-sidebar">
+      <aside v-show="showJournal" id="radar-journal" data-testid="radar-alert-panel" class="radar-sidebar">
         <div class="radar-live-alert rv-panel">
-          <div class="alert-section-heading"><span class="rv-eyebrow">ALERTES EN DIRECT</span><span class="status-dot"
-              :class="{ 'status-dot--live': isPolling }"></span></div>
-          <FlashAlertOverlay inline />
+          <div class="alert-section-heading"><span class="rv-eyebrow">{{ isMock ? 'APERÇU DES ALERTES' : 'ALERTES DE PARTIE' }}</span><span class="status-dot"
+              :class="{ 'status-dot--live': isPolling && !isMock }"></span></div>
+          <FlashAlertOverlay v-if="showJournal" inline />
           <div v-if="!activeAlert" class="alert-idle">
             <span class="alert-idle-symbol">
               <RvIcon name="crosshair" :size="24" />
             </span>
-            <strong v-if="isPolling">À l’écoute de la Faille</strong>
+            <strong v-if="isMock">Découvrez les alertes</strong>
+            <strong v-else-if="isPolling">À l’écoute de la Faille</strong>
             <strong v-else>Synchronisation en pause</strong>
-            <p v-if="isPolling">Les moments décisifs s’affichent ici et sur la carte.</p>
-            <p v-else>Reprenez la synchronisation pour recevoir les nouveaux événements.</p>
+            <p v-if="isMock">{{ isFullscreen ? 'Quittez le plein écran pour tester une alerte depuis le bandeau de démo.' : 'Utilisez « Tester une alerte » dans le bandeau de démo pour voir un exemple.' }}</p>
+            <p v-else-if="isPolling">Les moments décisifs s’affichent ici et sur la carte.</p>
+            <p v-else>Reprenez le suivi pour recevoir les nouveaux événements.</p>
           </div>
         </div>
-        <CombatLog :events="diffEvents" :selected-event-id="selectedEvent?.id" :is-live="isPolling" compact
+        <CombatLog v-model:filter="filter" v-model:search="search" :is-mock="isMock" :events="diffEvents" :selected-event-id="selectedEvent?.id" :is-live="isPolling" compact
           @select-event="selectedEvent = $event" />
       </aside>
     </div>
@@ -191,7 +149,7 @@ onUnmounted(() => {
     <div class="radar-bottom-bar">
       <div v-if="selectedEvent" class="radar-selection">
         <span>{{ selectedEvent.formattedTime }} · {{ selectedEvent.description }}</span>
-        <button type="button" class="rv-icon-button" aria-label="Désélectionner l’événement"
+        <button type="button" class="rv-icon-button" aria-label="Désélectionner l'événement"
           @click="selectedEvent = null">
           <RvIcon name="close" :size="14" />
         </button>
@@ -199,26 +157,14 @@ onUnmounted(() => {
       <span v-else class="radar-bottom-hint">
         <RvIcon name="crosshair" :size="13" />Sélectionnez un champion ou un événement pour afficher son détail.
       </span>
-      <details v-if="isMock" class="alert-simulator">
-        <summary>
-          <RvIcon name="flask" :size="14" /><span>Tester une alerte</span>
-          <RvIcon name="chevron-down" :size="13" />
-        </summary>
-        <div class="simulator-menu">
-          <span class="rv-eyebrow">SIMULATION VISUELLE & SONORE</span>
-          <div class="simulator-buttons">
-            <button v-for="demo in demoTypes" :key="demo.id" type="button" :data-testid="`test-alert-${demo.id}`"
-              class="rv-button" @click="triggerDemoAlert(demo.type, demo.soundKey)">{{ demo.label }}</button>
-          </div>
-        </div>
-      </details>
+
     </div>
   </section>
 </template>
 
 <style scoped>
 .radar-workspace {
-  height: calc(100dvh - 128px);
+  height: calc(100dvh - 210px);
   min-height: 530px;
   display: flex;
   flex-direction: column;
@@ -423,45 +369,6 @@ onUnmounted(() => {
   padding: 4px;
 }
 
-.alert-simulator {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.alert-simulator summary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  list-style: none;
-  color: #bba371;
-  font: 600 12px 'Rajdhani', sans-serif;
-  padding: 5px;
-}
-
-.alert-simulator summary::-webkit-details-marker {
-  display: none;
-}
-
-.simulator-menu {
-  position: absolute;
-  z-index: 50;
-  bottom: calc(100% + 12px);
-  right: 0;
-  width: 280px;
-  background: #101c29;
-  border: 1px solid #c8aa6e40;
-  box-shadow: 0 12px 36px #0009;
-  padding: 16px;
-  border-radius: 6px;
-}
-
-.simulator-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
 .fullscreen-error {
   color: #e6b974;
   font-size: 12px;
@@ -476,7 +383,7 @@ onUnmounted(() => {
 
 @media (max-width: 1150px) {
   .radar-workspace {
-    height: calc(100dvh - 187px);
+    height: calc(100dvh - 230px);
   }
 
   .radar-title .rv-eyebrow {
@@ -551,10 +458,6 @@ onUnmounted(() => {
   .radar-bottom-bar {
     flex-wrap: wrap;
     align-items: flex-start;
-  }
-
-  .alert-simulator {
-    margin-left: auto;
   }
 
   .radar-workspace:fullscreen {
