@@ -19,6 +19,28 @@ test.describe('Connection controls and diagnostics', () => {
     )
   })
 
+  test('displays portfolio, repository, contact, and X links in footer', async ({ page }) => {
+    const footer = page.locator('footer.app-footer')
+    await expect(footer).toBeVisible()
+
+    // Portfolio link
+    const portfolioLink = footer.locator('a[href="https://nabster.dev"]').first()
+    await expect(portfolioLink).toBeVisible()
+    await expect(footer).toContainText('nabster.dev')
+
+    // GitHub Repo link
+    const repoLink = footer.locator('a[href="https://github.com/nlabrazi/riftvision"]')
+    await expect(repoLink).toBeVisible()
+
+    // Twitter / X link
+    const xLink = footer.locator('a[href="https://x.com/Nabil71405502"]')
+    await expect(xLink).toBeVisible()
+
+    // Contact link
+    const mailLink = footer.locator('a[href="mailto:na.labrazi@gmail.com"]')
+    await expect(mailLink).toBeVisible()
+  })
+
   test('opens diagnostics from standby and returns to either main view', async ({ page }) => {
     await expect(page.getByTestId('view-tactical-btn')).toBeVisible()
     await expect(page.getByTestId('view-map-btn')).toBeVisible()

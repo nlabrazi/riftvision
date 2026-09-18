@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
+import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
@@ -40,6 +41,14 @@ const statusText = computed(() => {
   if (status.value.status === 'IN_GAME') return 'Partie en cours'
   if (isLiveActive.value) return 'Recherche de partie en cours…'
   return 'En attente du client League of Legends'
+})
+const viewEyebrow = computed(() => {
+  return currentView.value === 'diagnostic' ? 'OUTILS DE CONNEXION' : 'CENTRE TACTIQUE'
+})
+const viewHeading = computed(() => {
+  if (currentView.value === 'diagnostic') return 'Diagnostic API'
+  if (currentView.value === 'radar') return 'Carte immersive'
+  return 'Vue d’ensemble'
 })
 
 async function changeMode(action: () => Promise<void>) {
@@ -128,8 +137,8 @@ onUnmounted(clearAlerts)
     <main id="main-content" tabindex="-1" class="app-main" :class="{ 'app-main--immersive': isImmersive }">
       <div class="workspace-heading" :class="{ 'workspace-heading--immersive': isImmersive }">
         <div v-if="!isImmersive" class="workspace-title">
-          <p class="rv-eyebrow">{{ currentView === 'diagnostic' ? 'OUTILS DE CONNEXION' : 'CENTRE TACTIQUE' }}</p>
-          <h2>{{ currentView === 'diagnostic' ? 'Diagnostic API' : currentView === 'radar' ? 'Carte immersive' : 'Vue d’ensemble' }}</h2>
+          <p class="rv-eyebrow">{{ viewEyebrow }}</p>
+          <h2>{{ viewHeading }}</h2>
         </div>
         <div class="session-toolbar">
           <div data-testid="status-banner" class="session-status" role="status">
@@ -224,12 +233,6 @@ onUnmounted(clearAlerts)
       <FlashAlertOverlay v-if="!isImmersive" />
     </main>
 
-    <footer class="app-footer">
-      <div class="footer-brand">RIFTVISION <span>SECOND SCREEN COMPANION</span></div>
-      <p>RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone
-        officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties
-        are
-        trademarks or registered trademarks of Riot Games, Inc.</p>
-    </footer>
+    <AppFooter />
   </div>
 </template>
