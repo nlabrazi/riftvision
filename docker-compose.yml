@@ -12,6 +12,9 @@ services:
     environment:
       LIVE_CLIENT_BASE_URL: "${LIVE_CLIENT_BASE_URL:-https://127.0.0.1:2999}"
       NODE_ENV: development
+      # Détection fiable des modifications du volume monté sous Docker / WSL2.
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
     volumes:
       - ./:/app
       - node_modules:/app/node_modules

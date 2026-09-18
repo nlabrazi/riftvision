@@ -175,7 +175,12 @@ export function useRiotLive() {
       isMock: false,
     }
     lastError.value = null
+    isLoading.value = false
     resetGameData()
+    if (pollTimeout) {
+      clearTimeout(pollTimeout)
+      pollTimeout = null
+    }
 
     try {
       await $fetch('/api/riot/mock', {
@@ -185,12 +190,6 @@ export function useRiotLive() {
     } catch {
       // Ignore fallback
     }
-
-    await refreshAll()
-    if (pollTimeout) {
-      clearTimeout(pollTimeout)
-      pollTimeout = null
-    }
   }
 
   async function startMockMode() {
@@ -199,6 +198,9 @@ export function useRiotLive() {
     }
     statusSeq++
     liveDataSeq++
+    resetGameData()
+    isPolling.value = true
+    lastError.value = null
     clientMockMode.value = true
     status.value = {
       status: 'MOCK',
@@ -231,11 +233,16 @@ export function useRiotLive() {
       await stopMockMode()
     }
     isLiveActive.value = true
+    isPolling.value = true
     await refreshAll()
     scheduleNextPoll()
   }
 
   function stopLiveMode() {
+    // A response arriving after disconnection must not reopen the dashboard.
+    statusSeq++
+    liveDataSeq++
+    isLoading.value = false
     isLiveActive.value = false
     if (pollTimeout) {
       clearTimeout(pollTimeout)

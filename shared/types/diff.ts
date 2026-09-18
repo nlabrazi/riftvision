@@ -106,3 +106,5 @@ export interface GameDiffResult {
   redEconomy: TeamEconomySummary
   goldDifference: number // Positive means blue lead, negative means red lead
 }
+
+export type CombatLogFilter = 'all' | 'combat' | 'items' | 'objectives'

@@ -12,7 +12,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     const initialStatusPromise = page.waitForResponse((res) =>
       res.url().includes('/api/riot/status'),
     )
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatusPromise
 
     // Toggle mock mode to activate game data
@@ -22,7 +22,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
 
     // Verify mock mode is active
     const banner = page.locator('[data-testid="status-banner"]')
-    await expect(banner).toContainText('Mode Simulation / Mock actif')
+    await expect(banner).toContainText('Démo · exemple de partie à 16:45')
 
     // Verify Scoreboard Header is displayed
     const scoreboard = page.locator('[data-testid="scoreboard-header"]')
@@ -55,7 +55,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     const initialStatusPromise = page.waitForResponse((res) =>
       res.url().includes('/api/riot/status'),
     )
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatusPromise
 
     // Toggle mock mode
@@ -65,25 +65,26 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
 
     // Verify mock mode is active
     const banner = page.locator('[data-testid="status-banner"]')
-    await expect(banner).toContainText('Mode Simulation / Mock actif')
+    await expect(banner).toContainText('Démo · exemple de partie à 16:45')
 
     // Switch to Diagnostic API view
     await page.locator('[data-testid="view-diagnostic-btn"]').click()
+    await page.getByText('Diagnostic technique', { exact: false }).click()
 
     // Verify diagnostic tabs are rendered
     await expect(page.locator('[data-testid="tab-overview"]')).toBeVisible()
     await expect(page.locator('[data-testid="tab-raw"]')).toBeVisible()
 
-    // Switch back to Tactical view
-    await page.locator('[data-testid="view-tactical-btn"]').click()
+    // Return to the same match from help
+    await page.getByTestId('close-help-btn').click()
     await expect(page.locator('[data-testid="scoreboard-header"]')).toBeVisible()
   })
 
   test('keeps the map visible and opens the immersive view', async ({ page }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatus
-    await expect(page.getByTestId('view-map-btn')).toBeVisible()
+    await expect(page.getByTestId('view-map-btn')).toHaveCount(0)
     await page.getByTestId('mock-toggle-button').click()
     const minimap = page.getByTestId('tactical-minimap')
     await expect(minimap).toBeVisible()
@@ -91,7 +92,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     await expect(page.getByTestId('baron-pit-marker')).toBeVisible()
     await expect(page.getByTestId('dragon-pit-marker')).toBeVisible()
     await expect(page.getByTestId('turret-pin').first()).toBeVisible()
-    await page.getByTestId('map-toggle-btn').click()
+    await page.getByTestId('view-map-btn').click()
     await expect(page.getByTestId('focus-radar-view')).toBeVisible()
     await expect(minimap).toBeVisible()
     await page.getByTestId('view-tactical-btn').click()
@@ -103,7 +104,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     page,
   }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await page.getByTestId('mock-toggle-button').click()
     const journal = page.getByTestId('live-diff-feed')
@@ -124,7 +125,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
 
   test('opens champion details with the keyboard and clears them with Escape', async ({ page }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await page.getByTestId('mock-toggle-button').click()
     const champion = page.getByTestId('champion-map-pin').first()

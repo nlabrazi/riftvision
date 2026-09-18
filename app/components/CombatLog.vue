@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { DiffEventType, GameDiffEvent } from '#shared/types/diff'
+import { computed } from 'vue'
+import type { CombatLogFilter, DiffEventType, GameDiffEvent } from '#shared/types/diff'
 import { getChampionIconUrl, getItemIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
 
 const props = withDefaults(
@@ -9,40 +9,41 @@ const props = withDefaults(
     compact?: boolean
     selectedEventId?: string | null
     isLive?: boolean
+    isMock?: boolean
   }>(),
-  { compact: false, selectedEventId: null, isLive: true },
+  { compact: false, selectedEventId: null, isLive: true, isMock: false },
 )
 
 const emit = defineEmits<{ 'select-event': [event: GameDiffEvent] }>()
-type Filter = 'all' | 'combat' | 'items' | 'objectives'
-const activeFilter = ref<Filter>('all')
-const search = ref('')
-const filters: { id: Filter; label: string }[] = [
+const activeFilter = defineModel<CombatLogFilter>('filter', { default: 'all' })
+const search = defineModel<string>('search', { default: '' })
+const filters: { id: CombatLogFilter; label: string }[] = [
   { id: 'all', label: 'Tous' },
   { id: 'combat', label: 'Combats' },
   { id: 'items', label: 'Objets' },
   { id: 'objectives', label: 'Objectifs' },
 ]
 
-const eventKinds: Record<DiffEventType, { filter: Filter; label: string; icon: string }> = {
-  ITEM_PURCHASE: { filter: 'items', label: 'Achat', icon: 'layers' },
-  CHAMPION_KILL: { filter: 'combat', label: 'Élimination', icon: 'swords' },
-  CHAMPION_DEATH: { filter: 'combat', label: 'Mort', icon: 'swords' },
-  CHAMPION_RESPAWN: { filter: 'combat', label: 'Réapparition', icon: 'refresh' },
-  FIRST_BLOOD: { filter: 'combat', label: 'Premier sang', icon: 'swords' },
-  ACE: { filter: 'combat', label: 'Ace', icon: 'swords' },
-  TURRET_DESTROYED: { filter: 'objectives', label: 'Tour', icon: 'shield' },
-  INHIB_DESTROYED: { filter: 'objectives', label: 'Inhibiteur', icon: 'shield' },
-  DRAGON_KILL: { filter: 'objectives', label: 'Dragon', icon: 'shield' },
-  BARON_KILL: { filter: 'objectives', label: 'Baron Nashor', icon: 'shield' },
-  HERALD_KILL: { filter: 'objectives', label: 'Héraut', icon: 'shield' },
-  HORDE_KILL: { filter: 'objectives', label: 'Larves du Néant', icon: 'shield' },
-  MULTIKILL: { filter: 'combat', label: 'Multikill', icon: 'swords' },
-  KILL_STREAK: { filter: 'combat', label: 'Série', icon: 'activity' },
-  DOMINATING: { filter: 'objectives', label: 'Domination', icon: 'shield' },
-  GAME_END: { filter: 'combat', label: 'Fin de match', icon: 'activity' },
-  EXECUTE: { filter: 'combat', label: 'Exécution', icon: 'swords' },
-}
+const eventKinds: Record<DiffEventType, { filter: CombatLogFilter; label: string; icon: string }> =
+  {
+    ITEM_PURCHASE: { filter: 'items', label: 'Achat', icon: 'layers' },
+    CHAMPION_KILL: { filter: 'combat', label: 'Élimination', icon: 'swords' },
+    CHAMPION_DEATH: { filter: 'combat', label: 'Mort', icon: 'swords' },
+    CHAMPION_RESPAWN: { filter: 'combat', label: 'Réapparition', icon: 'refresh' },
+    FIRST_BLOOD: { filter: 'combat', label: 'Premier sang', icon: 'swords' },
+    ACE: { filter: 'combat', label: 'Ace', icon: 'swords' },
+    TURRET_DESTROYED: { filter: 'objectives', label: 'Tour', icon: 'shield' },
+    INHIB_DESTROYED: { filter: 'objectives', label: 'Inhibiteur', icon: 'shield' },
+    DRAGON_KILL: { filter: 'objectives', label: 'Dragon', icon: 'shield' },
+    BARON_KILL: { filter: 'objectives', label: 'Baron Nashor', icon: 'shield' },
+    HERALD_KILL: { filter: 'objectives', label: 'Héraut', icon: 'shield' },
+    HORDE_KILL: { filter: 'objectives', label: 'Larves du Néant', icon: 'shield' },
+    MULTIKILL: { filter: 'combat', label: 'Multikill', icon: 'swords' },
+    KILL_STREAK: { filter: 'combat', label: 'Série', icon: 'activity' },
+    DOMINATING: { filter: 'objectives', label: 'Domination', icon: 'shield' },
+    GAME_END: { filter: 'combat', label: 'Fin de match', icon: 'activity' },
+    EXECUTE: { filter: 'combat', label: 'Exécution', icon: 'swords' },
+  }
 
 const filteredEvents = computed(() => {
   const query = search.value.trim().toLocaleLowerCase('fr')
@@ -83,9 +84,9 @@ function eventImage(event: GameDiffEvent): string | undefined {
   <section class="rv-panel combat-log" :class="{ compact }" data-testid="live-diff-feed" aria-label="Journal de combat">
     <header class="log-heading">
       <div><span class="rv-eyebrow">Fil d'événements</span>
-        <h2>Journal de combat <span class="event-count">{{ events.length }}</span></h2>
+        <h2>Journal de combat</h2>
       </div>
-      <span class="live-label" :class="{ paused: !isLive }"><span />{{ isLive ? 'En direct' : 'En pause' }}</span>
+      <span class="live-label" :class="{ paused: !isLive || isMock }"><span />{{ isMock ? 'Exemple' : isLive ? 'En direct' : 'En pause' }}</span>
     </header>
 
     <div class="log-controls">
@@ -93,7 +94,7 @@ function eventImage(event: GameDiffEvent): string | undefined {
         <button v-for="filter in filters" :key="filter.id" type="button" :aria-pressed="activeFilter === filter.id"
           :class="{ active: activeFilter === filter.id }" @click="activeFilter = filter.id">{{ filter.label }}</button>
       </div>
-      <label v-if="!compact" class="log-search">
+      <label class="log-search">
         <RvIcon name="search" :size="14" /><input v-model="search" type="search" aria-label="Rechercher dans le journal"
           placeholder="Rechercher…" />
       </label>
@@ -125,6 +126,7 @@ function eventImage(event: GameDiffEvent): string | undefined {
         <strong v-else>La Faille est calme</strong>
         <p v-if="events.length">Essayez un autre filtre ou une autre recherche.</p>
         <p v-else>Les combats, achats et objectifs apparaîtront ici.</p>
+        <button v-if="activeFilter !== 'all' || search" type="button" class="rv-button" @click="activeFilter = 'all'; search = ''">Réinitialiser les filtres</button>
       </div>
     </div>
 
@@ -160,16 +162,6 @@ h2 {
   font-size: 16px;
   font-weight: 600;
   color: #e7e5dc;
-}
-
-.event-count {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: #8f9fa9;
-  border: 1px solid #273744;
-  border-radius: 4px;
-  padding: 1px 6px;
 }
 
 .live-label {
@@ -454,8 +446,11 @@ h2 {
 }
 
 .compact .log-controls {
+  flex-wrap: wrap;
   padding: 0 15px 12px;
 }
+
+.compact .log-search { width: 100%; }
 
 .compact .log-filters {
   width: 100%;

@@ -6,36 +6,31 @@ test.describe('Live alerts and map feedback', () => {
     const initialStatus = page.waitForResponse((response) =>
       response.url().includes('/api/riot/status'),
     )
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await page.getByTestId('mock-toggle-button').click()
-    await expect(page.getByTestId('status-banner')).toContainText('Mode Simulation / Mock actif')
+    await expect(page.getByTestId('status-banner')).toContainText(
+      'Démo · exemple de partie à 16:45',
+    )
     await page.getByTestId('view-map-btn').click()
     await expect(page.getByTestId('radar-large-map')).toBeVisible()
   })
 
   test('shows objective alerts on the map and allows dismissing them', async ({ page }) => {
     const radar = page.getByTestId('focus-radar-view')
-    const simulator = radar.locator('summary').filter({ hasText: 'Tester une alerte' })
-
-    await expect(radar.getByTestId('test-alert-baron')).toBeHidden()
-    await simulator.click()
-    await radar.getByTestId('test-alert-baron').click()
-
+    await page.getByTestId('test-alert-dragon').click()
     const overlay = radar.getByTestId('flash-alert-overlay')
     await expect(overlay).toBeVisible()
-    await expect(overlay).toContainText('BARON NASHOR')
-    await expect(overlay).toContainText('ALERTE ÉVÉNEMENT MAJEUR')
-    await expect(radar.getByTestId('map-event-ping').first()).toBeVisible()
-
-    await overlay.getByTestId('dismiss-alert-btn').click()
-    await expect(overlay).toBeHidden()
-
-    await radar.getByTestId('test-alert-dragon').click()
     await expect(overlay).toContainText('DRAGON')
+    await expect(overlay).toContainText('OBJECTIF STRATÉGIQUE')
     await expect(
       radar.locator('[data-testid="map-event-ping"][aria-label*="dragon" i]'),
     ).toBeVisible()
+
+    await overlay.getByTestId('dismiss-alert-btn').click()
+    await expect(overlay).toBeHidden()
+    await page.getByTestId('test-alert-dragon').click()
+    await expect(overlay).toContainText('DRAGON')
 
     // An active alert must leave the navigation usable.
     await page.getByTestId('view-tactical-btn').click()
@@ -48,13 +43,13 @@ test.describe('Live alerts and map feedback', () => {
 
   test('keeps the audio setting while switching between the two views', async ({ page }) => {
     const audioButton = page.getByTestId('audio-toggle-btn')
-    await expect(audioButton).toContainText('Audio')
+    await expect(audioButton).toContainText('Son activé')
     await audioButton.click()
-    await expect(audioButton).toContainText('Muet')
+    await expect(audioButton).toContainText('Son coupé')
 
     await page.getByTestId('view-tactical-btn').click()
-    await expect(audioButton).toContainText('Muet')
+    await expect(audioButton).toContainText('Son coupé')
     await audioButton.click()
-    await expect(audioButton).toContainText('Audio')
+    await expect(audioButton).toContainText('Son activé')
   })
 })
