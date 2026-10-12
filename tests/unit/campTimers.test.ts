@@ -106,6 +106,7 @@ describe('campTimers utility', () => {
     const dragonAlert60 = alerts60.find((a) => a.campId === 'DRAGON')
     expect(dragonAlert60).toBeDefined()
     expect(dragonAlert60?.title).toContain('DRAGON DANS 60 SECONDES')
+    expect(dragonAlert60?.soundKey).toBe('deathwing')
 
     // 30s alert
     const prevCamps32 = calculateCampTimers(268, []) // 32s remaining
@@ -114,6 +115,7 @@ describe('campTimers utility', () => {
     const dragonAlert30 = alerts30.find((a) => a.campId === 'DRAGON')
     expect(dragonAlert30).toBeDefined()
     expect(dragonAlert30?.title).toContain('DRAGON DANS 30 SECONDES')
+    expect(dragonAlert30?.soundKey).toBe('deathwing')
 
     // Spawn alert
     const prevSpawning = calculateCampTimers(298, []) // 2s remaining
@@ -123,5 +125,14 @@ describe('campTimers utility', () => {
     expect(dragonAlertSpawn).toBeDefined()
     expect(dragonAlertSpawn?.type).toBe('spawn')
     expect(dragonAlertSpawn?.title).toContain('DRAGON SUR LA FAILLE !')
+    expect(dragonAlertSpawn?.soundKey).toBe('deathwing')
+
+    // Baron 60s alert has archimonde sound
+    const prevBaron = calculateCampTimers(1138, []) // 62s remaining
+    const currBaron = calculateCampTimers(1141, []) // 59s remaining
+    const baronAlerts = detectCampAlerts(prevBaron, currBaron, 1141)
+    const baronAlert = baronAlerts.find((a) => a.campId === 'BARON')
+    expect(baronAlert).toBeDefined()
+    expect(baronAlert?.soundKey).toBe('archimonde')
   })
 })

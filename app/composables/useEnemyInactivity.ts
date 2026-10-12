@@ -71,6 +71,10 @@ export function useEnemyInactivity(gameDataRef: { value: RiotAllGameData | null 
     trackedEnemies.value.filter((e) => e.isMissing),
   )
 
+  const enemyToplaner = computed<EnemyMIAState | undefined>(() =>
+    trackedEnemies.value.find((e) => e.position === 'TOP'),
+  )
+
   const enemyJungler = computed<EnemyMIAState | undefined>(() =>
     trackedEnemies.value.find((e) => e.position === 'JUNGLE'),
   )
@@ -79,11 +83,22 @@ export function useEnemyInactivity(gameDataRef: { value: RiotAllGameData | null 
     trackedEnemies.value.find((e) => e.position === 'MIDDLE'),
   )
 
+  const enemyADC = computed<EnemyMIAState | undefined>(() =>
+    trackedEnemies.value.find((e) => e.position === 'BOTTOM'),
+  )
+
+  const enemySupport = computed<EnemyMIAState | undefined>(() =>
+    trackedEnemies.value.find((e) => e.position === 'UTILITY'),
+  )
+
   return {
     miaStates,
     trackedEnemies,
     missingEnemies,
+    enemyToplaner,
     enemyJungler,
     enemyMidlaner,
+    enemyADC,
+    enemySupport,
   }
 }

@@ -39,6 +39,7 @@ describe('useNeutralCamps', () => {
     expect(activeAlert.value).not.toBeNull()
     expect(activeAlert.value?.type).toBe('CAMP')
     expect(activeAlert.value?.title).toContain('DRAGON')
+    expect(activeAlert.value?.soundKey).toBe('deathwing')
     clearAlerts()
   })
 })

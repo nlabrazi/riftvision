@@ -421,6 +421,18 @@ describe('useFlashAlerts', () => {
     triggerDemoAlert('CAMP')
     expect(activeAlert.value?.type).toBe('CAMP')
     expect(activeAlert.value?.title).toBe('DRAGON ANCESTRAL IMMINENT')
-    expect(activeAlert.value?.soundType).toBe('objective')
+    expect(activeAlert.value?.soundKey).toBe('deathwing')
+
+    dismissCurrentAlert()
+
+    triggerDemoAlert('DRAGON')
+    expect(activeAlert.value?.type).toBe('DRAGON')
+    expect(activeAlert.value?.soundKey).toBe('deathwing')
+
+    dismissCurrentAlert()
+
+    triggerDemoAlert('BARON')
+    expect(activeAlert.value?.type).toBe('BARON')
+    expect(activeAlert.value?.soundKey).toBe('archimonde')
   })
 })

@@ -1,3 +1,4 @@
+import type { SoundEffectKey } from '../types/diff'
 import type { RiotEvent } from '../types/riot'
 import { OBJECTIVE_COORDINATES } from './mapCoordinates'
 
@@ -45,6 +46,7 @@ export interface CampAlert {
   remainingSeconds: number
   gameTime: number
   location: { x: number; y: number }
+  soundKey?: SoundEffectKey
 }
 
 export const CAMP_LOCATIONS = {
@@ -350,6 +352,9 @@ export function detectCampAlerts(
     const prev = prevMap.get(curr.id)
     if (!prev) continue
 
+    const soundKey: SoundEffectKey | undefined =
+      curr.id === 'DRAGON' ? 'deathwing' : curr.id === 'BARON' ? 'archimonde' : undefined
+
     // 1. Warning alert: crossed 60s remaining threshold (between 58s and 60s)
     if (prev.remainingSeconds > 60 && curr.remainingSeconds <= 60 && curr.remainingSeconds > 0) {
       alerts.push({
@@ -362,6 +367,7 @@ export function detectCampAlerts(
         remainingSeconds: curr.remainingSeconds,
         gameTime,
         location: curr.location,
+        soundKey,
       })
     }
     // 2. Warning alert: crossed 30s remaining threshold
@@ -380,6 +386,7 @@ export function detectCampAlerts(
         remainingSeconds: curr.remainingSeconds,
         gameTime,
         location: curr.location,
+        soundKey,
       })
     }
     // 3. Spawn alert: transitioned from SPAWNING to ALIVE (or remaining was > 0 and became 0)
@@ -394,6 +401,7 @@ export function detectCampAlerts(
         remainingSeconds: 0,
         gameTime,
         location: curr.location,
+        soundKey,
       })
     }
   }

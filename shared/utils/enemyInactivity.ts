@@ -1,18 +1,19 @@
 import type { SoundEffectKey } from '../types/diff'
-import type { RiotEvent, RiotPlayer, TeamType } from '../types/riot'
+import type { RiotEvent, RiotPlayer, RiotPosition, TeamType } from '../types/riot'
 import { isSamePlayer } from './gameDiff'
 
 export interface EnemyMIAState {
   summonerName: string
   championName: string
   team: TeamType
-  position: 'JUNGLE' | 'MIDDLE'
+  position: RiotPosition
   roleLabel: string
-  thresholdSeconds: number // 60 for jungle, 30 for mid
+  thresholdSeconds: number // 60 for jungle, 30 for lanes (top, mid, adc, support)
   lastSeenGameTime: number
   inactivitySeconds: number
   isMissing: boolean
   isDead: boolean
+  respawnTimer: number
   alertTriggered: boolean
   lastCreepScore: number
   lastLevel: number
@@ -27,7 +28,7 @@ export interface MIAAlert {
   id: string
   summonerName: string
   championName: string
-  role: 'JUNGLE' | 'MIDDLE'
+  role: RiotPosition
   roleLabel: string
   inactivitySeconds: number
   team: TeamType
@@ -41,9 +42,68 @@ export interface EnemyInactivityTrackerResult {
   alerts: MIAAlert[]
 }
 
+export function getRoleLabel(position: string): string {
+  switch (position) {
+    case 'TOP':
+      return 'Toplaner'
+    case 'JUNGLE':
+      return 'Jungler'
+    case 'MIDDLE':
+      return 'Midlaner'
+    case 'BOTTOM':
+      return 'ADC'
+    case 'UTILITY':
+      return 'Support'
+    default:
+      return 'Champion'
+  }
+}
+
+export function getAlertTitle(position: string): string {
+  switch (position) {
+    case 'TOP':
+      return 'ATTENTION : TOPLANER ADVERSE DISPARU !'
+    case 'JUNGLE':
+      return 'ATTENTION : JUNGLER ADVERSE DISPARU !'
+    case 'MIDDLE':
+      return 'ATTENTION : MIDLANER ADVERSE DISPARU !'
+    case 'BOTTOM':
+      return 'ATTENTION : ADC ADVERSE DISPARU !'
+    case 'UTILITY':
+      return 'ATTENTION : SUPPORT ADVERSE DISPARU !'
+    default:
+      return 'ATTENTION : ENNEMI DISPARU !'
+  }
+}
+
+export function getAlertSubtitle(
+  position: string,
+  champ: string,
+  formattedDuration: string,
+): string {
+  switch (position) {
+    case 'TOP':
+      return `Le toplaner adverse (${champ}) a disparu depuis ${formattedDuration} !`
+    case 'JUNGLE':
+      return `Le jungler adverse (${champ}) n'a pas été vu depuis ${formattedDuration} !`
+    case 'MIDDLE':
+      return `Le midlaner adverse (${champ}) a disparu depuis ${formattedDuration} !`
+    case 'BOTTOM':
+      return `L'ADC adverse (${champ}) a disparu depuis ${formattedDuration} !`
+    case 'UTILITY':
+      return `Le support adverse (${champ}) a disparu depuis ${formattedDuration} !`
+    default:
+      return `L'adversaire (${champ}) a disparu depuis ${formattedDuration} !`
+  }
+}
+
 /**
- * Tracks inactivity for enemy Jungler (60s) and enemy Midlaner (30s).
- * Emits MIA alerts with soundKey: 'beware' when threshold is reached.
+ * Tracks inactivity for all enemy roles (Top, Jungle, Mid, ADC, Support).
+ * - Jungler threshold: 60 seconds (1 minute)
+ * - Laners (Top, Mid, ADC, Support) threshold: 30 seconds
+ * Dead players in fountain are an exception and cannot be MIA; their respawn timer is tracked.
+ * When an enemy respawns, the inactivity baseline restarts from the moment of respawn.
+ * Emits MIA alerts with soundKey: 'beware' when thresholds are reached.
  */
 export function trackEnemyInactivity(
   allPlayers: RiotPlayer[] = [],
@@ -66,18 +126,15 @@ export function trackEnemyInactivity(
   const recentEvents = events.filter((e) => Math.abs(gameTime - e.EventTime) <= 5)
 
   for (const player of enemyPlayers) {
-    if (player.position !== 'JUNGLE' && player.position !== 'MIDDLE') {
-      continue
-    }
-
     const key = player.summonerName || player.championName
-    const role: 'JUNGLE' | 'MIDDLE' = player.position
-    const roleLabel = role === 'JUNGLE' ? 'Jungler' : 'Midlaner'
+    const role: RiotPosition = player.position || 'MIDDLE'
+    const roleLabel = getRoleLabel(role)
     const thresholdSeconds = role === 'JUNGLE' ? 60 : 30
     const champ = player.championName
 
     const prev = previousStates?.get(key)
-    const isDead = !!player.isDead
+    const isDead = Boolean(player.isDead || (player.respawnTimer && player.respawnTimer > 0))
+    const respawnTimer = Math.max(0, player.respawnTimer ?? 0)
 
     // Check if player participated in any recent events
     const inRecentEvent = recentEvents.some(
@@ -117,17 +174,17 @@ export function trackEnemyInactivity(
     let isMissing = false
 
     if (!prev) {
-      // First snapshot initialization
+      // First snapshot initialization: establish baseline
       lastSeen = gameTime
       alertTriggered = false
       isMissing = false
     } else if (isDead) {
-      // Dead players are in fountain and cannot gank
+      // Dead players are in fountain and cannot roam/gank; timer does not advance while dead
       lastSeen = gameTime
       alertTriggered = false
       isMissing = false
     } else if (prev.isDead && !isDead) {
-      // Just respawned
+      // Just respawned at fountain: timer restarts fresh from respawn time
       lastSeen = gameTime
       alertTriggered = false
       isMissing = false
@@ -150,21 +207,15 @@ export function trackEnemyInactivity(
           alertTriggered = true
           const formattedDuration = role === 'JUNGLE' ? '1 min (60s)' : `${Math.floor(inactivity)}s`
           alerts.push({
-            id: `mia-${role.toLowerCase()}-${champ.toLowerCase()}-${Math.floor(gameTime)}`,
+            id: `mia-${String(role).toLowerCase()}-${champ.toLowerCase()}-${Math.floor(gameTime)}`,
             summonerName: player.summonerName,
             championName: champ,
             role,
             roleLabel,
             inactivitySeconds: inactivity,
             team: enemyTeam,
-            title:
-              role === 'JUNGLE'
-                ? 'ATTENTION : JUNGLER ADVERSE DISPARU !'
-                : 'ATTENTION : MIDLANER ADVERSE DISPARU !',
-            subtitle:
-              role === 'JUNGLE'
-                ? `Le jungler adverse (${champ}) n'a pas été vu depuis ${formattedDuration} !`
-                : `Le midlaner adverse (${champ}) a disparu depuis ${formattedDuration} !`,
+            title: getAlertTitle(role),
+            subtitle: getAlertSubtitle(role, champ, formattedDuration),
             soundKey: 'beware',
           })
         }
@@ -182,9 +233,10 @@ export function trackEnemyInactivity(
       roleLabel,
       thresholdSeconds,
       lastSeenGameTime: lastSeen,
-      inactivitySeconds: Math.max(0, gameTime - lastSeen),
+      inactivitySeconds: isDead ? 0 : Math.max(0, gameTime - lastSeen),
       isMissing,
       isDead,
+      respawnTimer,
       alertTriggered,
       lastCreepScore: cs,
       lastLevel: level,

@@ -48,6 +48,7 @@ export function useNeutralCamps(gameDataRef: { value: RiotAllGameData | null }) 
           title: alert.title,
           subtitle: alert.subtitle,
           durationMs: 4500,
+          soundKey: alert.soundKey,
           soundType: 'objective',
           iconUrl: getObjectiveIconUrl(iconType, 'ORDER'),
         })

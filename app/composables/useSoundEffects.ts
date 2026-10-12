@@ -1,9 +1,11 @@
 import { ref } from 'vue'
 
-// Import all 18 WAV sound assets
+// Import all 20 WAV sound assets
+import archimondeUrl from '../assets/sounds/archimonde-aggro.wav'
 import bewareUrl from '../assets/sounds/beware.wav'
 import blueTeamDominatingUrl from '../assets/sounds/blue_team_dominating.wav'
 import blueTeamWinnerUrl from '../assets/sounds/blue_team_is_the_winner.wav'
+import deathwingUrl from '../assets/sounds/deathwing.wav'
 import doubleKillUrl from '../assets/sounds/doublekill.wav'
 import firstBloodUrl from '../assets/sounds/firstblood.wav'
 import godlikeUrl from '../assets/sounds/godlike.wav'
@@ -41,6 +43,8 @@ export type SoundKey =
   | 'red_team_is_the_winner'
   | 'humiliating_defeat'
   | 'beware'
+  | 'deathwing'
+  | 'archimonde'
 
 export const SOUND_ASSETS: Record<SoundKey, string> = {
   firstblood: firstBloodUrl,
@@ -61,6 +65,8 @@ export const SOUND_ASSETS: Record<SoundKey, string> = {
   red_team_is_the_winner: redTeamWinnerUrl,
   humiliating_defeat: humiliatingDefeatUrl,
   beware: bewareUrl,
+  deathwing: deathwingUrl,
+  archimonde: archimondeUrl,
 }
 
 export const isAudioMuted = ref(false)

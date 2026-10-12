@@ -220,9 +220,7 @@ export function useFlashAlerts() {
         })
       } else if (e.type === 'BARON_KILL') {
         const killerChamp = meta?.killerChamp || 'Équipe'
-        const soundKey =
-          (meta?.soundKey as SoundEffectKey) ||
-          (e.team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating')
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'archimonde'
         triggerAlert({
           id: e.id,
           type: 'BARON',
@@ -237,6 +235,7 @@ export function useFlashAlerts() {
       } else if (e.type === 'DRAGON_KILL') {
         const drakeType = meta?.dragonType || 'Élémentaire'
         const killerChamp = meta?.killerChamp || 'Équipe'
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'deathwing'
         triggerAlert({
           id: e.id,
           type: 'DRAGON',
@@ -245,6 +244,7 @@ export function useFlashAlerts() {
           team: e.team,
           iconUrl: getObjectiveIconUrl('dragon', e.team || 'ORDER'),
           durationMs: 4500,
+          soundKey,
           soundType: 'objective',
         })
       } else if (e.type === 'HERALD_KILL') {
@@ -434,6 +434,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('dragon', 'ORDER'),
         durationMs: 4500,
+        soundKey: customSoundKey || 'deathwing',
         soundType: 'objective',
       })
     } else if (type === 'BARON') {
@@ -445,7 +446,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('baron', 'ORDER'),
         durationMs: 5000,
-        soundKey: 'blue_team_dominating',
+        soundKey: customSoundKey || 'archimonde',
         soundType: 'objective',
       })
     } else if (type === 'ITEM') {
@@ -480,7 +481,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('dragon', 'ORDER'),
         durationMs: 4500,
-        soundKey: 'blue_team_dominating',
+        soundKey: customSoundKey || 'deathwing',
         soundType: 'objective',
       })
     } else if (type === 'ACE') {

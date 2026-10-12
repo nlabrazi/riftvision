@@ -17,7 +17,7 @@ describe('useSoundEffects', () => {
     setVolume(0.75)
   })
 
-  it('contains all 17 sound assets mapped to valid paths', () => {
+  it('contains all 20 sound assets mapped to valid paths', () => {
     const expectedKeys: SoundKey[] = [
       'firstblood',
       'doublekill',
@@ -37,9 +37,11 @@ describe('useSoundEffects', () => {
       'red_team_is_the_winner',
       'humiliating_defeat',
       'beware',
+      'deathwing',
+      'archimonde',
     ]
 
-    expect(Object.keys(SOUND_ASSETS)).toHaveLength(18)
+    expect(Object.keys(SOUND_ASSETS)).toHaveLength(20)
 
     for (const key of expectedKeys) {
       expect(SOUND_ASSETS[key]).toBeDefined()

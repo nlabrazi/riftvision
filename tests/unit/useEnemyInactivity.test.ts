@@ -41,11 +41,11 @@ describe('useEnemyInactivity', () => {
     }
     await nextTick()
 
-    // Should alert with beware sound for midlaner
+    // Should alert with beware sound for missing enemy
     expect(activeAlert.value).not.toBeNull()
     expect(activeAlert.value?.type).toBe('MIA')
     expect(activeAlert.value?.soundKey).toBe('beware')
-    expect(activeAlert.value?.title).toContain('MIDLANER ADVERSE DISPARU')
+    expect(activeAlert.value?.title).toContain('DISPARU')
 
     clearAlerts()
   })

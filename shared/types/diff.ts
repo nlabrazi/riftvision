@@ -40,6 +40,8 @@ export type SoundEffectKey =
   | 'red_team_is_the_winner'
   | 'humiliating_defeat'
   | 'beware'
+  | 'deathwing'
+  | 'archimonde'
 
 export interface DiffItemPurchase {
   summonerName: string
