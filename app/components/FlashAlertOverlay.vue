@@ -6,6 +6,8 @@ import RvIcon from './RvIcon.vue'
 withDefaults(defineProps<{ inline?: boolean }>(), { inline: false })
 const { activeAlert, alertQueue, dismissCurrentAlert } = useFlashAlerts()
 const accent = computed(() => {
+  if (activeAlert.value?.type === 'MIA') return '#f97316'
+  if (activeAlert.value?.type === 'CAMP') return '#34d399'
   if (activeAlert.value?.type === 'BARON' || activeAlert.value?.type === 'HERALD') return '#b694e8'
   if (activeAlert.value?.type === 'DRAGON' || activeAlert.value?.type === 'ITEM') return '#d9b971'
   if (activeAlert.value?.type === 'MULTIKILL' || activeAlert.value?.type === 'KILL_STREAK')
@@ -17,6 +19,10 @@ const accent = computed(() => {
 
 const categoryLabel = computed(() => {
   switch (activeAlert.value?.type) {
+    case 'MIA':
+      return 'DISPARITION ENNEMIE'
+    case 'CAMP':
+      return 'CAMP NEUTRE'
     case 'FIRST_BLOOD':
       return 'PREMIER SANG'
     case 'MULTIKILL':

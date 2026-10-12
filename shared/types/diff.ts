@@ -18,6 +18,8 @@ export type DiffEventType =
   | 'DOMINATING'
   | 'GAME_END'
   | 'EXECUTE'
+  | 'MIA'
+  | 'CAMP_TIMER'
 
 export type SoundEffectKey =
   | 'firstblood'
@@ -37,6 +39,7 @@ export type SoundEffectKey =
   | 'blue_team_is_the_winner'
   | 'red_team_is_the_winner'
   | 'humiliating_defeat'
+  | 'beware'
 
 export interface DiffItemPurchase {
   summonerName: string

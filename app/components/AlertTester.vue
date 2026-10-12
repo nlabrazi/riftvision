@@ -45,6 +45,8 @@ const demoTypes: Array<{
     soundKey: 'red_team_is_the_winner',
   },
   { type: 'EXECUTE', id: 'humiliating', label: 'Mort humiliante', soundKey: 'humiliating_defeat' },
+  { type: 'MIA', id: 'mia_beware', label: 'Disparition ennemie (Beware)', soundKey: 'beware' },
+  { type: 'CAMP', id: 'camp_spawn', label: 'Camp neutre / Objectif imminent' },
   { type: 'KILL', id: 'kill', label: 'Combat standard' },
   { type: 'DRAGON', id: 'dragon', label: 'Dragon' },
   { type: 'BARON', id: 'baron', label: 'Baron' },

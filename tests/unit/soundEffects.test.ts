@@ -36,9 +36,10 @@ describe('useSoundEffects', () => {
       'blue_team_is_the_winner',
       'red_team_is_the_winner',
       'humiliating_defeat',
+      'beware',
     ]
 
-    expect(Object.keys(SOUND_ASSETS)).toHaveLength(17)
+    expect(Object.keys(SOUND_ASSETS)).toHaveLength(18)
 
     for (const key of expectedKeys) {
       expect(SOUND_ASSETS[key]).toBeDefined()

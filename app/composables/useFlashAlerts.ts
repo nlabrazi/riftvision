@@ -23,6 +23,8 @@ export type FlashAlertType =
   | 'DOMINATING'
   | 'GAME_END'
   | 'EXECUTE'
+  | 'MIA'
+  | 'CAMP'
 
 export interface FlashAlert {
   id: string
@@ -456,6 +458,30 @@ export function useFlashAlerts() {
         iconUrl: getItemIconUrl(3031),
         durationMs: 4000,
         soundType: 'item',
+      })
+    } else if (type === 'MIA') {
+      triggerAlert({
+        id: `demo-mia-${Date.now()}`,
+        type: 'MIA',
+        title: 'ATTENTION : JUNGLER ADVERSE DISPARU !',
+        subtitle: "Lee Sin n'a pas été vu depuis 60s !",
+        team: 'CHAOS',
+        iconUrl: getChampionIconUrl('LeeSin'),
+        durationMs: 5000,
+        soundKey: 'beware',
+        soundType: 'danger',
+      })
+    } else if (type === 'CAMP') {
+      triggerAlert({
+        id: `demo-camp-${Date.now()}`,
+        type: 'CAMP',
+        title: 'DRAGON ANCESTRAL IMMINENT',
+        subtitle: 'Le Dragon Ancestral apparaît sur la Faille dans 30 secondes !',
+        team: 'ORDER',
+        iconUrl: getObjectiveIconUrl('dragon', 'ORDER'),
+        durationMs: 4500,
+        soundKey: 'blue_team_dominating',
+        soundType: 'objective',
       })
     } else if (type === 'ACE') {
       triggerAlert({

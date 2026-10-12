@@ -407,4 +407,20 @@ describe('useFlashAlerts', () => {
     expect(activeAlert.value?.iconUrl).toContain('Darius.png')
     expect(activeAlert.value?.victimIconUrl).toContain('Garen.png')
   })
+
+  it('triggers demo alerts for MIA and CAMP events with correct sounds', () => {
+    const { activeAlert, triggerDemoAlert, dismissCurrentAlert } = useFlashAlerts()
+
+    triggerDemoAlert('MIA')
+    expect(activeAlert.value?.type).toBe('MIA')
+    expect(activeAlert.value?.title).toBe('ATTENTION : JUNGLER ADVERSE DISPARU !')
+    expect(activeAlert.value?.soundKey).toBe('beware')
+
+    dismissCurrentAlert()
+
+    triggerDemoAlert('CAMP')
+    expect(activeAlert.value?.type).toBe('CAMP')
+    expect(activeAlert.value?.title).toBe('DRAGON ANCESTRAL IMMINENT')
+    expect(activeAlert.value?.soundType).toBe('objective')
+  })
 })
