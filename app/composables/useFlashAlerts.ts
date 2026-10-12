@@ -23,6 +23,8 @@ export type FlashAlertType =
   | 'DOMINATING'
   | 'GAME_END'
   | 'EXECUTE'
+  | 'MIA'
+  | 'CAMP'
 
 export interface FlashAlert {
   id: string
@@ -110,27 +112,49 @@ export function useFlashAlerts() {
    * Translates real-time diff events into prioritized flash alerts
    */
   function ingestDiffEvents(events: GameDiffEvent[]) {
+    const isGeneric = (name?: string) =>
+      !name || ['Champion', 'Ennemi', 'Inconnu', 'Tueur', 'Équipe'].includes(name)
+
+    // Collect killers that have a multikill or streak alert in this batch
+    const multikillKillers = new Set<string>()
+    const streakKillers = new Set<string>()
+    for (const ev of events) {
+      const m = ev.metadata as EventAlertMeta | undefined
+      if (ev.type === 'MULTIKILL') {
+        const kName = m?.killerName?.toLowerCase().split('#')[0]
+        const kChamp = m?.killerChampion?.toLowerCase()
+        if (kName) multikillKillers.add(kName)
+        if (kChamp && !isGeneric(kChamp)) multikillKillers.add(kChamp)
+      } else if (ev.type === 'KILL_STREAK') {
+        const kName = m?.killerName?.toLowerCase().split('#')[0]
+        const kChamp = m?.killerChampion?.toLowerCase()
+        if (kName) streakKillers.add(kName)
+        if (kChamp && !isGeneric(kChamp)) streakKillers.add(kChamp)
+      }
+    }
+
     for (const e of events) {
       const meta = e.metadata as EventAlertMeta | undefined
 
       if (e.type === 'FIRST_BLOOD') {
-        const killerChamp = meta?.killerChampion || 'Tueur'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Tueur'
         const victimChamp = meta?.victimChampion
         triggerAlert({
           id: e.id,
           type: 'FIRST_BLOOD',
           title: 'PREMIER SANG ! (FIRST BLOOD)',
-          subtitle: victimChamp
-            ? `${killerChamp} élimine ${victimChamp} pour le Premier Sang`
-            : `${killerChamp} a versé le Premier Sang !`,
+          subtitle:
+            victimChamp && !isGeneric(victimChamp)
+              ? `${killerChamp} élimine ${victimChamp} pour le Premier Sang`
+              : `${killerChamp} a versé le Premier Sang !`,
           team: e.team,
-          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
-          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
+          iconUrl: !isGeneric(killerChamp) ? getChampionIconUrl(killerChamp) : undefined,
+          victimIconUrl: !isGeneric(victimChamp) ? getChampionIconUrl(victimChamp) : undefined,
           durationMs: 4500,
           soundKey: 'firstblood',
         })
       } else if (e.type === 'MULTIKILL') {
-        const killerChamp = meta?.killerChampion || 'Champion'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Champion'
         const streak = meta?.streak || 2
         const soundKey = (meta?.soundKey as SoundEffectKey) || 'doublekill'
         triggerAlert({
@@ -139,12 +163,12 @@ export function useFlashAlerts() {
           title: e.title,
           subtitle: `${killerChamp} enchaîne ${streak} éliminations rapides !`,
           team: e.team,
-          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          iconUrl: !isGeneric(killerChamp) ? getChampionIconUrl(killerChamp) : undefined,
           durationMs: 4500,
           soundKey,
         })
       } else if (e.type === 'KILL_STREAK') {
-        const killerChamp = meta?.killerChampion || 'Champion'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Champion'
         const soundKey = (meta?.soundKey as SoundEffectKey) || 'killingspree'
         triggerAlert({
           id: e.id,
@@ -152,7 +176,7 @@ export function useFlashAlerts() {
           title: e.title,
           subtitle: e.description,
           team: e.team,
-          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
+          iconUrl: !isGeneric(killerChamp) ? getChampionIconUrl(killerChamp) : undefined,
           durationMs: 4500,
           soundKey,
         })
@@ -164,7 +188,7 @@ export function useFlashAlerts() {
           title: 'MORT HUMILIANTE',
           subtitle: `${victimChamp} s'est fait exécuter par l'environnement !`,
           team: e.team,
-          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
+          victimIconUrl: !isGeneric(victimChamp) ? getChampionIconUrl(victimChamp) : undefined,
           durationMs: 4000,
           soundKey: 'humiliating_defeat',
         })
@@ -196,9 +220,7 @@ export function useFlashAlerts() {
         })
       } else if (e.type === 'BARON_KILL') {
         const killerChamp = meta?.killerChamp || 'Équipe'
-        const soundKey =
-          (meta?.soundKey as SoundEffectKey) ||
-          (e.team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating')
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'archimonde'
         triggerAlert({
           id: e.id,
           type: 'BARON',
@@ -213,6 +235,7 @@ export function useFlashAlerts() {
       } else if (e.type === 'DRAGON_KILL') {
         const drakeType = meta?.dragonType || 'Élémentaire'
         const killerChamp = meta?.killerChamp || 'Équipe'
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'deathwing'
         triggerAlert({
           id: e.id,
           type: 'DRAGON',
@@ -221,6 +244,7 @@ export function useFlashAlerts() {
           team: e.team,
           iconUrl: getObjectiveIconUrl('dragon', e.team || 'ORDER'),
           durationMs: 4500,
+          soundKey,
           soundType: 'objective',
         })
       } else if (e.type === 'HERALD_KILL') {
@@ -249,9 +273,24 @@ export function useFlashAlerts() {
           soundType: 'ace',
         })
       } else if (e.type === 'CHAMPION_KILL') {
-        const killerChamp = meta?.killerChampion
+        const killerName = meta?.killerName?.toLowerCase().split('#')[0]
+        const killerChamp = meta?.championName || meta?.killerChampion
+        const kChampNorm = killerChamp?.toLowerCase()
         const victimChamp = meta?.victimChampion
-        const soundKey = meta?.soundKey as SoundEffectKey | undefined
+
+        const hasMultikill =
+          (killerName && multikillKillers.has(killerName)) ||
+          (kChampNorm && multikillKillers.has(kChampNorm))
+        const hasStreak =
+          (killerName && streakKillers.has(killerName)) ||
+          (kChampNorm && streakKillers.has(kChampNorm))
+
+        // Suppress generic kill alert when a multikill or streak alert is already present in this batch
+        if (hasMultikill || hasStreak) {
+          continue
+        }
+
+        const soundKey = (meta?.soundKey as SoundEffectKey) || 'headshot'
         triggerAlert({
           id: e.id,
           type: 'KILL',
@@ -260,8 +299,10 @@ export function useFlashAlerts() {
             : `${killerChamp || 'Champion'} ⚔️ ${victimChamp || 'Ennemi'}`,
           subtitle: `${killerChamp || 'Le tueur'} a éliminé ${victimChamp || "l'adversaire"}${meta?.isSoloKill ? ' en duel' : ''}`,
           team: e.team,
-          iconUrl: killerChamp ? getChampionIconUrl(killerChamp) : undefined,
-          victimIconUrl: victimChamp ? getChampionIconUrl(victimChamp) : undefined,
+          iconUrl:
+            killerChamp && !isGeneric(killerChamp) ? getChampionIconUrl(killerChamp) : undefined,
+          victimIconUrl:
+            victimChamp && !isGeneric(victimChamp) ? getChampionIconUrl(victimChamp) : undefined,
           durationMs: 3500,
           soundKey,
           soundType: 'kill',
@@ -393,6 +434,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('dragon', 'ORDER'),
         durationMs: 4500,
+        soundKey: customSoundKey || 'deathwing',
         soundType: 'objective',
       })
     } else if (type === 'BARON') {
@@ -404,7 +446,7 @@ export function useFlashAlerts() {
         team: 'ORDER',
         iconUrl: getObjectiveIconUrl('baron', 'ORDER'),
         durationMs: 5000,
-        soundKey: 'blue_team_dominating',
+        soundKey: customSoundKey || 'archimonde',
         soundType: 'objective',
       })
     } else if (type === 'ITEM') {
@@ -417,6 +459,30 @@ export function useFlashAlerts() {
         iconUrl: getItemIconUrl(3031),
         durationMs: 4000,
         soundType: 'item',
+      })
+    } else if (type === 'MIA') {
+      triggerAlert({
+        id: `demo-mia-${Date.now()}`,
+        type: 'MIA',
+        title: 'ATTENTION : JUNGLER ADVERSE DISPARU !',
+        subtitle: "Lee Sin n'a pas été vu depuis 60s !",
+        team: 'CHAOS',
+        iconUrl: getChampionIconUrl('LeeSin'),
+        durationMs: 5000,
+        soundKey: 'beware',
+        soundType: 'danger',
+      })
+    } else if (type === 'CAMP') {
+      triggerAlert({
+        id: `demo-camp-${Date.now()}`,
+        type: 'CAMP',
+        title: 'DRAGON ANCESTRAL IMMINENT',
+        subtitle: 'Le Dragon Ancestral apparaît sur la Faille dans 30 secondes !',
+        team: 'ORDER',
+        iconUrl: getObjectiveIconUrl('dragon', 'ORDER'),
+        durationMs: 4500,
+        soundKey: customSoundKey || 'deathwing',
+        soundType: 'objective',
       })
     } else if (type === 'ACE') {
       triggerAlert({
@@ -431,7 +497,7 @@ export function useFlashAlerts() {
       })
     } else {
       // Standard or Headshot Kill
-      const soundKey = customSoundKey === 'headshot' ? 'headshot' : undefined
+      const soundKey: SoundEffectKey = customSoundKey || 'headshot'
       triggerAlert({
         id: `demo-kill-${Date.now()}`,
         type: 'KILL',

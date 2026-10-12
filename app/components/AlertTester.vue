@@ -45,9 +45,16 @@ const demoTypes: Array<{
     soundKey: 'red_team_is_the_winner',
   },
   { type: 'EXECUTE', id: 'humiliating', label: 'Mort humiliante', soundKey: 'humiliating_defeat' },
+  { type: 'MIA', id: 'mia_beware', label: 'Disparition ennemie (Beware)', soundKey: 'beware' },
+  {
+    type: 'CAMP',
+    id: 'camp_spawn',
+    label: 'Camp neutre / Objectif imminent',
+    soundKey: 'deathwing',
+  },
   { type: 'KILL', id: 'kill', label: 'Combat standard' },
-  { type: 'DRAGON', id: 'dragon', label: 'Dragon' },
-  { type: 'BARON', id: 'baron', label: 'Baron' },
+  { type: 'DRAGON', id: 'dragon', label: 'Dragon (Deathwing)', soundKey: 'deathwing' },
+  { type: 'BARON', id: 'baron', label: 'Baron (Archimonde)', soundKey: 'archimonde' },
   { type: 'ITEM', id: 'item', label: 'Power spike' },
   { type: 'ACE', id: 'ace', label: 'Ace' },
 ]

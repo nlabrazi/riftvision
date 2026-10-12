@@ -3,7 +3,8 @@
 pipeline {
     agent {
         docker {
-            image 'node:20'
+            image 'mcr.microsoft.com/playwright:v1.63.0-noble'
+            args '--ipc=host'
         }
     }
 
@@ -35,6 +36,12 @@ pipeline {
         stage('Unit tests') {
             steps {
                 sh 'npm test'
+            }
+        }
+
+        stage('End-to-end tests') {
+            steps {
+                sh 'npm run e2e'
             }
         }
 

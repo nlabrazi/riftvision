@@ -1,20 +1,61 @@
-export const DDRAGON_VERSION = '14.18.1'
+export const DDRAGON_VERSION = '16.20.1'
 export const DDRAGON_BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}`
 
 const CHAMPION_NAME_MAP: Record<string, string> = {
-  Wukong: 'MonkeyKing',
-  Renata: 'Renata',
-  'Renata Glasc': 'Renata',
-  Nunu: 'Nunu',
-  'Nunu & Willump': 'Nunu',
-  "Cho'Gath": 'Chogath',
-  "Kai'Sa": 'Kaisa',
-  "Kha'Zix": 'Khazix',
-  LeBlanc: 'Leblanc',
-  "Vel'Koz": 'Velkoz',
-  "Bel'Veth": 'Belveth',
-  "K'Sante": 'KSante',
-  FiddleSticks: 'Fiddlesticks',
+  wukong: 'MonkeyKing',
+  monkeyking: 'MonkeyKing',
+  renata: 'Renata',
+  'renata glasc': 'Renata',
+  renataglasc: 'Renata',
+  nunu: 'Nunu',
+  'nunu & willump': 'Nunu',
+  'nunu and willump': 'Nunu',
+  nunuwillump: 'Nunu',
+  "cho'gath": 'Chogath',
+  chogath: 'Chogath',
+  "kai'sa": 'Kaisa',
+  kaisa: 'Kaisa',
+  "kha'zix": 'Khazix',
+  khazix: 'Khazix',
+  leblanc: 'Leblanc',
+  "vel'koz": 'Velkoz',
+  velkoz: 'Velkoz',
+  "bel'veth": 'Belveth',
+  belveth: 'Belveth',
+  "k'sante": 'KSante',
+  ksante: 'KSante',
+  fiddlesticks: 'Fiddlesticks',
+  drmundo: 'DrMundo',
+  'dr. mundo': 'DrMundo',
+  'dr mundo': 'DrMundo',
+  jarvaniv: 'JarvanIV',
+  'jarvan iv': 'JarvanIV',
+  kogmaw: 'KogMaw',
+  "kog'maw": 'KogMaw',
+  leesin: 'LeeSin',
+  'lee sin': 'LeeSin',
+  masteryi: 'MasterYi',
+  'master yi': 'MasterYi',
+  missfortune: 'MissFortune',
+  'miss fortune': 'MissFortune',
+  reksai: 'RekSai',
+  "rek'sai": 'RekSai',
+  tahmkench: 'TahmKench',
+  'tahm kench': 'TahmKench',
+  twistedfate: 'TwistedFate',
+  'twisted fate': 'TwistedFate',
+  xinzhao: 'XinZhao',
+  'xin zhao': 'XinZhao',
+  aurelionsol: 'AurelionSol',
+  'aurelion sol': 'AurelionSol',
+}
+
+/**
+ * Clean raw champion name by removing game_character_displayname_ prefix
+ */
+export function cleanChampionName(rawName?: string): string {
+  if (!rawName) return ''
+  return rawName.trim().replace(/^game_character_displayname_/i, '')
 }
 
 /**
@@ -22,12 +63,17 @@ const CHAMPION_NAME_MAP: Record<string, string> = {
  */
 export function formatChampionNameForDDragon(rawName: string): string {
   if (!rawName) return 'Unknown'
-  const trimmed = rawName.trim()
-  if (CHAMPION_NAME_MAP[trimmed]) {
-    return CHAMPION_NAME_MAP[trimmed]
+  const clean = rawName.trim().replace(/^game_character_displayname_/i, '')
+  const lower = clean.toLowerCase()
+  if (CHAMPION_NAME_MAP[lower]) {
+    return CHAMPION_NAME_MAP[lower]
   }
-  // Remove spaces, apostrophes and dots
-  return trimmed.replace(/['\s.]/g, '')
+  const noSpecial = lower.replace(/['\s.&]/g, '')
+  if (CHAMPION_NAME_MAP[noSpecial]) {
+    return CHAMPION_NAME_MAP[noSpecial]
+  }
+  // Remove spaces, apostrophes, ampersands and dots
+  return clean.replace(/['\s.&]/g, '')
 }
 
 /**

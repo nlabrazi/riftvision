@@ -108,7 +108,7 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 ## 💻 Installation & Démarrage
 
 ### Prérequis
-* Node.js 24.x pour le développement et la suite de tests. Le Dockerfile utilise encore Node.js 20 : le serveur de développement y fonctionne, mais Vitest 5 nécessite Node.js `^22.12.0`, `^24.0.0` ou `>=26.0.0`.
+* Node.js 22.x ou 24.x pour le développement et la suite de tests (Vitest 5 nécessite Node.js `^22.12.0`, `^24.0.0` ou `>=26.0.0`). Le Dockerfile utilise désormais Node.js 22 LTS.
 * League of Legends (sur la même machine pour le mode réel) ou utilisation du mode simulation intégré
 
 ### Option A : Lancer en local
@@ -223,7 +223,7 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 
 Distribué sous licence **MIT**. Voir `LICENSE.txt` pour plus d'informations.
 
-- 👤 **Nabil Labrazi** : [Portfolio](https://nabil-labrazi.fr) • [LinkedIn](https://linkedin.com/in/nabil-labrazi) • [Email](mailto:na.labrazi@gmail.com)
+- 👤 **Nabil Labrazi** : [Portfolio](https://nabster.dev) • [LinkedIn](https://linkedin.com/in/nabil-labrazi) • [Email](mailto:na.labrazi@gmail.com)
 
 [contributors-shield]: https://img.shields.io/github/contributors/nlabrazi/riftvision.svg?style=for-the-badge
 [contributors-url]: https://github.com/nlabrazi/riftvision/graphs/contributors

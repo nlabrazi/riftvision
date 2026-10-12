@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
-import { getChampionIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
+import { formatSecondsToTime, getChampionIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
+import { calculateCampTimers } from '#shared/utils/campTimers'
 import {
   getChampionMapPosition,
   getDestroyedTurretIds,
@@ -47,6 +48,24 @@ const destroyedTurretIds = computed(
 const selectedLocation = computed(() =>
   props.selectedEvent ? getMapEventLocation(props.selectedEvent, players.value) : null,
 )
+
+const camps = computed(() =>
+  calculateCampTimers(gameTime.value, props.gameData?.events?.Events || []),
+)
+const dragonCamp = computed(() => camps.value.find((c) => c.id === 'DRAGON'))
+const baronCamp = computed(() => camps.value.find((c) => c.id === 'BARON'))
+
+const dragonTimerLabel = computed(() => {
+  if (!dragonCamp.value) return ''
+  if (dragonCamp.value.status === 'ALIVE') return 'DISPO'
+  return formatSecondsToTime(dragonCamp.value.remainingSeconds)
+})
+
+const baronTimerLabel = computed(() => {
+  if (!baronCamp.value) return ''
+  if (baronCamp.value.status === 'ALIVE') return 'DISPO'
+  return formatSecondsToTime(baronCamp.value.remainingSeconds)
+})
 
 interface MapPing {
   id: string
@@ -221,11 +240,17 @@ function championLabel(player: RiotPlayer) {
     </div>
 
     <div data-testid="baron-pit-marker" class="map-objective map-objective--baron" :style="pointStyle(OBJECTIVE_COORDINATES.BARON_PIT)">
-      <span class="objective-token"><img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="" /></span>
+      <span class="objective-token">
+        <img :src="getObjectiveIconUrl('baron', 'ORDER')" alt="" />
+        <span v-if="baronTimerLabel" class="objective-timer-pill" :class="{ 'is-alive': baronTimerLabel === 'DISPO' }">{{ baronTimerLabel }}</span>
+      </span>
       <span class="objective-name">Baron / Héraut</span>
     </div>
     <div data-testid="dragon-pit-marker" class="map-objective map-objective--dragon" :style="pointStyle(OBJECTIVE_COORDINATES.DRAGON_PIT)">
-      <span class="objective-token"><img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="" /></span>
+      <span class="objective-token">
+        <img :src="getObjectiveIconUrl('dragon', 'ORDER')" alt="" />
+        <span v-if="dragonTimerLabel" class="objective-timer-pill" :class="{ 'is-alive': dragonTimerLabel === 'DISPO' }">{{ dragonTimerLabel }}</span>
+      </span>
       <span class="objective-name">Dragon</span>
     </div>
 
@@ -352,8 +377,10 @@ function championLabel(player: RiotPlayer) {
 .map-objective { z-index: 2; display: flex; align-items: center; flex-direction: column; gap: 5px; }
 .map-objective--baron { --objective-color: #bcabe0; }
 .map-objective--dragon { --objective-color: #ddba75; }
-.objective-token { display: grid; place-items: center; width: clamp(25px, 5.5cqw, 40px); aspect-ratio: 1; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--objective-color) 55%, transparent); background: #101922ec; box-shadow: 0 3px 14px #0009; }
+.objective-token { position: relative; display: grid; place-items: center; width: clamp(25px, 5.5cqw, 40px); aspect-ratio: 1; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--objective-color) 55%, transparent); background: #101922ec; box-shadow: 0 3px 14px #0009; }
 .objective-token img { width: 63%; height: 63%; object-fit: contain; }
+.objective-timer-pill { position: absolute; top: -6px; right: -8px; padding: 1px 4px; border-radius: 4px; background: #081119f2; border: 1px solid var(--objective-color); color: var(--objective-color); font: 700 clamp(7px, 1.25cqw, 10px) 'Rajdhani', sans-serif; letter-spacing: .03em; white-space: nowrap; box-shadow: 0 1px 4px #000c; }
+.objective-timer-pill.is-alive { border-color: #4ade80; color: #4ade80; background: #062215f2; }
 .objective-name { padding: 2px 6px; border-radius: 3px; background: #091219e6; color: var(--objective-color); font-size: clamp(8px, 1.5cqw, 11px); font-weight: 600; white-space: nowrap; }
 .map-turret { z-index: 1; width: clamp(11px, 2.2cqw, 17px); aspect-ratio: 1; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--team-color) 65%, transparent); color: var(--team-color); background: #0a1723; border-radius: 3px; box-shadow: 0 1px 5px #0008; }
 .map-turret img { width: 75%; height: 75%; object-fit: contain; }

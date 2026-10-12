@@ -3,8 +3,11 @@ import { computed } from 'vue'
 import type { CombatLogFilter, GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
 import { getChampionIconUrl, getItemIconUrl, getRoleIconUrl } from '#shared/utils/ddragon'
+import type { EnemyMIAState } from '#shared/utils/enemyInactivity'
 import CombatLog from './CombatLog.vue'
 import MatchScoreboard from './MatchScoreboard.vue'
+import NeutralCampTimers from './NeutralCampTimers.vue'
+import RvIcon from './RvIcon.vue'
 import TacticalMinimap from './TacticalMinimap.vue'
 
 const props = withDefaults(
@@ -17,6 +20,7 @@ const props = withDefaults(
     formattedGameTime: string
     isMock?: boolean
     isPolling?: boolean
+    miaStates?: Map<string, EnemyMIAState>
   }>(),
   { isMock: false, isPolling: true },
 )
@@ -61,6 +65,14 @@ function onChampionError(event: Event) {
   const image = event.target as HTMLImageElement
   image.onerror = null
   image.src = '/favicon.ico'
+}
+
+function miaBadge(player: RiotPlayer): string | null {
+  if (!props.miaStates || player.isDead) return null
+  const key = player.summonerName || player.championName
+  const state = props.miaStates.get(key)
+  if (!state?.isMissing) return null
+  return `${Math.floor(state.inactivitySeconds)}s`
 }
 </script>
 
@@ -131,6 +143,8 @@ function onChampionError(event: Event) {
       />
     </div>
 
+    <NeutralCampTimers :game-data="gameData" />
+
     <div class="rosters-heading">
       <div>
         <span class="rv-eyebrow">Les forces en présence</span>
@@ -165,7 +179,13 @@ function onChampionError(event: Event) {
           </div>
 
           <div class="champion-info">
-            <div class="champion-name"><strong>{{ player.championName }}</strong><img v-if="getRoleIconUrl(player.position)" :src="getRoleIconUrl(player.position)" :alt="roleLabels[player.position] || 'Rôle inconnu'" :title="roleLabels[player.position]" /></div>
+            <div class="champion-name">
+              <strong>{{ player.championName }}</strong>
+              <img v-if="getRoleIconUrl(player.position)" :src="getRoleIconUrl(player.position)" :alt="roleLabels[player.position] || 'Rôle inconnu'" :title="roleLabels[player.position]" />
+              <span v-if="miaBadge(player)" class="mia-badge" :title="`Disparu depuis ${miaBadge(player)}`">
+                <RvIcon name="activity" :size="10" /> MIA {{ miaBadge(player) }}
+              </span>
+            </div>
             <span class="summoner-name" :title="player.summonerName">{{ player.summonerName.split('#')[0] }}</span>
           </div>
 
@@ -227,6 +247,8 @@ h3 { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600; color: var
 .champion-name { display: flex; align-items: center; gap: 6px; }
 .champion-name strong { font-size: 12px; color: #d5dee4; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .champion-name img { width: 12px; height: 12px; object-fit: contain; opacity: .6; flex-shrink: 0; }
+.mia-badge { display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; background: rgb(249 115 22 / 16%); border: 1px solid rgb(249 115 22 / 50%); border-radius: 3px; color: #fb923c; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; animation: mia-pulse 1.8s infinite ease-in-out; }
+@keyframes mia-pulse { 0%, 100% { opacity: .85; } 50% { opacity: 1; border-color: #f97316; box-shadow: 0 0 6px rgb(249 115 22 / 40%); } }
 .summoner-name { display: block; font-size: 10px; color: #758c9e; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-top: 3px; }
 .player-kda, .player-cs { white-space: nowrap; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px; color: #cad7e0; text-align: center; font-variant-numeric: tabular-nums; }
 .player-kda > span:not(.deaths) { color: #536979; }

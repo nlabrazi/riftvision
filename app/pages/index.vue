@@ -8,7 +8,9 @@ import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
 import RvIcon from '../components/RvIcon.vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
+import { useEnemyInactivity } from '../composables/useEnemyInactivity'
 import { useFlashAlerts } from '../composables/useFlashAlerts'
+import { useNeutralCamps } from '../composables/useNeutralCamps'
 import { useRiotLive } from '../composables/useRiotLive'
 
 const {
@@ -34,6 +36,8 @@ const {
 } = useRiotLive()
 const { isAudioMuted, toggleAudioMute, ingestDiffEvents, clearAlerts, triggerDemoAlert } =
   useFlashAlerts()
+useNeutralCamps(gameData)
+const { miaStates } = useEnemyInactivity(gameData)
 const currentView = ref<'tactical' | 'radar'>('tactical')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
@@ -130,7 +134,7 @@ onUnmounted(clearAlerts)
         @click.exact.prevent="returnHome">
         <div class="brand-symbol" aria-hidden="true"><span>R</span><i></i></div>
         <div>
-          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.1</span></div>
+          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.2</span></div>
           <p>VOTRE REGARD SUR LA FAILLE</p>
         </div>
       </a>
@@ -218,6 +222,7 @@ onUnmounted(clearAlerts)
         v-model:filter="journalFilter" v-model:search="journalSearch"
         :game-data="gameData" :blue-economy="blueEconomy" :red-economy="redEconomy" :gold-difference="goldDifference"
         :diff-events="diffEvents" :formatted-game-time="formattedGameTime" :is-mock="status.isMock" :is-polling="isPolling"
+        :mia-states="miaStates"
         @switch-view="switchView('radar')" />
 
       <FocusRadarView v-else-if="isImmersive" v-model:selected-event="selectedEvent" v-model:filter="journalFilter" v-model:search="journalSearch"
