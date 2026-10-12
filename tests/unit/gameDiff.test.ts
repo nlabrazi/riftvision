@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { mockGameData } from '../../server/data/mockGame'
 import type { RiotAllGameData } from '../../shared/types/riot'
 import {
+  buildPlayerMap,
   calculateTeamEconomy,
   computeGameDiff,
+  findPlayer,
+  isSamePlayer,
   parseTurretDetails,
 } from '../../shared/utils/gameDiff'
 
@@ -281,5 +284,82 @@ describe('gameDiff utility & economy engine', () => {
     expect(endEvent).toBeDefined()
     expect(endEvent?.title).toContain("VICTOIRE DE L'ÉQUIPE BLEUE")
     expect(endEvent?.metadata).toMatchObject({ soundKey: 'blue_team_is_the_winner' })
+  })
+
+  it('matches players robustly regardless of region tag or casing', () => {
+    expect(isSamePlayer('DariusMaster#EUW', 'dariusmaster')).toBe(true)
+    expect(isSamePlayer('Ahri#KR1', 'AHRI#kr1')).toBe(true)
+    expect(isSamePlayer('PlayerOne#EUW', 'PlayerTwo#EUW')).toBe(false)
+    expect(isSamePlayer(undefined, 'Player')).toBe(false)
+
+    const map = buildPlayerMap(mockGameData.allPlayers, mockGameData.activePlayer)
+    // Should resolve with full name
+    const p1 = findPlayer('DariusMaster#EUW', map, mockGameData.allPlayers)
+    expect(p1?.championName).toBe('Darius')
+
+    // Should resolve without tag
+    const p2 = findPlayer('DariusMaster', map, mockGameData.allPlayers)
+    expect(p2?.championName).toBe('Darius')
+
+    // Should resolve lower-case
+    const p3 = findPlayer('dariusmaster', map, mockGameData.allPlayers)
+    expect(p3?.championName).toBe('Darius')
+  })
+
+  it('resolves active player champion name for kills even if killer name omits tag', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    // Set activePlayer summoner name
+    currState.activePlayer = {
+      summonerName: 'DariusMaster#EUW',
+      currentGold: 1420,
+      level: 11,
+      championStats: {},
+    }
+
+    // Kill event where KillerName is just the username without tag
+    currState.events.Events.push({
+      EventID: 110,
+      EventName: 'ChampionKill',
+      EventTime: 820.0,
+      KillerName: 'DariusMaster',
+      VictimName: 'DemaciaSpin#EUW',
+      Assisters: [],
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const killEvent = result.newEvents.find((e) => e.id === 'kill-110')
+    expect(killEvent).toBeDefined()
+    // Must display champion name, NOT summoner username
+    expect(killEvent?.title).toContain('Darius')
+    expect(killEvent?.description).toContain('Darius a éliminé Garen')
+    expect(killEvent?.metadata).toMatchObject({
+      killerChampion: 'Darius',
+      victimChampion: 'Garen',
+    })
+  })
+
+  it('defaults soundKey to headshot for assisted champion kills', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    // Assisted kill (1 assist)
+    currState.events.Events.push({
+      EventID: 111,
+      EventName: 'ChampionKill',
+      EventTime: 850.0,
+      KillerName: 'FoxCharm#EUW',
+      VictimName: 'ShadowNinja#EUW',
+      Assisters: ['BlindMonk#EUW'],
+    })
+
+    const result = computeGameDiff(prevState, currState)
+    const killEvent = result.newEvents.find((e) => e.id === 'kill-111')
+    expect(killEvent).toBeDefined()
+    expect(killEvent?.metadata).toMatchObject({
+      isSoloKill: false,
+      soundKey: 'headshot',
+    })
   })
 })

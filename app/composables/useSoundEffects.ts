@@ -166,6 +166,12 @@ export function playSynthesizedFallback(
   }
 }
 
+const lastPlayedTimes = new Map<string, number>()
+
+export function resetSoundHistory() {
+  lastPlayedTimes.clear()
+}
+
 /**
  * Plays a game sound effect from the 17 WAV files with automatic fallback
  */
@@ -173,12 +179,21 @@ export function playGameSound(key: SoundKey | string): boolean {
   if (isAudioMuted.value || typeof window === 'undefined') return false
 
   const normalizedKey = key.toLowerCase() as SoundKey
+  const now = Date.now()
+  const lastTime = lastPlayedTimes.get(normalizedKey) || 0
+  if (now - lastTime < 1500) {
+    // Avoid playing the exact same sound effect twice within 1.5s
+    return false
+  }
+
   const soundUrl = SOUND_ASSETS[normalizedKey]
 
   if (!soundUrl) {
     playSynthesizedFallback('kill')
     return false
   }
+
+  lastPlayedTimes.set(normalizedKey, now)
 
   try {
     const audio = new Audio(soundUrl)
@@ -212,6 +227,7 @@ export function useSoundEffects() {
     toggleAudioMute,
     setVolume,
     playGameSound,
+    resetSoundHistory,
     playSynthesizedFallback,
     soundAssets: SOUND_ASSETS,
   }

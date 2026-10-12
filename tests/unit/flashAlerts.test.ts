@@ -265,4 +265,119 @@ describe('useFlashAlerts', () => {
     expect(activeAlert.value?.type).toBe('EXECUTE')
     expect(activeAlert.value?.soundKey).toBe('humiliating_defeat')
   })
+
+  it('suppresses generic kill alert when multikill is present in the same batch', () => {
+    const { activeAlert, alertQueue, ingestDiffEvents } = useFlashAlerts()
+
+    const events: GameDiffEvent[] = [
+      {
+        id: 'kill-1',
+        type: 'CHAMPION_KILL',
+        gameTime: 450,
+        formattedTime: '07:30',
+        title: 'Kill : Jinx ⚔️ Caitlyn',
+        description: 'Jinx a éliminé Caitlyn',
+        team: 'ORDER',
+        metadata: {
+          killerName: 'GetExcited#EUW',
+          killerChampion: 'Jinx',
+          victimChampion: 'Caitlyn',
+          soundKey: 'headshot',
+        },
+      },
+      {
+        id: 'multi-1',
+        type: 'MULTIKILL',
+        gameTime: 450,
+        formattedTime: '07:30',
+        title: 'DOUBLE KILL !',
+        description: 'Jinx réalise un Double Kill',
+        team: 'ORDER',
+        metadata: {
+          killerName: 'GetExcited#EUW',
+          killerChampion: 'Jinx',
+          streak: 2,
+          soundKey: 'doublekill',
+        },
+      },
+    ]
+
+    ingestDiffEvents(events)
+
+    // Only MULTIKILL alert should be active, CHAMPION_KILL should not be queued
+    expect(activeAlert.value?.type).toBe('MULTIKILL')
+    expect(activeAlert.value?.soundKey).toBe('doublekill')
+    expect(alertQueue.value).toHaveLength(0)
+  })
+
+  it('suppresses generic kill alert when kill streak is present in the same batch', () => {
+    const { activeAlert, alertQueue, ingestDiffEvents } = useFlashAlerts()
+
+    const events: GameDiffEvent[] = [
+      {
+        id: 'kill-2',
+        type: 'CHAMPION_KILL',
+        gameTime: 600,
+        formattedTime: '10:00',
+        title: 'Kill : Ahri ⚔️ Zed',
+        description: 'Ahri a éliminé Zed',
+        team: 'ORDER',
+        metadata: {
+          killerName: 'FoxCharm#EUW',
+          killerChampion: 'Ahri',
+          victimChampion: 'Zed',
+          streak: 3,
+          soundKey: 'killingspree',
+        },
+      },
+      {
+        id: 'streak-2',
+        type: 'KILL_STREAK',
+        gameTime: 600,
+        formattedTime: '10:00',
+        title: 'SÉRIE DE MEURTRES (KILLING SPREE)',
+        description: 'Ahri enchaîne 3 éliminations sans mourir !',
+        team: 'ORDER',
+        metadata: {
+          killerName: 'FoxCharm#EUW',
+          killerChampion: 'Ahri',
+          streak: 3,
+          soundKey: 'killingspree',
+        },
+      },
+    ]
+
+    ingestDiffEvents(events)
+
+    // Only KILL_STREAK alert should be active, avoiding duplicate sound and alert
+    expect(activeAlert.value?.type).toBe('KILL_STREAK')
+    expect(activeAlert.value?.soundKey).toBe('killingspree')
+    expect(alertQueue.value).toHaveLength(0)
+  })
+
+  it('defaults soundKey to headshot for standard champion kills without streak', () => {
+    const { activeAlert, ingestDiffEvents } = useFlashAlerts()
+
+    const events: GameDiffEvent[] = [
+      {
+        id: 'kill-assisted',
+        type: 'CHAMPION_KILL',
+        gameTime: 700,
+        formattedTime: '11:40',
+        title: 'Kill : Garen ⚔️ Darius',
+        description: 'Garen a éliminé Darius',
+        team: 'CHAOS',
+        metadata: {
+          killerChampion: 'Garen',
+          victimChampion: 'Darius',
+          isSoloKill: false,
+        },
+      },
+    ]
+
+    ingestDiffEvents(events)
+
+    expect(activeAlert.value?.type).toBe('KILL')
+    expect(activeAlert.value?.soundKey).toBe('headshot')
+  })
 })

@@ -4,8 +4,117 @@ import type {
   SoundEffectKey,
   TeamEconomySummary,
 } from '../types/diff'
-import type { RiotAllGameData, RiotEvent, RiotPlayer, TeamType } from '../types/riot'
+import type {
+  RiotActivePlayer,
+  RiotAllGameData,
+  RiotEvent,
+  RiotPlayer,
+  TeamType,
+} from '../types/riot'
 import { formatSecondsToTime, getItemIconUrl } from './ddragon'
+
+/**
+ * Check if two names refer to the same player (ignoring case and region tag like #EUW)
+ */
+export function isSamePlayer(nameA?: string, nameB?: string): boolean {
+  if (!nameA || !nameB) return false
+  const cleanA = nameA.trim().toLowerCase().split('#')[0]
+  const cleanB = nameB.trim().toLowerCase().split('#')[0]
+  return cleanA === cleanB
+}
+
+/**
+ * Build a lookup map indexing players by full name, normalized name, and base name without tag
+ */
+export function buildPlayerMap(
+  players: RiotPlayer[],
+  activePlayer?: RiotActivePlayer,
+): Map<string, RiotPlayer> {
+  const map = new Map<string, RiotPlayer>()
+
+  const normalize = (s?: string) => (s || '').trim().toLowerCase()
+  const baseName = (s?: string) => normalize(s).split('#')[0]
+
+  // Identify active player in allPlayers if activePlayer is provided
+  let matchedActivePlayer: RiotPlayer | undefined
+  if (activePlayer?.summonerName) {
+    const actNorm = normalize(activePlayer.summonerName)
+    const actBase = baseName(activePlayer.summonerName)
+    matchedActivePlayer = players.find((p) => {
+      const pNorm = normalize(p.summonerName)
+      const pBase = baseName(p.summonerName)
+      return pNorm === actNorm || pBase === actBase
+    })
+  }
+
+  for (const p of players) {
+    map.set(p.summonerName, p)
+    map.set(normalize(p.summonerName), p)
+    map.set(baseName(p.summonerName), p)
+
+    if (p.rawSummonerName) {
+      map.set(p.rawSummonerName, p)
+      map.set(normalize(p.rawSummonerName), p)
+      map.set(baseName(p.rawSummonerName), p)
+    }
+
+    if (p.championName) {
+      map.set(p.championName, p)
+      map.set(normalize(p.championName), p)
+    }
+  }
+
+  if (activePlayer?.summonerName && matchedActivePlayer) {
+    map.set(activePlayer.summonerName, matchedActivePlayer)
+    map.set(normalize(activePlayer.summonerName), matchedActivePlayer)
+    map.set(baseName(activePlayer.summonerName), matchedActivePlayer)
+  }
+
+  return map
+}
+
+/**
+ * Find a player by summonerName, riotId, or championName
+ */
+export function findPlayer(
+  name: string | undefined,
+  playerMap: Map<string, RiotPlayer>,
+  players: RiotPlayer[],
+  activePlayer?: RiotActivePlayer,
+): RiotPlayer | undefined {
+  if (!name) return undefined
+  const trimmed = name.trim()
+  if (!trimmed) return undefined
+
+  if (playerMap.has(trimmed)) return playerMap.get(trimmed)
+
+  const norm = trimmed.toLowerCase()
+  if (playerMap.has(norm)) return playerMap.get(norm)
+
+  const base = norm.split('#')[0]
+  if (playerMap.has(base)) return playerMap.get(base)
+
+  if (activePlayer?.summonerName && isSamePlayer(name, activePlayer.summonerName)) {
+    const actBase = activePlayer.summonerName.trim().toLowerCase().split('#')[0]
+    const p = players.find(
+      (pl) => isSamePlayer(pl.summonerName, actBase) || isSamePlayer(pl.rawSummonerName, actBase),
+    )
+    if (p) return p
+  }
+
+  const found = players.find((p) => {
+    const pBase = (p.summonerName || '').trim().toLowerCase().split('#')[0]
+    const pRaw = (p.rawSummonerName || '').trim().toLowerCase().split('#')[0]
+    return (
+      pBase === base ||
+      pRaw === base ||
+      (pBase.length >= 3 && base.length >= 3 && (pBase.includes(base) || base.includes(pBase)))
+    )
+  })
+  if (found) return found
+
+  return undefined
+}
 
 /**
  * Parse turret string ID to extract lane and tier
@@ -65,7 +174,24 @@ export function calculateTeamEconomy(
   let dragonCount = 0
   let baronCount = 0
 
-  const playerNames = new Set(teamPlayers.map((p) => p.summonerName))
+  const playerNames = new Set<string>()
+  for (const p of teamPlayers) {
+    playerNames.add(p.summonerName)
+    playerNames.add(p.summonerName.toLowerCase())
+    playerNames.add(p.summonerName.toLowerCase().split('#')[0])
+    if (p.rawSummonerName) {
+      playerNames.add(p.rawSummonerName)
+      playerNames.add(p.rawSummonerName.toLowerCase())
+      playerNames.add(p.rawSummonerName.toLowerCase().split('#')[0])
+    }
+  }
+
+  const isTeamKiller = (killer?: string) => {
+    if (!killer) return false
+    const norm = killer.toLowerCase()
+    const base = norm.split('#')[0]
+    return playerNames.has(killer) || playerNames.has(norm) || playerNames.has(base)
+  }
 
   for (const e of events) {
     if (e.EventName === 'TurretKilled') {
@@ -73,12 +199,12 @@ export function calculateTeamEconomy(
       // If the destroyed turret was on the other team, this team destroyed it
       if (details.destroyedTeam !== 'UNKNOWN' && details.destroyedTeam !== team) {
         turretCount++
-      } else if (e.KillerName && playerNames.has(e.KillerName)) {
+      } else if (isTeamKiller(e.KillerName)) {
         turretCount++
       }
-    } else if (e.EventName === 'DragonKill' && e.KillerName && playerNames.has(e.KillerName)) {
+    } else if (e.EventName === 'DragonKill' && isTeamKiller(e.KillerName)) {
       dragonCount++
-    } else if (e.EventName === 'BaronKill' && e.KillerName && playerNames.has(e.KillerName)) {
+    } else if (e.EventName === 'BaronKill' && isTeamKiller(e.KillerName)) {
       baronCount++
     }
   }
@@ -108,9 +234,9 @@ export function calculateKillStreak(
 
   for (const ev of sorted) {
     if (ev.EventName === 'ChampionKill') {
-      if (ev.KillerName === summonerName) {
+      if (isSamePlayer(ev.KillerName, summonerName)) {
         streak++
-      } else if (ev.VictimName === summonerName) {
+      } else if (isSamePlayer(ev.VictimName, summonerName)) {
         streak = 0
       }
     }
@@ -136,11 +262,8 @@ export function computeGameDiff(
 
   const newEvents: GameDiffEvent[] = []
 
-  // Player Map for quick lookup
-  const playerMap = new Map<string, RiotPlayer>()
-  for (const p of players) {
-    playerMap.set(p.summonerName, p)
-  }
+  // Player Map for quick lookup with flexible Riot ID / Summoner Name matching
+  const playerMap = buildPlayerMap(players, curr.activePlayer)
 
   // 1. Detect New Items Purchased (Inventory Diff)
   if (prev?.allPlayers?.length) {
@@ -227,8 +350,8 @@ export function computeGameDiff(
 
   for (const e of rawNewEvents) {
     if (e.EventName === 'FirstBlood') {
-      const recipient = e.Recipient ? playerMap.get(e.Recipient) : undefined
-      const killerChamp = recipient?.championName || e.Recipient?.split('#')[0] || 'Champion'
+      const recipient = findPlayer(e.Recipient, playerMap, players, curr.activePlayer)
+      const killerChamp = recipient?.championName || 'Champion'
       newEvents.push({
         id: `firstblood-${e.EventID}`,
         type: 'FIRST_BLOOD',
@@ -245,8 +368,8 @@ export function computeGameDiff(
         },
       })
     } else if (e.EventName === 'Multikill') {
-      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-      const killerChamp = killer?.championName || e.KillerName?.split('#')[0] || 'Champion'
+      const killer = findPlayer(e.KillerName, playerMap, players, curr.activePlayer)
+      const killerChamp = killer?.championName || 'Champion'
       const streak = Number(e.KillStreak) || 2
 
       let title = 'DOUBLE KILL !'
@@ -306,8 +429,8 @@ export function computeGameDiff(
     } else if (e.EventName === 'ChampionKill') {
       const isExecution =
         !e.KillerName || e.KillerName.startsWith('Turret_') || e.KillerName.startsWith('Minion_')
-      const victim = e.VictimName ? playerMap.get(e.VictimName) : undefined
-      const victimChamp = victim?.championName || e.VictimName?.split('#')[0] || 'Inconnu'
+      const victim = findPlayer(e.VictimName, playerMap, players, curr.activePlayer)
+      const victimChamp = victim?.championName || 'Ennemi'
 
       if (isExecution) {
         newEvents.push({
@@ -326,17 +449,17 @@ export function computeGameDiff(
           },
         })
       } else {
-        const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-        const killerChamp = killer?.championName || e.KillerName?.split('#')[0] || 'Inconnu'
+        const killer = findPlayer(e.KillerName, playerMap, players, curr.activePlayer)
+        const killerChamp = killer?.championName || 'Champion'
         const isSoloKill = !e.Assisters || e.Assisters.length === 0
         const streak = e.KillerName ? calculateKillStreak(allEvents, e.KillerName, e.EventTime) : 1
 
-        let soundKey: SoundEffectKey | undefined
+        let soundKey: SoundEffectKey = 'headshot'
         if (streak >= 8) soundKey = 'ludicrouskill'
         else if (streak >= 6) soundKey = 'godlike'
         else if (streak >= 4) soundKey = 'unstoppable'
         else if (streak === 3) soundKey = 'killingspree'
-        else if (isSoloKill) soundKey = 'headshot'
+        else soundKey = 'headshot'
 
         newEvents.push({
           id: `kill-${e.EventID}`,
@@ -391,8 +514,8 @@ export function computeGameDiff(
       }
     } else if (e.EventName === 'TurretKilled') {
       const { destroyedTeam, lane } = parseTurretDetails(e.TurretKilled)
-      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-      const killerChamp = killer?.championName || e.KillerName || 'Inconnu'
+      const killer = findPlayer(e.KillerName, playerMap, players, curr.activePlayer)
+      const killerChamp = killer?.championName || 'Équipe'
 
       newEvents.push({
         id: `turret-${e.EventID}`,
@@ -405,8 +528,8 @@ export function computeGameDiff(
         metadata: { turretId: e.TurretKilled, lane, destroyedTeam, killerChamp },
       })
     } else if (e.EventName === 'DragonKill') {
-      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-      const killerChamp = killer?.championName || e.KillerName || 'Inconnu'
+      const killer = findPlayer(e.KillerName, playerMap, players, curr.activePlayer)
+      const killerChamp = killer?.championName || 'Équipe'
 
       newEvents.push({
         id: `dragon-${e.EventID}`,
@@ -419,8 +542,8 @@ export function computeGameDiff(
         metadata: { dragonType: e.DragonType, killerChamp },
       })
     } else if (e.EventName === 'BaronKill') {
-      const killer = e.KillerName ? playerMap.get(e.KillerName) : undefined
-      const killerChamp = killer?.championName || e.KillerName || 'Inconnu'
+      const killer = findPlayer(e.KillerName, playerMap, players, curr.activePlayer)
+      const killerChamp = killer?.championName || 'Équipe'
       const team: TeamType = killer?.team || 'ORDER'
       const soundKey: SoundEffectKey =
         team === 'ORDER' ? 'blue_team_dominating' : 'red_team_dominating'

@@ -4,6 +4,7 @@ import {
   type SoundKey,
   playGameSound,
   playSynthesizedFallback,
+  resetSoundHistory,
   useSoundEffects,
 } from '../../app/composables/useSoundEffects'
 
@@ -84,5 +85,49 @@ describe('useSoundEffects', () => {
       playSynthesizedFallback('item')
       playSynthesizedFallback('ace')
     }).not.toThrow()
+  })
+
+  it('debounces identical sound effect within 1.5s in browser environment', () => {
+    const originalWindow = globalThis.window
+    try {
+      let playCalled = 0
+      globalThis.window = {
+        AudioContext: class {},
+      } as unknown as Window & typeof globalThis
+
+      // @ts-expect-error test mock
+      globalThis.Audio = class {
+        volume = 1
+        play() {
+          playCalled++
+          return Promise.resolve()
+        }
+      }
+
+      resetSoundHistory()
+      const first = playGameSound('headshot')
+      expect(first).toBe(true)
+      expect(playCalled).toBe(1)
+
+      // Immediate second call with same key should be blocked by debounce
+      const second = playGameSound('headshot')
+      expect(second).toBe(false)
+      expect(playCalled).toBe(1)
+
+      // Different key should be allowed
+      const differentKey = playGameSound('doublekill')
+      expect(differentKey).toBe(true)
+      expect(playCalled).toBe(2)
+
+      // After resetSoundHistory, same key can be played again
+      resetSoundHistory()
+      const afterReset = playGameSound('headshot')
+      expect(afterReset).toBe(true)
+      expect(playCalled).toBe(3)
+    } finally {
+      globalThis.window = originalWindow
+      // @ts-expect-error restore
+      delete globalThis.Audio
+    }
   })
 })
