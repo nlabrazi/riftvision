@@ -6,6 +6,7 @@ import {
   calculateTeamEconomy,
   computeGameDiff,
   findPlayer,
+  identifyActivePlayer,
   isSamePlayer,
   parseTurretDetails,
 } from '../../shared/utils/gameDiff'
@@ -335,6 +336,7 @@ describe('gameDiff utility & economy engine', () => {
     expect(killEvent?.title).toContain('Darius')
     expect(killEvent?.description).toContain('Darius a éliminé Garen')
     expect(killEvent?.metadata).toMatchObject({
+      championName: 'Darius',
       killerChampion: 'Darius',
       victimChampion: 'Garen',
     })
@@ -358,8 +360,110 @@ describe('gameDiff utility & economy engine', () => {
     const killEvent = result.newEvents.find((e) => e.id === 'kill-111')
     expect(killEvent).toBeDefined()
     expect(killEvent?.metadata).toMatchObject({
+      championName: 'Ahri',
       isSoloKill: false,
       soundKey: 'headshot',
+    })
+  })
+
+  it('identifies active player via riotId and riotIdGameName when summonerName is empty', () => {
+    const players = JSON.parse(JSON.stringify(mockGameData.allPlayers))
+    players[0].riotId = 'TopLaner#EUW'
+    players[0].riotIdGameName = 'TopLaner'
+
+    const activePlayer = {
+      summonerName: '',
+      riotId: 'TopLaner#EUW',
+      riotIdGameName: 'TopLaner',
+      currentGold: 500,
+      level: 1,
+      championStats: {},
+    }
+
+    const matched = identifyActivePlayer(players, activePlayer)
+    expect(matched).toBeDefined()
+    expect(matched?.championName).toBe(players[0].championName)
+  })
+
+  it('identifies active player via ability IDs embedding champion name', () => {
+    const players = JSON.parse(JSON.stringify(mockGameData.allPlayers))
+    // Empty names on activePlayer
+    const activePlayer = {
+      summonerName: '',
+      currentGold: 500,
+      level: 1,
+      championStats: {},
+      abilities: {
+        Q: { id: 'DariusCleave' },
+      },
+    }
+
+    const matched = identifyActivePlayer(players, activePlayer)
+    expect(matched).toBeDefined()
+    expect(matched?.championName).toBe('Darius')
+  })
+
+  it('identifies active player via single human player fallback in bot games', () => {
+    const players = [
+      { ...mockGameData.allPlayers[0], isBot: false },
+      { ...mockGameData.allPlayers[1], isBot: true },
+      { ...mockGameData.allPlayers[2], isBot: true },
+    ]
+    const activePlayer = {
+      summonerName: '',
+      currentGold: 500,
+      level: 1,
+      championStats: {},
+    }
+
+    const matched = identifyActivePlayer(players, activePlayer)
+    expect(matched).toBeDefined()
+    expect(matched?.championName).toBe(players[0].championName)
+  })
+
+  it('sets metadata.championName on all combat events and cleans raw names', () => {
+    const prevState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+    const currState: RiotAllGameData = JSON.parse(JSON.stringify(mockGameData))
+
+    currState.events.Events.push(
+      {
+        EventID: 201,
+        EventName: 'FirstBlood',
+        EventTime: 120.0,
+        Recipient: 'DariusMaster#EUW',
+      },
+      {
+        EventID: 202,
+        EventName: 'Multikill',
+        EventTime: 125.0,
+        KillerName: 'DariusMaster#EUW',
+        KillStreak: 2,
+      },
+      {
+        EventID: 203,
+        EventName: 'ChampionKill',
+        EventTime: 130.0,
+        KillerName: 'Turret_TChaos_R_03_A',
+        VictimName: 'DemaciaSpin#EUW',
+      },
+    )
+
+    const result = computeGameDiff(prevState, currState)
+    const fb = result.newEvents.find((e) => e.id === 'firstblood-201')
+    const multi = result.newEvents.find((e) => e.id === 'multikill-202')
+    const exec = result.newEvents.find((e) => e.id === 'execute-203')
+
+    expect(fb?.metadata).toMatchObject({
+      championName: 'Darius',
+      killerChampion: 'Darius',
+    })
+    expect(multi?.metadata).toMatchObject({
+      championName: 'Darius',
+      killerChampion: 'Darius',
+    })
+    expect(exec?.metadata).toMatchObject({
+      championName: 'Garen',
+      victimChampion: 'Garen',
     })
   })
 })

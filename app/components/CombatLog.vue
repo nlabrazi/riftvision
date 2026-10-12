@@ -75,8 +75,18 @@ function eventImage(event: GameDiffEvent): string | undefined {
   if (event.type === 'BARON_KILL') return getObjectiveIconUrl('baron', team)
   if (event.type === 'HERALD_KILL') return getObjectiveIconUrl('herald', team)
   if (event.type === 'TURRET_DESTROYED') return getObjectiveIconUrl('tower', team)
-  const champion = metadata.championName || metadata.killerChampion || metadata.killerChamp
-  return typeof champion === 'string' ? getChampionIconUrl(champion) : undefined
+  const champion =
+    metadata.championName ||
+    metadata.killerChampion ||
+    metadata.killerChamp ||
+    metadata.victimChampion
+  if (
+    typeof champion === 'string' &&
+    !['Champion', 'Ennemi', 'Inconnu', 'Tueur', 'Équipe', 'Unknown'].includes(champion)
+  ) {
+    return getChampionIconUrl(champion)
+  }
+  return undefined
 }
 </script>
 
@@ -109,7 +119,7 @@ function eventImage(event: GameDiffEvent): string | undefined {
             :aria-label="`${event.formattedTime} · ${event.description}. Afficher le détail`"
             data-testid="combat-log-event" @click="emit('select-event', event)">
             <time>{{ event.formattedTime }}</time>
-            <span class="event-visual"><img v-if="eventImage(event)" :src="eventImage(event)" alt="" loading="lazy" />
+            <span class="event-visual"><img v-if="eventImage(event)" :src="eventImage(event)" alt="" loading="lazy" @error="(e) => ((e.target as HTMLElement).style.display = 'none')" />
               <RvIcon v-else :name="eventKinds[event.type].icon" :size="16" />
             </span>
             <span class="event-copy"><span class="event-meta"><span class="event-type">{{ eventKinds[event.type].label

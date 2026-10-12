@@ -135,7 +135,7 @@ export function useFlashAlerts() {
       const meta = e.metadata as EventAlertMeta | undefined
 
       if (e.type === 'FIRST_BLOOD') {
-        const killerChamp = meta?.killerChampion || 'Tueur'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Tueur'
         const victimChamp = meta?.victimChampion
         triggerAlert({
           id: e.id,
@@ -152,7 +152,7 @@ export function useFlashAlerts() {
           soundKey: 'firstblood',
         })
       } else if (e.type === 'MULTIKILL') {
-        const killerChamp = meta?.killerChampion || 'Champion'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Champion'
         const streak = meta?.streak || 2
         const soundKey = (meta?.soundKey as SoundEffectKey) || 'doublekill'
         triggerAlert({
@@ -166,7 +166,7 @@ export function useFlashAlerts() {
           soundKey,
         })
       } else if (e.type === 'KILL_STREAK') {
-        const killerChamp = meta?.killerChampion || 'Champion'
+        const killerChamp = meta?.championName || meta?.killerChampion || 'Champion'
         const soundKey = (meta?.soundKey as SoundEffectKey) || 'killingspree'
         triggerAlert({
           id: e.id,
@@ -272,7 +272,7 @@ export function useFlashAlerts() {
         })
       } else if (e.type === 'CHAMPION_KILL') {
         const killerName = meta?.killerName?.toLowerCase().split('#')[0]
-        const killerChamp = meta?.killerChampion
+        const killerChamp = meta?.championName || meta?.killerChampion
         const kChampNorm = killerChamp?.toLowerCase()
         const victimChamp = meta?.victimChampion
 

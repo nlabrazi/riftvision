@@ -57,8 +57,8 @@ const categoryLabel = computed(() => {
         <div class="flash-content">
           <div v-if="activeAlert.iconUrl" class="flash-avatar"
             :class="{ 'flash-avatar--objective': ['BARON', 'DRAGON', 'HERALD', 'TURRET'].includes(activeAlert.type) }">
-            <img :src="activeAlert.iconUrl" alt="" />
-            <img v-if="activeAlert.victimIconUrl" :src="activeAlert.victimIconUrl" alt="" class="flash-victim" />
+            <img :src="activeAlert.iconUrl" alt="" @error="(e) => ((e.target as HTMLElement).style.display = 'none')" />
+            <img v-if="activeAlert.victimIconUrl" :src="activeAlert.victimIconUrl" alt="" class="flash-victim" @error="(e) => ((e.target as HTMLElement).style.display = 'none')" />
           </div>
           <div class="flash-copy">
             <h3>{{ activeAlert.title.replace('⚔️', '→') }}</h3>

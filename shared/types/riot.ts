@@ -70,6 +70,9 @@ export interface RiotPlayer {
   skinName?: string
   summonerName: string
   rawSummonerName?: string
+  riotId?: string
+  riotIdGameName?: string
+  riotIdTagLine?: string
   summonerSpells: {
     summonerSpellOne: RiotSummonerSpell
     summonerSpellTwo: RiotSummonerSpell
@@ -82,6 +85,13 @@ export interface RiotActivePlayer {
   currentGold: number
   level: number
   summonerName: string
+  riotId?: string
+  riotIdGameName?: string
+  riotIdTagLine?: string
+  abilities?: Record<
+    string,
+    { id?: string; displayName?: string; rawDisplayName?: string; rawDescription?: string }
+  >
 }
 
 export interface RiotEvent {

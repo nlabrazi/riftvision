@@ -380,4 +380,31 @@ describe('useFlashAlerts', () => {
     expect(activeAlert.value?.type).toBe('KILL')
     expect(activeAlert.value?.soundKey).toBe('headshot')
   })
+
+  it('resolves champion iconUrl using championName and avoids broken icon for generic roles', () => {
+    const { activeAlert, ingestDiffEvents } = useFlashAlerts()
+
+    const events: GameDiffEvent[] = [
+      {
+        id: 'kill-champ-name',
+        type: 'CHAMPION_KILL',
+        gameTime: 800,
+        formattedTime: '13:20',
+        title: 'Solo Kill : Darius ⚔️ Garen',
+        description: 'Darius a éliminé Garen en duel',
+        team: 'ORDER',
+        metadata: {
+          championName: 'Darius',
+          victimChampion: 'Garen',
+          isSoloKill: true,
+        },
+      },
+    ]
+
+    ingestDiffEvents(events)
+
+    expect(activeAlert.value?.type).toBe('KILL')
+    expect(activeAlert.value?.iconUrl).toContain('Darius.png')
+    expect(activeAlert.value?.victimIconUrl).toContain('Garen.png')
+  })
 })
