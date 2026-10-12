@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-10-12
+
+### Maintenance & CI
+- Mise à niveau du pipeline Jenkins avec l'image Playwright Noble (`mcr.microsoft.com/playwright:v1.63.0-noble`) et exécution automatisée de la suite de tests E2E.
+- Mise à niveau de l'image de base Docker vers Node.js 22 LTS (`node:22-bookworm-slim`).
+- Alignement des versions (`1.2.3`), badge de version d'en-tête et harmonisation des liens portfolio vers `nabster.dev`.
+
+## [1.2.2] - 2026-09-22
+
+### Tests & Résilience
+- Ajout de suites de tests End-to-End Playwright pour la résilience réseau (erreurs HTTP 500 sur le statut initial, gestion des déconnexions/reconnexions en cours de partie et conservation des données affichées).
+- Suite de tests E2E dédiée au testeur d'alertes (`AlertTester`) dans le volet de diagnostic technique pour la validation des bannières et bruitages en mode démo.
+
+## [1.2.1] - 2026-09-19
+
+### Intégration continue
+- Ajout du fichier de pipeline CI `Jenkinsfile` avec la bibliothèque partagée `nabster-ci`.
+- Notifications Telegram automatisées pour le suivi des builds (démarrage, succès, échec).
+- Étapes de pipeline pour l'installation, le linting Biome, la vérification du formatage, les tests unitaires et le build de production.
+
+## [1.2.0] - 2026-09-18
+
+### Interface & Ressources
+- Intégration officielle de Font Awesome pour l'ensemble des icônes de l'interface et du footer via le composant `RvIcon`.
+- Intégration de 17 bruitages WAV officiels de League of Legends avec système de secours synthétisé Web Audio API et bascule muet globale.
+- Liens portfolio, dépôt GitHub, profil X et contact dans le footer de l'application avec tests E2E associés.
+- Documentation mise à jour pour le rechargement à chaud sous Docker / WSL2 et clarification de l'architecture cible pour le multi-joueur.
+
 ## [1.1.0] - 2026-09-15
 
 ### Interface & ergonomie
