@@ -8,7 +8,13 @@
   "directories": {
     "output": "dist-overlay"
   },
-  "files": ["scripts/desktop-overlay.cjs", "package.json"],
+  "files": ["scripts/desktop-overlay.cjs", "package.json", "public/favicon.ico"],
+  "extraResources": [
+    {
+      "from": "public/favicon.ico",
+      "to": "favicon.ico"
+    }
+  ],
   "extraMetadata": {
     "main": "scripts/desktop-overlay.cjs"
   },
