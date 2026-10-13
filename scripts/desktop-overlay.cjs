@@ -4,11 +4,16 @@
  * Fenêtre transparente, sans bordure, Always-on-Top et 100% traversante pour la souris (Click-through)
  * superposée à League of Legends (mode Plein écran fenêtré / Borderless).
  * 
- * Lancement sous Windows :
- *   electron desktop-overlay.cjs
+ * Intègre :
+ *  - Zone de notification Windows (System Tray) avec menu contextuel et statut
+ *  - Notification native au démarrage
+ *  - Ouverture automatique du tableau de bord dans le navigateur par défaut
+ *  - Raccourcis globaux F9 (test) et Ctrl+Shift+O (visibilité)
  */
 
-const { app, BrowserWindow, globalShortcut, screen } = require('electron')
+const path = require('node:path')
+const fs = require('node:fs')
+const { app, BrowserWindow, globalShortcut, screen, Tray, Menu, shell, Notification } = require('electron')
 
 // Empêche les instances multiples
 const gotTheLock = app.requestSingleInstanceLock()
@@ -19,6 +24,109 @@ if (!gotTheLock) {
 }
 
 let overlayWindow = null
+let tray = null
+
+function resolveIconPath() {
+  const candidates = [
+    path.join(__dirname, '..', 'public', 'favicon.ico'),
+    path.join(process.resourcesPath, 'public', 'favicon.ico'),
+    path.join(__dirname, 'public', 'favicon.ico'),
+  ]
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
+  }
+  return ''
+}
+
+function getDashboardUrl() {
+  const customUrl = process.env.RIFTVISION_URL
+  if (customUrl) {
+    try {
+      const u = new URL(customUrl)
+      return `${u.protocol}//${u.host}`
+    } catch {
+      return customUrl
+    }
+  }
+  return 'http://localhost:3000'
+}
+
+function triggerTestAlert() {
+  console.log('[RiftVision Overlay] Déclenchement de l’alerte de test !')
+  if (overlayWindow && overlayWindow.webContents) {
+    overlayWindow.webContents.executeJavaScript(`
+      if (window.__triggerDemoAlert) {
+        window.__triggerDemoAlert('DRAGON')
+      }
+    `).catch(() => {})
+  }
+}
+
+function toggleOverlayVisibility() {
+  if (overlayWindow) {
+    if (overlayWindow.isVisible()) {
+      overlayWindow.hide()
+      console.log('[RiftVision Overlay] Overlay masqué')
+    } else {
+      overlayWindow.show()
+      console.log('[RiftVision Overlay] Overlay affiché')
+    }
+  }
+}
+
+function createTray() {
+  const iconPath = resolveIconPath()
+  try {
+    tray = new Tray(iconPath)
+    tray.setToolTip('RiftVision Overlay — Compagnon In-Game Actif')
+
+    const contextMenu = Menu.buildFromTemplate([
+      { label: '🟢 RiftVision Overlay (Actif)', enabled: false },
+      { type: 'separator' },
+      {
+        label: '🌐 Ouvrir le tableau de bord',
+        click: () => {
+          shell.openExternal(getDashboardUrl())
+        },
+      },
+      {
+        label: '⚡ Tester une alerte in-game (F9)',
+        click: () => {
+          triggerTestAlert()
+        },
+      },
+      {
+        label: '👁️ Masquer / Afficher l’overlay (Ctrl+Shift+O)',
+        click: () => {
+          toggleOverlayVisibility()
+        },
+      },
+      { type: 'separator' },
+      {
+        label: '❌ Quitter RiftVision',
+        click: () => {
+          app.quit()
+        },
+      },
+    ])
+
+    tray.setContextMenu(contextMenu)
+    tray.on('double-click', () => {
+      shell.openExternal(getDashboardUrl())
+    })
+
+    // Notification toast native au démarrage
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'RiftVision Overlay est actif !',
+        body: 'Superposé à League of Legends. Appuyez sur F9 pour tester ou faites un clic droit sur l’icône dans la barre des tâches pour ouvrir le tableau de bord.',
+        icon: iconPath,
+      }).show()
+    }
+  } catch (err) {
+    console.warn('[RiftVision Overlay] Note Tray :', err.message)
+  }
+}
 
 function createOverlayWindow() {
   const displays = screen.getAllDisplays()
@@ -81,8 +189,8 @@ function createOverlayWindow() {
   })
 
   overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.error(`[RiftVision Overlay] ✗ Erreur de chargement (${errorCode}) : ${errorDescription}`)
-    console.error('[RiftVision Overlay] Assurez-vous que le serveur RiftVision tourne (npm run dev).')
+    console.error(`[RiftVision Overlay] ✗ En attente de connexion (${errorCode}) : ${errorDescription}`)
+    console.log('[RiftVision Overlay] En attente du tableau de bord sur http://localhost:3000...')
   })
 
   overlayWindow.webContents.on('console-message', (_event, _level, message) => {
@@ -98,30 +206,24 @@ function createOverlayWindow() {
 
 app.whenReady().then(() => {
   createOverlayWindow()
+  createTray()
+
+  // Ouvre automatiquement le tableau de bord web dans le navigateur par défaut
+  if (process.env.RIFTVISION_NO_BROWSER !== '1') {
+    setTimeout(() => {
+      console.log(`[RiftVision Overlay] Ouverture du tableau de bord dans le navigateur : ${getDashboardUrl()}`)
+      shell.openExternal(getDashboardUrl()).catch(() => {})
+    }, 1200)
+  }
 
   // Raccourci global F9 : déclenche une alerte de test n'importe où
   globalShortcut.register('F9', () => {
-    console.log('[RiftVision Overlay] Touche F9 détectée -> déclenchement de l’alerte de test !')
-    if (overlayWindow && overlayWindow.webContents) {
-      overlayWindow.webContents.executeJavaScript(`
-        if (window.__triggerDemoAlert) {
-          window.__triggerDemoAlert('DRAGON')
-        }
-      `).catch(() => {})
-    }
+    triggerTestAlert()
   })
 
   // Raccourci global Ctrl+Shift+O (lettre O) : bascule la visibilité
   globalShortcut.register('CommandOrControl+Shift+O', () => {
-    if (overlayWindow) {
-      if (overlayWindow.isVisible()) {
-        overlayWindow.hide()
-        console.log('[RiftVision Overlay] Overlay masqué')
-      } else {
-        overlayWindow.show()
-        console.log('[RiftVision Overlay] Overlay affiché')
-      }
-    }
+    toggleOverlayVisibility()
   })
 
   app.on('activate', () => {
@@ -139,4 +241,8 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
+  if (tray) {
+    tray.destroy()
+    tray = null
+  }
 })
