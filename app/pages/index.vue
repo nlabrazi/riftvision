@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CombatLogFilter, GameDiffEvent } from '#shared/types/diff'
 import AlertTester from '../components/AlertTester.vue'
 import AppFooter from '../components/AppFooter.vue'

@@ -5,7 +5,6 @@ import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import RvIcon from '../components/RvIcon.vue'
 import { useFlashAlerts } from '../composables/useFlashAlerts'
 import { useRiotLive } from '../composables/useRiotLive'
-import { useSoundEffects } from '../composables/useSoundEffects'
 
 useHead({
   title: 'RiftVision — In-Game HUD Overlay',
@@ -27,7 +26,6 @@ const {
   dismissCurrentAlert,
   ingestDiffEvents,
 } = useFlashAlerts()
-const { isAudioMuted: soundMuted } = useSoundEffects()
 
 let eventSource: EventSource | null = null
 
