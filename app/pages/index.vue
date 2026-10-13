@@ -6,6 +6,7 @@ import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
+import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
 import { useEnemyInactivity } from '../composables/useEnemyInactivity'
@@ -23,6 +24,10 @@ const {
   blueEconomy,
   redEconomy,
   goldDifference,
+  isGameOver,
+  gameResult,
+  triggerGameOver,
+  dismissGameOver,
   isPolling,
   lastError,
   isConnected,
@@ -224,10 +229,16 @@ onUnmounted(() => {
             <button v-if="hasGame" type="button" class="rv-button" data-testid="test-alert-dragon" @click="triggerDemoAlert('DRAGON')">
               <RvIcon name="flask" :size="15" />Tester une alerte
             </button>
+            <button v-if="hasGame" type="button" class="rv-button" data-testid="test-game-over-btn" @click="triggerGameOver('VICTORY')">
+              <RvIcon name="check" :size="15" />Bilan de fin de match
+            </button>
             <button type="button" data-testid="live-toggle-button" class="rv-button rv-button-primary" :disabled="isChangingMode" @click="changeMode(startLiveMode)">Connecter ma partie</button>
             <button type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(stopMockMode)">Quitter la démo</button>
           </template>
           <template v-else-if="hasGame">
+            <button type="button" class="rv-button" data-testid="show-game-over-btn" @click="triggerGameOver()">
+              <RvIcon name="check" :size="15" />Bilan de match
+            </button>
             <button v-if="!isPolling" type="button" class="rv-button rv-button-primary" @click="togglePolling">Reprendre le suivi</button>
             <button type="button" data-testid="live-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(stopLiveMode)">Déconnecter</button>
           </template>
@@ -364,6 +375,22 @@ onUnmounted(() => {
       <FlashAlertOverlay v-if="!isImmersive && hasGame" />
     </main>
     <AppFooter />
+
+    <!-- Bilan de fin de match (Post-Game Recap) -->
+    <Teleport to="body">
+      <PostGameReport
+        v-if="isGameOver && hasGame && gameData"
+        :game-data="gameData"
+        :blue-economy="blueEconomy"
+        :red-economy="redEconomy"
+        :gold-difference="goldDifference"
+        :formatted-game-time="formattedGameTime"
+        :result="gameResult || 'VICTORY'"
+        :diff-events="diffEvents"
+        @close="dismissGameOver"
+        @new-game="dismissGameOver(); changeMode(status.isMock ? stopMockMode : stopLiveMode)"
+      />
+    </Teleport>
 
     <!-- Modale de configuration et statut de l'Overlay In-Game -->
     <Teleport to="body">
