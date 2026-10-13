@@ -301,27 +301,64 @@ onUnmounted(() => {
           </template>
           <template v-else>
             <p>Retrouvez les scores, les événements et les alertes sur votre second écran.</p>
+            <div class="companion-status-pill" :class="{ 'companion-status-pill--live': isOverlayConnected }">
+              <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+              <span>{{ isOverlayConnected ? 'Compagnon desktop détecté & synchronisé' : 'Compagnon desktop non détecté' }}</span>
+            </div>
             <ol class="connection-steps standby-steps">
               <li><strong>Lancez une partie de League of Legends.</strong><span>Sur le même ordinateur que RiftVision.</span></li>
               <li><strong>Connectez votre partie ci-dessous.</strong><span>Le tableau de bord s’ouvre dès que la partie est détectée.</span></li>
             </ol>
           </template>
           <div v-if="!status.isMock" class="standby-actions">
-            <button type="button" data-testid="live-toggle-button" class="rv-button" :class="{ 'rv-button-primary': !isLiveActive }" :disabled="isChangingMode"
+            <!-- Si compagnon connecté OU recherche live déjà active : bouton normal actif -->
+            <button v-if="isOverlayConnected || isLiveActive" type="button" data-testid="live-toggle-button" class="rv-button" :class="{ 'rv-button-primary': !isLiveActive }" :disabled="isChangingMode"
               @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)">
               <RvIcon :name="isLiveActive ? 'close' : 'signal'" :size="17" />
               {{ isChangingMode ? 'Connexion…' : isLiveActive ? 'Annuler la recherche' : 'Connecter ma partie' }}
             </button>
+            <!-- Si compagnon absent : bouton téléchargement mis en avant + bouton live verrouillé -->
+            <template v-else>
+              <a href="/api/download/overlay" download class="rv-button rv-button-primary" title="Télécharger l'installateur Windows officiel (.exe)">
+                <RvIcon name="download" :size="16" />
+                <span>Télécharger l’application (.exe)</span>
+              </a>
+              <button type="button" class="rv-button rv-button-locked" disabled title="Installez et lancez le compagnon desktop pour connecter votre partie réelle">
+                <RvIcon name="lock" :size="15" />
+                <span>Partie live (Compagnon requis)</span>
+              </button>
+            </template>
             <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(startMockMode)">
               Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
             </button>
           </div>
-          <p v-if="!isLiveActive && !status.isMock" class="standby-hint">Pas de partie en cours ? La démo permet de découvrir l’interface.</p>
+          <p v-if="!isLiveActive && !status.isMock" class="standby-hint">
+            {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : 'Pas encore installé ? Téléchargez l’application Windows ou découvrez la démo en 1 clic.' }}
+          </p>
         </div>
         <div class="standby-map" aria-hidden="true">
           <div class="standby-map-ring"></div><img src="/assets/images/sr-map.png" alt="" />
           <span class="standby-map-label"><RvIcon name="crosshair" :size="14" />FAILLE DE L’INVOCATEUR</span>
           <span class="standby-map-point standby-map-point--blue"></span><span class="standby-map-point standby-map-point--red"></span>
+        </div>
+      </section>
+
+      <!-- Grille des piliers du produit (Landing page synthétique) -->
+      <section v-if="!hasGame && !status.isMock && !isLiveActive" class="standby-features-grid" aria-label="Fonctionnalités clés de RiftVision">
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="shield" :size="20" /></div>
+          <h4>Compagnon Sécurisé</h4>
+          <p>Connecté localement à la Live Client Data API de Riot. Aucune injection de code, 100% fair-play.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="dashboard" :size="20" /></div>
+          <h4>Dashboard Second Écran</h4>
+          <p>Radar tactique, KDA, inventaires complets, comparaison économique (&Delta; Gold) et timers de camps neutres.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="bolt" :size="20" /></div>
+          <h4>Overlay HUD In-Game</h4>
+          <p>Bannières d’impact transparentes au centre de votre écran de jeu, 100% traversantes pour la souris.</p>
         </div>
       </section>
       <FlashAlertOverlay v-if="!isImmersive && hasGame" />

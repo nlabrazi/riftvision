@@ -870,6 +870,82 @@ button:disabled {
   backdrop-filter: blur(8px);
 }
 
+/* Statut Compagnon sur la landing page */
+.companion-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(6, 13, 21, 0.7);
+  border: 1px solid rgba(200, 170, 110, 0.25);
+  border-radius: 9999px;
+  font-size: 12px;
+  color: #97a6b7;
+  margin: 14px 0 6px;
+  width: fit-content;
+}
+
+.companion-status-pill--live {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  background: rgba(6, 28, 20, 0.6);
+}
+
+.rv-button-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(200, 170, 110, 0.2);
+  color: #8c9bad;
+}
+
+/* Grille des fonctionnalités sur la landing page */
+.standby-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.feature-card {
+  background: rgba(6, 13, 21, 0.75);
+  border: 1px solid rgba(200, 170, 110, 0.2);
+  border-radius: 6px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.feature-card:hover {
+  border-color: rgba(200, 170, 110, 0.45);
+  transform: translateY(-2px);
+}
+
+.feature-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(200, 170, 110, 0.12);
+  color: #c8aa6e;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.feature-card h4 {
+  font: 600 15px 'Rajdhani', sans-serif;
+  color: #f0e6d2;
+  margin: 0;
+}
+
+.feature-card p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8c9bad;
+  margin: 0;
+}
+
 @media (max-width: 700px) {
   .session-bar--demo { padding: 12px; }
   .session-actions { width: 100%; }
