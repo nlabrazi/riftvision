@@ -47,6 +47,27 @@ describe('useEnemyInactivity', () => {
     expect(activeAlert.value?.soundKey).toBe('beware')
     expect(activeAlert.value?.title).toContain('DISPARU')
 
+    // Now simulate all enemies showing activity (e.g. gaining CS) at gameTime = 142
+    const activeUpdate = gameDataRef.value
+    if (!activeUpdate?.gameData) throw new Error('gameData missing')
+    gameDataRef.value = {
+      ...activeUpdate,
+      allPlayers: activeUpdate.allPlayers.map((p) => ({
+        ...p,
+        scores: { ...p.scores, creepScore: p.scores.creepScore + 10 },
+      })),
+      gameData: {
+        ...activeUpdate.gameData,
+        gameTime: 142,
+      },
+    }
+    await nextTick()
+
+    // Both activeAlert and alertQueue for MIA enemies must be immediately revoked!
+    const { alertQueue } = useFlashAlerts()
+    expect(activeAlert.value).toBeNull()
+    expect(alertQueue.value).toHaveLength(0)
+
     clearAlerts()
   })
 })

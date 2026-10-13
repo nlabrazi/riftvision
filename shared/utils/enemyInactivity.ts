@@ -1,12 +1,13 @@
 import type { SoundEffectKey } from '../types/diff'
-import type { RiotEvent, RiotPlayer, RiotPosition, TeamType } from '../types/riot'
+import type { PlayerPosition, RiotEvent, RiotPlayer, TeamType } from '../types/riot'
+import { cleanChampionName } from './ddragon'
 import { isSamePlayer } from './gameDiff'
 
 export interface EnemyMIAState {
   summonerName: string
   championName: string
   team: TeamType
-  position: RiotPosition
+  position: PlayerPosition
   roleLabel: string
   thresholdSeconds: number // 60 for jungle, 30 for lanes (top, mid, adc, support)
   lastSeenGameTime: number
@@ -22,13 +23,14 @@ export interface EnemyMIAState {
   lastAssists: number
   lastWardScore: number
   lastItemCount: number
+  lastItemsSignature: string
 }
 
 export interface MIAAlert {
   id: string
   summonerName: string
   championName: string
-  role: RiotPosition
+  role: PlayerPosition
   roleLabel: string
   inactivitySeconds: number
   team: TeamType
@@ -40,6 +42,40 @@ export interface MIAAlert {
 export interface EnemyInactivityTrackerResult {
   states: Map<string, EnemyMIAState>
   alerts: MIAAlert[]
+}
+
+export function computeItemsSignature(player: RiotPlayer): string {
+  if (!player.items || player.items.length === 0) return ''
+  return [...player.items]
+    .sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0))
+    .map((item) => `${item.slot}:${item.itemID}:${item.count}:${item.canUse ? 1 : 0}`)
+    .join('|')
+}
+
+export function doesEventInvolvePlayer(event: RiotEvent, player: RiotPlayer): boolean {
+  const identifiers = [
+    player.summonerName,
+    player.rawSummonerName,
+    player.riotId,
+    player.riotIdGameName,
+    player.championName,
+    cleanChampionName(player.championName),
+    player.rawChampionName,
+    cleanChampionName(player.rawChampionName),
+  ].filter((s): s is string => typeof s === 'string' && !!s.trim())
+
+  const matchesAny = (target?: string) =>
+    Boolean(target && identifiers.some((id) => isSamePlayer(target, id)))
+
+  if (matchesAny(event.KillerName) || matchesAny(event.VictimName) || matchesAny(event.Acer)) {
+    return true
+  }
+
+  if (Array.isArray(event.Assisters)) {
+    return event.Assisters.some((assister) => matchesAny(assister))
+  }
+
+  return false
 }
 
 export function getRoleLabel(position: string): string {
@@ -122,12 +158,9 @@ export function trackEnemyInactivity(
   const enemyTeam: TeamType = activePlayerTeam === 'CHAOS' ? 'ORDER' : 'CHAOS'
   const enemyPlayers = allPlayers.filter((p) => p.team === enemyTeam)
 
-  // Find recent events within the last 5 seconds to detect player participation
-  const recentEvents = events.filter((e) => Math.abs(gameTime - e.EventTime) <= 5)
-
   for (const player of enemyPlayers) {
     const key = player.summonerName || player.championName
-    const role: RiotPosition = player.position || 'MIDDLE'
+    const role: PlayerPosition = player.position || 'MIDDLE'
     const roleLabel = getRoleLabel(role)
     const thresholdSeconds = role === 'JUNGLE' ? 60 : 30
     const champ = player.championName
@@ -136,16 +169,16 @@ export function trackEnemyInactivity(
     const isDead = Boolean(player.isDead || (player.respawnTimer && player.respawnTimer > 0))
     const respawnTimer = Math.max(0, player.respawnTimer ?? 0)
 
-    // Check if player participated in any recent events
-    const inRecentEvent = recentEvents.some(
+    // Find any event involving this player since their last seen time (or within last 5s)
+    const minEventTime = prev ? prev.lastSeenGameTime : gameTime - 5
+    const inRecentEvent = events.some(
       (e) =>
-        isSamePlayer(e.KillerName, player.summonerName) ||
-        isSamePlayer(e.VictimName, player.summonerName) ||
-        (Array.isArray(e.Assisters) &&
-          e.Assisters.some((a) => isSamePlayer(a, player.summonerName))),
+        e.EventTime > minEventTime &&
+        e.EventTime <= gameTime + 2 &&
+        doesEventInvolvePlayer(e, player),
     )
 
-    // Check for score / level / CS / inventory changes
+    // Check for score / level / CS / ward / full inventory state changes
     const cs = player.scores?.creepScore ?? 0
     const level = player.level ?? 1
     const kills = player.scores?.kills ?? 0
@@ -153,17 +186,19 @@ export function trackEnemyInactivity(
     const assists = player.scores?.assists ?? 0
     const wardScore = player.scores?.wardScore ?? 0
     const itemCount = player.items?.length ?? 0
+    const itemsSignature = computeItemsSignature(player)
 
     let hasActivity = inRecentEvent
     if (prev) {
       if (
-        cs > prev.lastCreepScore ||
-        level > prev.lastLevel ||
+        cs !== prev.lastCreepScore ||
+        level !== prev.lastLevel ||
         kills !== prev.lastKills ||
         deaths !== prev.lastDeaths ||
         assists !== prev.lastAssists ||
-        wardScore > prev.lastWardScore ||
-        itemCount !== prev.lastItemCount
+        Math.abs(wardScore - prev.lastWardScore) > 0.001 ||
+        itemCount !== prev.lastItemCount ||
+        itemsSignature !== prev.lastItemsSignature
       ) {
         hasActivity = true
       }
@@ -189,7 +224,7 @@ export function trackEnemyInactivity(
       alertTriggered = false
       isMissing = false
     } else if (hasActivity || isEarlyGame) {
-      // Player was recently seen active
+      // Player was recently seen active: immediately reset timer to 0
       lastSeen = gameTime
       alertTriggered = false
       isMissing = false
@@ -245,6 +280,7 @@ export function trackEnemyInactivity(
       lastAssists: assists,
       lastWardScore: wardScore,
       lastItemCount: itemCount,
+      lastItemsSignature: itemsSignature,
     }
 
     currentStates.set(key, state)

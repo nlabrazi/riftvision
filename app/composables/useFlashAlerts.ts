@@ -77,6 +77,19 @@ export function useFlashAlerts() {
   }
 
   function triggerAlert(alert: FlashAlert) {
+    if (alert.type === 'MIA' && alert.actorName) {
+      const normActor = alert.actorName.toLowerCase()
+      const alreadyActive =
+        activeAlert.value?.type === 'MIA' &&
+        activeAlert.value?.actorName?.toLowerCase() === normActor
+      const alreadyQueued = alertQueue.value.some(
+        (a) => a.type === 'MIA' && a.actorName?.toLowerCase() === normActor,
+      )
+      if (alreadyActive || alreadyQueued) {
+        return
+      }
+    }
+
     if (activeAlert.value) {
       // Put in queue if current alert is playing
       alertQueue.value.push(alert)
@@ -93,6 +106,21 @@ export function useFlashAlerts() {
     activeTimeout = setTimeout(() => {
       dismissCurrentAlert()
     }, alert.durationMs || 4000)
+  }
+
+  function revokeMIAAlert(championName: string) {
+    if (!championName) return
+    const norm = championName.toLowerCase()
+
+    // Remove any pending MIA alert for this champion from the queue
+    alertQueue.value = alertQueue.value.filter(
+      (a) => !(a.type === 'MIA' && a.actorName?.toLowerCase() === norm),
+    )
+
+    // If the currently displayed alert is an MIA alert for this champion, dismiss it immediately
+    if (activeAlert.value?.type === 'MIA' && activeAlert.value?.actorName?.toLowerCase() === norm) {
+      dismissCurrentAlert()
+    }
   }
 
   interface EventAlertMeta {
@@ -523,6 +551,7 @@ export function useFlashAlerts() {
     dismissCurrentAlert,
     clearAlerts,
     triggerAlert,
+    revokeMIAAlert,
     toggleAudioMute,
     ingestDiffEvents,
     triggerDemoAlert,

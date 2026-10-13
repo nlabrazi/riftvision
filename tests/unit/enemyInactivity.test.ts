@@ -178,4 +178,38 @@ describe('enemyInactivity tracker', () => {
     expect(midMIA?.isMissing).toBe(true)
     expect(tickMIA.alerts.some((a) => a.role === 'MIDDLE')).toBe(true)
   })
+
+  it('requires 30 full continuous seconds: reappearing at 20s (e.g. item/trinket/CS update) resets timer and does NOT alert 10s later', () => {
+    const players = getPlayers()
+    const midPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'MIDDLE')
+    if (!midPlayer) throw new Error('midPlayer missing')
+
+    // 1. Baseline at t = 300
+    const initial = trackEnemyInactivity(players, 'ORDER', 300, [], null)
+
+    // 2. At t = 320 (20s later), midlaner reappears and uses an active item / trinket (same item count, canUse changes)
+    if (midPlayer.items[0]) {
+      midPlayer.items[0].canUse = false
+    }
+    const tick20 = trackEnemyInactivity(players, 'ORDER', 320, [], initial.states)
+    const midAt20 = Array.from(tick20.states.values()).find((s) => s.position === 'MIDDLE')
+    expect(midAt20?.lastSeenGameTime).toBe(320)
+    expect(midAt20?.inactivitySeconds).toBe(0)
+    expect(midAt20?.isMissing).toBe(false)
+
+    // 3. 10 seconds later at t = 330 (30s after initial 300, but only 10s after reappearing at 320)
+    // Must NOT trigger an alert for midlaner!
+    const tick30 = trackEnemyInactivity(players, 'ORDER', 330, [], tick20.states)
+    const midAlertAt30 = tick30.alerts.find((a) => a.role === 'MIDDLE')
+    expect(midAlertAt30).toBeUndefined()
+    const midAt30 = Array.from(tick30.states.values()).find((s) => s.position === 'MIDDLE')
+    expect(midAt30?.isMissing).toBe(false)
+    expect(midAt30?.inactivitySeconds).toBe(10)
+
+    // 4. Only after 30 true continuous seconds from 320 (at t = 350) does the alert fire
+    const tick50 = trackEnemyInactivity(players, 'ORDER', 350, [], tick30.states)
+    const midAlertAt50 = tick50.alerts.find((a) => a.role === 'MIDDLE')
+    expect(midAlertAt50).toBeDefined()
+    expect(midAlertAt50?.soundKey).toBe('beware')
+  })
 })
