@@ -13,7 +13,23 @@
     "main": "scripts/desktop-overlay.cjs"
   },
   "win": {
-    "target": "portable",
-    "icon": "public/favicon.ico"
+    "target": "nsis",
+    "icon": "public/favicon.ico",
+    "signExecutable": false,
+    "legalTrademarks": "RiftVision"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "RiftVision Overlay",
+    "uninstallDisplayName": "RiftVision Overlay",
+    "installerSidebar": "build/installer-sidebar.bmp",
+    "installerHeader": "build/installer-header.bmp",
+    "license": "build/installer-info.txt",
+    "runAfterFinish": true,
+    "artifactName": "RiftVision-Overlay-Setup-${version}.${ext}"
   }
 }

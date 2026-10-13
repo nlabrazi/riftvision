@@ -1,0 +1,26 @@
+========================================================================
+                      RiftVision — Overlay In-Game
+========================================================================
+
+Bienvenue dans l'assistant d'installation de RiftVision Overlay !
+
+RiftVision Overlay est le compagnon tête haute (HUD) officiel de RiftVision
+pour League of Legends.
+
+FONCTIONNALITÉS :
+• Overlay 100% transparent et sans bordure au-dessus du jeu.
+• Click-Through intégral : aucun clic de souris ni touche bloquée.
+• Synchronisation instantanée des alertes tactiques (Dragons, Baron, Kills, MIA)
+  avec le tableau de bord web.
+• Raccourcis pratiques :
+    - F9            : Déclencher immédiatement une alerte de test
+    - Ctrl+Shift+O  : Masquer ou réafficher l'overlay à tout moment
+
+RECOMMANDATIONS DE JEU :
+1. Configurez League of Legends en mode d'affichage « Plein écran fenêtré »
+   (Borderless) dans les paramètres vidéo du jeu.
+2. Gardez le serveur ou tableau de bord RiftVision actif sur votre second
+   écran ou en arrière-plan.
+
+Cliquez sur « Suivant » pour choisir le dossier d'installation et continuer.
+
