@@ -4,6 +4,8 @@ import { alertHub } from '../../utils/alertHub'
 export default defineEventHandler((event) => {
   const eventStream = createEventStream(event)
 
+  alertHub.addClient()
+
   const onAlert = (data: unknown) => {
     eventStream.push(JSON.stringify(data))
   }
@@ -11,6 +13,7 @@ export default defineEventHandler((event) => {
   alertHub.on('alert', onAlert)
 
   eventStream.onClosed(() => {
+    alertHub.removeClient()
     alertHub.off('alert', onAlert)
   })
 

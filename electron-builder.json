@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.riftvision.overlay",
+  "productName": "RiftVision Overlay",
+  "directories": {
+    "output": "dist-overlay"
+  },
+  "files": ["scripts/desktop-overlay.cjs", "package.json"],
+  "extraMetadata": {
+    "main": "scripts/desktop-overlay.cjs"
+  },
+  "win": {
+    "target": "portable",
+    "icon": "public/favicon.ico"
+  }
+}

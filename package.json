@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "overlay": "npx electron scripts/desktop-overlay.cjs"
+    "overlay": "npx electron scripts/desktop-overlay.cjs",
+    "overlay:build": "npx electron-builder --config electron-builder.json"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",

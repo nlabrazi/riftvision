@@ -111,48 +111,45 @@ async function refresh() {
   }
 }
 
-async function openOverlayWindow() {
-  if (typeof window === 'undefined') return
+const isOverlayConnected = ref(false)
+const isOverlayModalOpen = ref(false)
+const overlayToast = ref<string | null>(null)
+let overlayToastTimer: ReturnType<typeof setTimeout> | null = null
+let overlayStatusInterval: ReturnType<typeof setInterval> | null = null
 
-  // 1. Essayer Document Picture-in-Picture en priorité (Always-on-Top natif du navigateur)
-  if ('documentPictureInPicture' in window) {
-    try {
-      const pip = await (
-        window as unknown as {
-          documentPictureInPicture: {
-            requestWindow: (options: { width: number; height: number }) => Promise<Window>
-          }
-        }
-      ).documentPictureInPicture.requestWindow({
-        width: 540,
-        height: 280,
-      })
-      const iframe = pip.document.createElement('iframe')
-      iframe.src = '/overlay?pip=1'
-      iframe.style.width = '100%'
-      iframe.style.height = '100%'
-      iframe.style.border = 'none'
-      iframe.style.background = 'transparent'
-      pip.document.body.style.margin = '0'
-      pip.document.body.style.background = '#060d15'
-      pip.document.body.appendChild(iframe)
-      return
-    } catch {
-      // Annulation ou échec PiP, fallback sur window.open
-    }
+async function checkOverlayStatus() {
+  try {
+    const res = await $fetch<{ connected: boolean; clientCount: number }>('/api/alerts/status')
+    isOverlayConnected.value = res.connected
+  } catch {
+    isOverlayConnected.value = false
   }
-
-  // 2. Fenêtre pop-up standard centrée
-  const width = 540
-  const height = 300
-  const left = Math.max(0, (window.screen.width - width) / 2)
-  const top = 120
-  window.open(
-    '/overlay',
-    'RiftVisionOverlay',
-    `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`,
-  )
 }
+
+function showOverlayToast(msg: string) {
+  overlayToast.value = msg
+  if (overlayToastTimer) clearTimeout(overlayToastTimer)
+  overlayToastTimer = setTimeout(() => {
+    overlayToast.value = null
+  }, 3500)
+}
+
+function triggerOverlayHudAction() {
+  // Déclenche une alerte de test transmise en direct via SSE à l'overlay desktop
+  triggerDemoAlert('DRAGON')
+
+  if (isOverlayConnected.value) {
+    showOverlayToast('Alerte de test envoyée sur votre écran de jeu !')
+  } else {
+    // Si le compagnon desktop n'est pas détecté, ouvrir la modale d'aide
+    isOverlayModalOpen.value = true
+  }
+}
+
+onMounted(() => {
+  checkOverlayStatus()
+  overlayStatusInterval = setInterval(checkOverlayStatus, 4000)
+})
 
 watch(latestLiveEvents, (fresh) => {
   if (fresh.length) ingestDiffEvents(fresh)
@@ -166,7 +163,11 @@ watch(hasGame, (connected) => {
     currentView.value = 'tactical'
   }
 })
-onUnmounted(clearAlerts)
+onUnmounted(() => {
+  clearAlerts()
+  if (overlayStatusInterval) clearInterval(overlayStatusInterval)
+  if (overlayToastTimer) clearTimeout(overlayToastTimer)
+})
 </script>
 
 <template>
@@ -189,9 +190,11 @@ onUnmounted(clearAlerts)
           <span>{{ isAudioMuted ? 'Son coupé' : 'Son activé' }}</span>
         </button>
         <button type="button" data-testid="open-overlay-btn" class="rv-button"
-          title="Ouvrir l'overlay tête haute in-game (PiP ou fenêtre flottante)" @click="openOverlayWindow">
-          <RvIcon name="expand" :size="15" />
-          <span>Overlay HUD</span>
+          :class="{ 'rv-button-primary': isOverlayConnected }"
+          :title="isOverlayConnected ? 'Overlay in-game connecté · Cliquez pour tester' : 'Configurer l’overlay in-game'"
+          @click="triggerOverlayHudAction">
+          <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+          <span>{{ isOverlayConnected ? 'Overlay HUD actif' : 'Overlay HUD' }}</span>
         </button>
         <button v-if="!isHelpOpen" type="button" data-testid="view-diagnostic-btn" class="rv-button" @click="toggleHelp">
           <RvIcon name="settings" :size="17" /><span>Aide et réglages</span>
@@ -324,5 +327,60 @@ onUnmounted(clearAlerts)
       <FlashAlertOverlay v-if="!isImmersive && hasGame" />
     </main>
     <AppFooter />
+
+    <!-- Modale de configuration et statut de l'Overlay In-Game -->
+    <Teleport to="body">
+      <div v-if="isOverlayModalOpen" class="rv-modal-backdrop" @click.self="isOverlayModalOpen = false">
+        <div class="rv-modal-card" role="dialog" aria-modal="true">
+          <div class="rv-modal-header">
+            <h3>🎮 Overlay In-Game (Façon Mobalytics)</h3>
+            <button type="button" class="rv-icon-button" aria-label="Fermer" @click="isOverlayModalOpen = false">
+              <RvIcon name="close" :size="15" />
+            </button>
+          </div>
+          <div class="rv-modal-body">
+            <div class="overlay-modal-status">
+              <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+              <strong>{{ isOverlayConnected ? 'Compagnon détecté et connecté !' : 'Compagnon non détecté' }}</strong>
+            </div>
+            <p>L'overlay s'affiche en <strong>surimpression transparente</strong> en plein milieu de votre écran de jeu sans jamais bloquer vos clics de souris.</p>
+            <div class="overlay-modal-steps">
+              <div class="step-item">
+                <span class="step-num">1</span>
+                <div>
+                  <strong>Sous Windows :</strong>
+                  <p>Double-cliquez sur <code>scripts/start-overlay.bat</code> ou tapez :</p>
+                  <code>electron desktop-overlay.cjs</code>
+                </div>
+              </div>
+              <div class="step-item">
+                <span class="step-num">2</span>
+                <div>
+                  <strong>En jeu :</strong>
+                  <p>Mettez League of Legends en mode <em>Plein écran fenêtré (Borderless)</em>.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rv-modal-footer">
+            <button type="button" class="rv-button rv-button-primary" @click="triggerDemoAlert('DRAGON'); showOverlayToast('Alerte de test envoyée !')">
+              <RvIcon name="flask" :size="14" />
+              Tester l'alerte maintenant
+            </button>
+            <button type="button" class="rv-button" @click="isOverlayModalOpen = false">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Toast de confirmation overlay -->
+    <Transition name="fade">
+      <div v-if="overlayToast" class="rv-toast" role="status">
+        <span class="status-dot status-dot--live" />
+        <span>{{ overlayToast }}</span>
+      </div>
+    </Transition>
   </div>
 </template>
