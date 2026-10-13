@@ -52,6 +52,8 @@ En complément du tableau de bord second écran, RiftVision propose un **overlay
 
 - 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode *Plein écran fenêtré (Borderless)*.
 - 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté. Vous conservez un contrôle parfait et sans latence de votre personnage.
+- 📌 **Barre des tâches (System Tray)** : Se loge discrètement dans la zone de notification Windows avec notification native et menu contextuel clic-droit complet (Statut, Ouvrir le tableau de bord, Tester l'alerte F9, Masquer/Afficher, Quitter proprement sans passer par le Gestionnaire des tâches).
+- 🌐 **Lancement automatique du Dashboard** : Ouvre immédiatement le tableau de bord tactique dans votre navigateur web par défaut dès le démarrage de l'exécutable.
 - ⚡ **Synchronisation instantanée (< 5ms)** : Relié au serveur RiftVision via un pont **Server-Sent Events (SSE)** (`/api/alerts/stream`). Tout événement déclenché depuis le second écran ou détecté en partie apparaît instantanément en jeu.
 - 🔌 **Indicateur d'état en direct** : La barre d'outils du dashboard affiche `Overlay HUD actif` avec une pastille lumineuse dès que le compagnon est connecté.
 - ⌨️ **Raccourcis & Commandes** :
@@ -59,7 +61,17 @@ En complément du tableau de bord second écran, RiftVision propose un **overlay
   - **Ctrl + Shift + O** : Masque ou réaffiche l'overlay à la volée en cours de partie.
   - **Bouton « Overlay HUD » (Dashboard)** : Envoie une alerte de test au compagnon ou ouvre la modale d'aide pas-à-pas s'il n'est pas encore connecté.
 
-### Lancement du compagnon
+### 🏆 Bilan de fin de match (Post-Game Recap)
+
+Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan de fin de match »**, RiftVision ouvre un récapitulatif complet de la partie :
+- **Bannière Victoire / Défaite** : Durée de jeu, carte et équipe associée.
+- **Fiche de performance individuelle** : KDA, ratio KDA, % participation aux éliminations (% KP), sbires totaux et rythme (CS/min), score de vision et valeur d'équipement.
+- **Équipement final** : Les 6 slots d'objets complétés avec portraits Data Dragon et la relique de vision.
+- **Comparatif face-à-face d'équipe** : Kills, Dragons abattus, Barons Nashor, Tourelles détruites et or total d'équipement (&Delta; Gold).
+- **Faits marquants** : Historique horodaté des moments décisifs (Premier Sang, Dragons, Barons, Hérauts, Séries d'éliminations, Ace).
+- **Export en 1 clic** : Bouton pour copier instantanément un résumé propre dans le presse-papier.
+
+### Lancement et distribution du compagnon
 
 #### En développement :
 ```bash
@@ -69,14 +81,13 @@ npm run overlay
 Sous Windows, vous pouvez aussi double-cliquer sur `scripts/start-overlay.bat` ou exécuter `scripts/start-overlay.ps1`.
 
 #### En production (Installateur officiel Windows .exe) :
-Pour distribuer l'overlay aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
+Pour distribuer le compagnon aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
 ```bash
 npm run overlay:build
 ```
 Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.2.3.exe` dans le dossier `dist-overlay/` :
-- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier, Raccourcis, Installation, Lancement).
-- **Personnalisation du dossier** : Bouton *Parcourir...* pour installer où le joueur le souhaite.
-- **Raccourcis intégrés** : Création automatique des raccourcis sur le Bureau et dans le Menu Démarrer.
+- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier avec bouton *Parcourir...*, Raccourcis Bureau et Menu Démarrer, Installation, Lancement).
+- **Téléchargement direct depuis l'application web** : Le tableau de bord propose un bouton direct **« Télécharger l'application (.exe) »** connecté à la route `/api/download/overlay`.
 - **Détails & Informations** : Affichage des recommandations (mode Plein écran fenêtré) directement dans l'assistant.
 
 > [!NOTE]
@@ -117,6 +128,13 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Navigation simplifiée, affichage responsive et identité Hextech conservée
   - [x] Intégration Font Awesome pour les icônes de l’interface et du footer
   - [x] Hot reload Docker / WSL2 avec polling et procédure de synchronisation des dépendances
+- [x] **v1.3 — Compagnon Desktop, Overlay HUD & Bilan de match**
+  - [x] Compagnon Electron transparent 100% traversant à la souris (*click-through*)
+  - [x] Intégration Barre des tâches (System Tray) avec menu contextuel et fermeture propre
+  - [x] Lancement automatique du tableau de bord dans le navigateur par défaut
+  - [x] Installateur Windows NSIS interactif avec choix de dossier d'installation (`RiftVision-Overlay-Setup-1.2.3.exe`)
+  - [x] Route de téléchargement direct `/api/download/overlay` et landing page avec statut compagnon
+  - [x] Bilan de fin de match complet (KDA, % KP, CS/min, inventaire final, comparatif d'objectifs, faits marquants et export presse-papier)
 - [ ] **Tests live entre amis sur VPS — à développer**
   - [ ] Programme compagnon Windows pour lire l’API locale sur le PC de chaque joueur
   - [ ] Association du compagnon au tableau de bord par code temporaire

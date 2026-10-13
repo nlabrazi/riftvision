@@ -6,17 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2026-10-13
 
-### Overlay In-Game & Synchronisation Desktop
+### Overlay In-Game, Compagnon Desktop & Bilan de match
 - **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger propulsé par Electron, superposé à League of Legends (mode fenêtré borderless) avec fenêtre transparente, sans bordure et 100% traversante à la souris (`setIgnoreMouseEvents(true)`).
+- **Intégration Barre des tâches (System Tray)** : Icône Windows dans la zone de notification avec notification native de démarrage et menu contextuel complet (Statut, Ouvrir le tableau de bord, Tester F9, Masquer/Afficher Ctrl+Shift+O, et Quitter proprement l'application sans passer par le Gestionnaire des tâches).
+- **Lancement automatique du Dashboard** : Ouverture automatique du tableau de bord dans le navigateur par défaut dès le démarrage du compagnon.
+- **Installateur Windows NSIS interactif** : Assistant d'installation graphique pas-à-pas (`RiftVision-Overlay-Setup-1.2.3.exe`) avec choix du répertoire (bouton Parcourir), raccourcis Bureau et Menu Démarrer, et consignes de jeu.
+- **Landing Page & Téléchargement direct** :
+  - Détection temps réel de la présence du compagnon desktop avec badge d'état.
+  - Route de téléchargement direct `/api/download/overlay` streamant l'exécutable d'installation officiel.
+  - Verrouillage du bouton de partie live si le compagnon n'est pas encore lancé avec invitation au téléchargement, tout en conservant l'accès direct en 1 clic au mode démo.
+  - Grille de présentation des 3 piliers du produit (Compagnon sécurisé, Dashboard second écran, Overlay HUD).
+- **Bilan de fin de match (Post-Game Recap)** :
+  - Détection automatique de l'événement `GameEnd` ou ouverture manuelle via le bouton dédié.
+  - Fiche de performance individuelle : KDA, ratio KDA, % participation aux éliminations (% KP), sbires (CS et CS/min), score de vision, et valeur totale d'inventaire.
+  - Équipement final complet (6 slots d'objets + relique).
+  - Comparatif face-à-face des équipes (Kills, Dragons, Barons Nashor, Tourelles détruites, or d'équipement).
+  - Moments clés du match (Premier Sang, Dragons, Barons, Hérauts, Séries d'éliminations, Ace).
+  - Export instantané du récapitulatif dans le presse-papier pour partage facile.
 - **Synchronisation Server-Sent Events (SSE)** : Hub temps réel (`/api/alerts/stream`, `/api/alerts/broadcast`, `/api/alerts/status`) synchronisant instantanément les alertes entre le dashboard second écran et l'overlay in-game.
 - **Contrôles & Raccourcis globaux** :
   - Touche `F9` pour déclencher une alerte de test immédiatement sur l'écran de jeu.
   - Raccourci `Ctrl + Shift + O` pour masquer ou réafficher l'overlay in-game.
   - Bouton `Overlay HUD` dans la barre d'outils du dashboard avec statut de connexion en direct (point lumineux) et envoi d'alerte de test via SSE.
-  - Modale d'aide Hextech pour guider la configuration de l'overlay et le mode fenêtré borderless.
-- **Distribution & Packaging Portable** :
-  - Configuration `electron-builder` pour générer un exécutable `.exe` portable et autonome sans nécessiter l'installation de Node.js par les joueurs.
-  - Scripts de démarrage Windows `scripts/start-overlay.bat` et `scripts/start-overlay.ps1`.
 
 ## [1.2.3] - 2026-10-12
 
