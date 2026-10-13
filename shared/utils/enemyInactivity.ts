@@ -1,7 +1,7 @@
 import type { SoundEffectKey } from '../types/diff'
 import type { PlayerPosition, RiotEvent, RiotPlayer, TeamType } from '../types/riot'
 import { cleanChampionName } from './ddragon'
-import { isSamePlayer } from './gameDiff'
+import { isSamePlayer, parseTurretDetails } from './gameDiff'
 
 export interface EnemyMIAState {
   summonerName: string
@@ -103,6 +103,64 @@ export function getLanerWalkingThreshold(position: PlayerPosition): number {
     return 25 // 18s walking + 7s margin
   }
   return 30 // 25s walking + 5s margin for TOP, BOTTOM, UTILITY
+}
+
+export function getLaneFromPosition(position: PlayerPosition): 'TOP' | 'MID' | 'BOT' | null {
+  switch (position) {
+    case 'TOP':
+      return 'TOP'
+    case 'MIDDLE':
+      return 'MID'
+    case 'BOTTOM':
+    case 'UTILITY':
+      return 'BOT'
+    default:
+      return null
+  }
+}
+
+export function isLaneT1Destroyed(
+  events: RiotEvent[] = [],
+  team: TeamType,
+  lane: 'TOP' | 'MID' | 'BOT',
+): boolean {
+  return events.some((e) => {
+    if (e.EventName !== 'TurretKilled' || !e.TurretKilled) return false
+    const details = parseTurretDetails(e.TurretKilled)
+    return details.destroyedTeam === team && details.lane === lane
+  })
+}
+
+/**
+ * Adjusts walking threshold based on destroyed outer turrets (T1):
+ * - If enemy's own T1 is destroyed: minions crash closer to their base (T2).
+ *   The enemy reaches their wave faster: threshold reduced by 5s (Mid: 20s, Side: 25s).
+ * - If our allied T1 is destroyed (and enemy T1 alive): the wave pushes into our territory.
+ *   The enemy must walk farther across the river: threshold increased by 5s (Mid: 30s, Side: 35s).
+ * - Both T1 destroyed or both alive: baseline threshold (Mid: 25s, Side: 30s).
+ */
+export function getAdjustedLanerWalkingThreshold(
+  position: PlayerPosition,
+  events: RiotEvent[] = [],
+  activePlayerTeam: TeamType = 'ORDER',
+  enemyTeam: TeamType = 'CHAOS',
+): number {
+  const baseThreshold = getLanerWalkingThreshold(position)
+  const lane = getLaneFromPosition(position)
+  if (!lane) return baseThreshold
+
+  const enemyT1Down = isLaneT1Destroyed(events, enemyTeam, lane)
+  const alliedT1Down = isLaneT1Destroyed(events, activePlayerTeam, lane)
+
+  if (enemyT1Down && !alliedT1Down) {
+    return Math.max(15, baseThreshold - 5)
+  }
+
+  if (alliedT1Down && !enemyT1Down) {
+    return baseThreshold + 5
+  }
+
+  return baseThreshold
 }
 
 export function getJunglerThreshold(gameTime: number): number {
@@ -273,8 +331,8 @@ export function trackEnemyInactivity(
         }
       }
     } else {
-      // Laners: Post-death return-to-lane detection
-      thresholdSeconds = getLanerWalkingThreshold(role)
+      // Laners: Post-death return-to-lane detection with turret status adjustment
+      thresholdSeconds = getAdjustedLanerWalkingThreshold(role, events, activePlayerTeam, enemyTeam)
 
       if (!prev) {
         lastSeen = gameTime
