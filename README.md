@@ -68,12 +68,20 @@ npm run overlay
 ```
 Sous Windows, vous pouvez aussi double-cliquer sur `scripts/start-overlay.bat` ou exécuter `scripts/start-overlay.ps1`.
 
-#### En production (Exécutable autonome .exe pour les joueurs) :
+#### En production (Installateur officiel Windows .exe) :
 Pour distribuer l'overlay aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
 ```bash
 npm run overlay:build
 ```
-Cette commande génère un exécutable portable autonome `RiftVision-Overlay.exe` dans le dossier `dist-overlay/`. Les joueurs n'ont qu'à double-cliquer sur cet exécutable pour profiter de l'overlay in-game.
+Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.2.3.exe` dans le dossier `dist-overlay/` :
+- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier, Raccourcis, Installation, Lancement).
+- **Personnalisation du dossier** : Bouton *Parcourir...* pour installer où le joueur le souhaite.
+- **Raccourcis intégrés** : Création automatique des raccourcis sur le Bureau et dans le Menu Démarrer.
+- **Détails & Informations** : Affichage des recommandations (mode Plein écran fenêtré) directement dans l'assistant.
+
+> [!NOTE]
+> **Avertissement « Éditeur inconnu » (Windows SmartScreen) :**
+> Lors du premier lancement sous Windows d'une application open-source sans certificat d'autorité payant, Windows Defender SmartScreen peut afficher un écran bleu protecteur. Cliquez simplement sur **« Informations complémentaires »** puis **« Exécuter quand même »** pour poursuivre l'installation.
 
 ---
 
@@ -249,7 +257,7 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 | `npm run test` | Exécute la suite de tests unitaires avec **Vitest** |
 | `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
 | `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
-| `npm run overlay:build` | Génère l'exécutable portable autonome Windows (`.exe`) dans `dist-overlay/` |
+| `npm run overlay:build` | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/` |
 
 ---
 
