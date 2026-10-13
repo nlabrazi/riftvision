@@ -19,13 +19,14 @@
 
 ### ℹ️ Description
 
-**RiftVision** est un copilote web « second screen » pour **League of Legends**, conçu pour afficher des alertes dynamiques et des informations tactiques en temps réel sur un second écran ou une tablette, **sans overlay intrusif en jeu**.
+**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game** (façon Mobalytics / Blitz.gg), affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
 - 🎮 **3 Modes de fonctionnement** :
   - **Veille (Standby)** : Démarrage propre et silencieux sans requêtes agressives ni erreurs de timeout dans le vide.
   - **Mode Simulation (Démo)** : Instantané réel d'une partie (16:45) pour prototyper et tester sans client LoL actif.
   - **Mode Live** : Écoute explicite et synchronisation automatique avec le jeu en cours.
+- 👓 **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger (Electron), 100% traversant à la souris (*click-through*), superposé au jeu en mode *Plein écran fenêtré (Borderless)*.
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🎨 **Icônes Font Awesome** : composant Vue officiel enregistré par un plugin Nuxt, utilisé pour l’interface et les liens du footer. Seules les icônes nécessaires sont importées.
 - 🔊 **Alertes audio** : 17 fichiers WAV intégrés, sons contextuels synthétisés et commande pour couper ou réactiver le son.
@@ -42,6 +43,37 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 2. **Pas d'avantage déloyal (*Unfair Advantage*)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
 3. **Mention légale obligatoire** :
    > *RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.*
+
+---
+
+## 🎮 Compagnon Overlay In-Game (Façon Mobalytics / Blitz.gg)
+
+En complément du tableau de bord second écran, RiftVision propose un **overlay tête haute (HUD)** natif ultra-léger propulsé par Electron :
+
+- 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode *Plein écran fenêtré (Borderless)*.
+- 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté. Vous conservez un contrôle parfait et sans latence de votre personnage.
+- ⚡ **Synchronisation instantanée (< 5ms)** : Relié au serveur RiftVision via un pont **Server-Sent Events (SSE)** (`/api/alerts/stream`). Tout événement déclenché depuis le second écran ou détecté en partie apparaît instantanément en jeu.
+- 🔌 **Indicateur d'état en direct** : La barre d'outils du dashboard affiche `Overlay HUD actif` avec une pastille lumineuse dès que le compagnon est connecté.
+- ⌨️ **Raccourcis & Commandes** :
+  - **F9** : Déclenche immédiatement une alerte de test in-game depuis n'importe où.
+  - **Ctrl + Shift + O** : Masque ou réaffiche l'overlay à la volée en cours de partie.
+  - **Bouton « Overlay HUD » (Dashboard)** : Envoie une alerte de test au compagnon ou ouvre la modale d'aide pas-à-pas s'il n'est pas encore connecté.
+
+### Lancement du compagnon
+
+#### En développement :
+```bash
+# Lancer l'overlay avec Electron (nécessite que le serveur Nuxt tourne sur http://localhost:3000)
+npm run overlay
+```
+Sous Windows, vous pouvez aussi double-cliquer sur `scripts/start-overlay.bat` ou exécuter `scripts/start-overlay.ps1`.
+
+#### En production (Exécutable autonome .exe pour les joueurs) :
+Pour distribuer l'overlay aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
+```bash
+npm run overlay:build
+```
+Cette commande génère un exécutable portable autonome `RiftVision-Overlay.exe` dans le dossier `dist-overlay/`. Les joueurs n'ont qu'à double-cliquer sur cet exécutable pour profiter de l'overlay in-game.
 
 ---
 
@@ -216,6 +248,8 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 | `npm run format:check` | Vérifie le formatage sans modifier les fichiers (idéal pour la CI) |
 | `npm run test` | Exécute la suite de tests unitaires avec **Vitest** |
 | `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
+| `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
+| `npm run overlay:build` | Génère l'exécutable portable autonome Windows (`.exe`) dans `dist-overlay/` |
 
 ---
 

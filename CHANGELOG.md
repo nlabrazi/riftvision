@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-13
+
+### Overlay In-Game & Synchronisation Desktop
+- **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger propulsé par Electron, superposé à League of Legends (mode fenêtré borderless) avec fenêtre transparente, sans bordure et 100% traversante à la souris (`setIgnoreMouseEvents(true)`).
+- **Synchronisation Server-Sent Events (SSE)** : Hub temps réel (`/api/alerts/stream`, `/api/alerts/broadcast`, `/api/alerts/status`) synchronisant instantanément les alertes entre le dashboard second écran et l'overlay in-game.
+- **Contrôles & Raccourcis globaux** :
+  - Touche `F9` pour déclencher une alerte de test immédiatement sur l'écran de jeu.
+  - Raccourci `Ctrl + Shift + O` pour masquer ou réafficher l'overlay in-game.
+  - Bouton `Overlay HUD` dans la barre d'outils du dashboard avec statut de connexion en direct (point lumineux) et envoi d'alerte de test via SSE.
+  - Modale d'aide Hextech pour guider la configuration de l'overlay et le mode fenêtré borderless.
+- **Distribution & Packaging Portable** :
+  - Configuration `electron-builder` pour générer un exécutable `.exe` portable et autonome sans nécessiter l'installation de Node.js par les joueurs.
+  - Scripts de démarrage Windows `scripts/start-overlay.bat` et `scripts/start-overlay.ps1`.
+
 ## [1.2.3] - 2026-10-12
 
 ### Maintenance & CI
