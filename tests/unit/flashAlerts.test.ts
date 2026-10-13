@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useFlashAlerts } from '../../app/composables/useFlashAlerts'
+import { closeBroadcastSync, useFlashAlerts } from '../../app/composables/useFlashAlerts'
 import type { GameDiffEvent } from '../../shared/types/diff'
 
 describe('useFlashAlerts', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    closeBroadcastSync()
     const { alertQueue, isAudioMuted, activeAlert } = useFlashAlerts()
     alertQueue.value = []
     activeAlert.value = null
@@ -434,5 +435,72 @@ describe('useFlashAlerts', () => {
     triggerDemoAlert('BARON')
     expect(activeAlert.value?.type).toBe('BARON')
     expect(activeAlert.value?.soundKey).toBe('archimonde')
+  })
+
+  it('synchronizes alerts through BroadcastChannel when available', () => {
+    const postMessageMock = vi.fn()
+    let channelHandler: ((ev: { data: unknown }) => void) | null = null
+
+    class MockBroadcastChannel {
+      name: string
+      constructor(name: string) {
+        this.name = name
+      }
+      postMessage = postMessageMock
+      set onmessage(fn: (ev: { data: unknown }) => void) {
+        channelHandler = fn
+      }
+      close = vi.fn()
+    }
+
+    vi.stubGlobal('BroadcastChannel', MockBroadcastChannel)
+    closeBroadcastSync()
+
+    const { activeAlert, triggerAlert, dismissCurrentAlert } = useFlashAlerts()
+
+    // 1. Triggering an alert broadcasts TRIGGER_ALERT
+    triggerAlert({
+      id: 'bc-1',
+      type: 'DRAGON',
+      title: 'DRAGON TEST',
+      subtitle: 'Sub test',
+      durationMs: 3000,
+    })
+
+    expect(postMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'TRIGGER_ALERT',
+        alert: expect.objectContaining({ id: 'bc-1' }),
+      }),
+    )
+
+    // 2. Receiving a message from BroadcastChannel triggers an alert without broadcasting
+    postMessageMock.mockClear()
+    dismissCurrentAlert()
+    postMessageMock.mockClear()
+
+    if (channelHandler) {
+      channelHandler({
+        data: {
+          type: 'TRIGGER_ALERT',
+          alert: {
+            id: 'bc-remote',
+            type: 'BARON',
+            title: 'REMOTE BARON',
+            subtitle: 'Broadcasted',
+            durationMs: 2500,
+          },
+        },
+      })
+    }
+
+    expect(activeAlert.value?.id).toBe('bc-remote')
+    expect(activeAlert.value?.title).toBe('REMOTE BARON')
+    // Should NOT broadcast back the alert received via broadcast
+    expect(postMessageMock).not.toHaveBeenCalled()
+
+    // Clean up
+    closeBroadcastSync()
+    vi.unstubAllGlobals()
   })
 })

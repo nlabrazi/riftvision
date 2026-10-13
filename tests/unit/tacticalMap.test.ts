@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getChampionMapPosition,
+  getDestroyedTurretIds,
   OBJECTIVE_COORDINATES,
   ROLE_COORDINATES,
   TURRET_LANDMARKS,
-  getChampionMapPosition,
-  getDestroyedTurretIds,
 } from '../../shared/utils/mapCoordinates'
 
 describe('mapCoordinates', () => {

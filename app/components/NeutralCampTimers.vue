@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { RiotAllGameData } from '#shared/types/riot'
-import { type NeutralCamp, calculateCampTimers } from '#shared/utils/campTimers'
+import { calculateCampTimers, type NeutralCamp } from '#shared/utils/campTimers'
 import { formatSecondsToTime, getObjectiveIconUrl } from '#shared/utils/ddragon'
 import RvIcon from './RvIcon.vue'
 

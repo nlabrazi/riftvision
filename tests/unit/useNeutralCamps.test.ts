@@ -1,9 +1,9 @@
-import { nextTick, ref } from 'vue'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { nextTick, ref } from 'vue'
 import { useFlashAlerts } from '../../app/composables/useFlashAlerts'
 import { useNeutralCamps } from '../../app/composables/useNeutralCamps'
-import type { RiotAllGameData } from '../../shared/types/riot'
 import { mockGameData } from '../../server/data/mockGame'
+import type { RiotAllGameData } from '../../shared/types/riot'
 
 describe('useNeutralCamps', () => {
   beforeEach(() => {

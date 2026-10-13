@@ -45,6 +45,15 @@ body {
   font-size: 14px;
 }
 
+html.rv-overlay-mode,
+body.rv-overlay-mode,
+html.rv-overlay-mode #__nuxt {
+  background: transparent !important;
+  background-color: transparent !important;
+  overflow: hidden;
+  user-select: none;
+}
+
 button,
 summary,
 a {

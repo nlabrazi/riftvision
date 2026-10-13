@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  SOUND_ASSETS,
-  type SoundKey,
   playGameSound,
   playSynthesizedFallback,
   resetSoundHistory,
+  SOUND_ASSETS,
+  type SoundKey,
   useSoundEffects,
 } from '../../app/composables/useSoundEffects'
 

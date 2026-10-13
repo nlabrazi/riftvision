@@ -111,6 +111,49 @@ async function refresh() {
   }
 }
 
+async function openOverlayWindow() {
+  if (typeof window === 'undefined') return
+
+  // 1. Essayer Document Picture-in-Picture en priorité (Always-on-Top natif du navigateur)
+  if ('documentPictureInPicture' in window) {
+    try {
+      const pip = await (
+        window as unknown as {
+          documentPictureInPicture: {
+            requestWindow: (options: { width: number; height: number }) => Promise<Window>
+          }
+        }
+      ).documentPictureInPicture.requestWindow({
+        width: 540,
+        height: 280,
+      })
+      const iframe = pip.document.createElement('iframe')
+      iframe.src = '/overlay?pip=1'
+      iframe.style.width = '100%'
+      iframe.style.height = '100%'
+      iframe.style.border = 'none'
+      iframe.style.background = 'transparent'
+      pip.document.body.style.margin = '0'
+      pip.document.body.style.background = '#060d15'
+      pip.document.body.appendChild(iframe)
+      return
+    } catch {
+      // Annulation ou échec PiP, fallback sur window.open
+    }
+  }
+
+  // 2. Fenêtre pop-up standard centrée
+  const width = 540
+  const height = 300
+  const left = Math.max(0, (window.screen.width - width) / 2)
+  const top = 120
+  window.open(
+    '/overlay',
+    'RiftVisionOverlay',
+    `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`,
+  )
+}
+
 watch(latestLiveEvents, (fresh) => {
   if (fresh.length) ingestDiffEvents(fresh)
 })
@@ -144,6 +187,11 @@ onUnmounted(clearAlerts)
           :aria-pressed="!isAudioMuted" @click="toggleAudioMute">
           <RvIcon :name="isAudioMuted ? 'volume-off' : 'volume'" :size="17" />
           <span>{{ isAudioMuted ? 'Son coupé' : 'Son activé' }}</span>
+        </button>
+        <button type="button" data-testid="open-overlay-btn" class="rv-button"
+          title="Ouvrir l'overlay tête haute in-game (PiP ou fenêtre flottante)" @click="openOverlayWindow">
+          <RvIcon name="expand" :size="15" />
+          <span>Overlay HUD</span>
         </button>
         <button v-if="!isHelpOpen" type="button" data-testid="view-diagnostic-btn" class="rv-button" @click="toggleHelp">
           <RvIcon name="settings" :size="17" /><span>Aide et réglages</span>
@@ -196,6 +244,11 @@ onUnmounted(clearAlerts)
           <h3 id="reading-help-title">Comprendre le tableau de bord</h3>
           <p>Sélectionnez un événement du journal pour afficher son détail sur la carte. Le bouton « Agrandir la carte » donne plus de place à la carte et aux alertes.</p>
           <p>Les champions sont placés selon leur rôle : ce ne sont pas leurs positions en temps réel. L’économie compare la valeur des objets équipés, pas l’or total gagné.</p>
+        </section>
+        <section class="rv-panel help-panel" aria-labelledby="overlay-help-title">
+          <h3 id="overlay-help-title">Overlay en jeu (Mode Tête Haute)</h3>
+          <p>Le bouton <strong>« Overlay HUD »</strong> détache une fenêtre flottante au-dessus de League of Legends (en mode <em>Plein écran fenêtré / Borderless</em>). Les alertes sont synchronisées instantanément avec votre session.</p>
+          <p>Pour un overlay 100% transparent et traversant pour la souris (façon Mobalytics), lancez le compagnon desktop avec <code>npm run overlay</code>.</p>
         </section>
         <details class="rv-panel advanced-tools">
           <summary>Diagnostic technique <span>Connexion et données brutes</span><RvIcon name="chevron-down" :size="16" /></summary>
