@@ -19,7 +19,7 @@
 
 ### ℹ️ Description
 
-**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game** (façon Mobalytics / Blitz.gg), affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
+**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game**, affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
 - 🎮 **3 Modes de fonctionnement** :
@@ -46,7 +46,7 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 
 ---
 
-## 🎮 Compagnon Overlay In-Game (Façon Mobalytics / Blitz.gg)
+## 🎮 Compagnon Overlay In-Game (HUD Transparent)
 
 En complément du tableau de bord second écran, RiftVision propose un **overlay tête haute (HUD)** natif ultra-léger propulsé par Electron :
 

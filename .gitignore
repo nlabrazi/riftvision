@@ -5,6 +5,7 @@
 .nitro
 .cache
 dist
+dist-overlay
 
 # Node dependencies
 node_modules

@@ -251,7 +251,7 @@ onUnmounted(() => {
         <section class="rv-panel help-panel" aria-labelledby="overlay-help-title">
           <h3 id="overlay-help-title">Overlay en jeu (Mode Tête Haute)</h3>
           <p>Le bouton <strong>« Overlay HUD »</strong> détache une fenêtre flottante au-dessus de League of Legends (en mode <em>Plein écran fenêtré / Borderless</em>). Les alertes sont synchronisées instantanément avec votre session.</p>
-          <p>Pour un overlay 100% transparent et traversant pour la souris (façon Mobalytics), lancez le compagnon desktop avec <code>npm run overlay</code>.</p>
+          <p>Pour un overlay 100% transparent et traversant pour la souris, lancez le compagnon desktop avec <code>npm run overlay</code>.</p>
         </section>
         <details class="rv-panel advanced-tools">
           <summary>Diagnostic technique <span>Connexion et données brutes</span><RvIcon name="chevron-down" :size="16" /></summary>
@@ -333,7 +333,7 @@ onUnmounted(() => {
       <div v-if="isOverlayModalOpen" class="rv-modal-backdrop" @click.self="isOverlayModalOpen = false">
         <div class="rv-modal-card" role="dialog" aria-modal="true">
           <div class="rv-modal-header">
-            <h3>🎮 Overlay In-Game (Façon Mobalytics)</h3>
+            <h3>🎮 Overlay In-Game (HUD Transparent)</h3>
             <button type="button" class="rv-icon-button" aria-label="Fermer" @click="isOverlayModalOpen = false">
               <RvIcon name="close" :size="15" />
             </button>

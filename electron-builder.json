@@ -2,6 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.riftvision.overlay",
   "productName": "RiftVision Overlay",
+  "electronVersion": "34.0.0",
+  "npmRebuild": false,
+  "nodeGypRebuild": false,
   "directories": {
     "output": "dist-overlay"
   },

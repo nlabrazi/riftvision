@@ -1,6 +1,8 @@
 {
   "name": "riftvision",
   "version": "1.2.3",
+  "description": "Copilote tactique et overlay in-game pour League of Legends",
+  "author": "Nabil Labrazi",
   "type": "module",
   "private": true,
   "scripts": {
@@ -18,7 +20,7 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "overlay": "npx electron scripts/desktop-overlay.cjs",
-    "overlay:build": "npx electron-builder --config electron-builder.json"
+    "overlay:build": "npx --yes electron-builder --win --config electron-builder.json"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
