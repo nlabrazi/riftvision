@@ -85,7 +85,7 @@ Pour distribuer le compagnon aux utilisateurs finaux **sans leur demander d'inst
 ```bash
 npm run overlay:build
 ```
-Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.2.3.exe` dans le dossier `dist-overlay/` :
+Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.3.0.exe` dans le dossier `dist-overlay/` :
 - **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier avec bouton *Parcourir...*, Raccourcis Bureau et Menu Démarrer, Installation, Lancement).
 - **Téléchargement direct depuis l'application web** : Le tableau de bord propose un bouton direct **« Télécharger l'application (.exe) »** connecté à la route `/api/download/overlay`.
 - **Détails & Informations** : Affichage des recommandations (mode Plein écran fenêtré) directement dans l'assistant.
@@ -132,7 +132,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Compagnon Electron transparent 100% traversant à la souris (*click-through*)
   - [x] Intégration Barre des tâches (System Tray) avec menu contextuel et fermeture propre
   - [x] Lancement automatique du tableau de bord dans le navigateur par défaut
-  - [x] Installateur Windows NSIS interactif avec choix de dossier d'installation (`RiftVision-Overlay-Setup-1.2.3.exe`)
+  - [x] Installateur Windows NSIS interactif avec choix de dossier d'installation (`RiftVision-Overlay-Setup-1.3.0.exe`)
   - [x] Route de téléchargement direct `/api/download/overlay` et landing page avec statut compagnon
   - [x] Bilan de fin de match complet (KDA, % KP, CS/min, inventaire final, comparatif d'objectifs, faits marquants et export presse-papier)
 - [ ] **Tests live entre amis sur VPS — à développer**

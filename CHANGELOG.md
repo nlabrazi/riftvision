@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger propulsé par Electron, superposé à League of Legends (mode fenêtré borderless) avec fenêtre transparente, sans bordure et 100% traversante à la souris (`setIgnoreMouseEvents(true)`).
 - **Intégration Barre des tâches (System Tray)** : Icône Windows dans la zone de notification avec notification native de démarrage et menu contextuel complet (Statut, Ouvrir le tableau de bord, Tester F9, Masquer/Afficher Ctrl+Shift+O, et Quitter proprement l'application sans passer par le Gestionnaire des tâches).
 - **Lancement automatique du Dashboard** : Ouverture automatique du tableau de bord dans le navigateur par défaut dès le démarrage du compagnon.
-- **Installateur Windows NSIS interactif** : Assistant d'installation graphique pas-à-pas (`RiftVision-Overlay-Setup-1.2.3.exe`) avec choix du répertoire (bouton Parcourir), raccourcis Bureau et Menu Démarrer, et consignes de jeu.
+- **Installateur Windows NSIS interactif** : Assistant d'installation graphique pas-à-pas (`RiftVision-Overlay-Setup-1.3.0.exe`) avec choix du répertoire (bouton Parcourir), raccourcis Bureau et Menu Démarrer, et consignes de jeu.
 - **Landing Page & Téléchargement direct** :
   - Détection temps réel de la présence du compagnon desktop avec badge d'état.
   - Route de téléchargement direct `/api/download/overlay` streamant l'exécutable d'installation officiel.

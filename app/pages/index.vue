@@ -183,7 +183,7 @@ onUnmounted(() => {
         @click.exact.prevent="returnHome">
         <div class="brand-symbol" aria-hidden="true"><span>R</span><i></i></div>
         <div>
-          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.2</span></div>
+          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.3</span></div>
           <p>VOTRE REGARD SUR LA FAILLE</p>
         </div>
       </a>

@@ -16,6 +16,11 @@
               Nabster
             </a>
           </div>
+          <span class="footer-dot" aria-hidden="true">·</span>
+          <a href="https://github.com/nlabrazi/riftvision/blob/master/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="creator-link"
+            title="Consulter les notes de version et nouveautés">
+            Changelog v1.3.0
+          </a>
         </div>
 
         <!-- Social Icons (Font Awesome) -->
