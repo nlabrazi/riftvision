@@ -9,12 +9,15 @@ export interface EnemyMIAState {
   team: TeamType
   position: PlayerPosition
   roleLabel: string
-  thresholdSeconds: number // 60 for jungle, 30 for lanes (top, mid, adc, support)
+  thresholdSeconds: number // 60s (<5min) / 30s (>=5min) for Jungle; 25s (Mid) / 30s (Top/Bot) post-respawn for lanes
   lastSeenGameTime: number
   inactivitySeconds: number
   isMissing: boolean
   isDead: boolean
   respawnTimer: number
+  waitingForReturnToLane?: boolean
+  lastRespawnGameTime?: number
+  lastAlertGameTime?: number
   alertTriggered: boolean
   lastCreepScore: number
   lastLevel: number
@@ -95,51 +98,44 @@ export function getRoleLabel(position: string): string {
   }
 }
 
-export function getAlertTitle(position: string): string {
-  switch (position) {
-    case 'TOP':
-      return 'ATTENTION : TOPLANER ADVERSE DISPARU !'
-    case 'JUNGLE':
-      return 'ATTENTION : JUNGLER ADVERSE DISPARU !'
-    case 'MIDDLE':
-      return 'ATTENTION : MIDLANER ADVERSE DISPARU !'
-    case 'BOTTOM':
-      return 'ATTENTION : ADC ADVERSE DISPARU !'
-    case 'UTILITY':
-      return 'ATTENTION : SUPPORT ADVERSE DISPARU !'
-    default:
-      return 'ATTENTION : ENNEMI DISPARU !'
+export function getLanerWalkingThreshold(position: PlayerPosition): number {
+  if (position === 'MIDDLE') {
+    return 25 // 18s walking + 7s margin
   }
+  return 30 // 25s walking + 5s margin for TOP, BOTTOM, UTILITY
 }
 
-export function getAlertSubtitle(
-  position: string,
-  champ: string,
-  formattedDuration: string,
-): string {
+export function getJunglerThreshold(gameTime: number): number {
+  return gameTime < 300 ? 60 : 30
+}
+
+export function getLanerNotReturnedTitle(position: string): string {
   switch (position) {
     case 'TOP':
-      return `Le toplaner adverse (${champ}) a disparu depuis ${formattedDuration} !`
-    case 'JUNGLE':
-      return `Le jungler adverse (${champ}) n'a pas été vu depuis ${formattedDuration} !`
+      return 'ATTENTION : TOPLANER ADVERSE NON REVENU EN LANE !'
     case 'MIDDLE':
-      return `Le midlaner adverse (${champ}) a disparu depuis ${formattedDuration} !`
+      return 'ATTENTION : MIDLANER ADVERSE NON REVENU EN LANE !'
     case 'BOTTOM':
-      return `L'ADC adverse (${champ}) a disparu depuis ${formattedDuration} !`
+      return 'ATTENTION : ADC ADVERSE NON REVENU EN LANE !'
     case 'UTILITY':
-      return `Le support adverse (${champ}) a disparu depuis ${formattedDuration} !`
+      return 'ATTENTION : SUPPORT ADVERSE NON REVENU EN LANE !'
     default:
-      return `L'adversaire (${champ}) a disparu depuis ${formattedDuration} !`
+      return 'ATTENTION : ENNEMI NON REVENU EN LANE !'
   }
 }
 
 /**
- * Tracks inactivity for all enemy roles (Top, Jungle, Mid, ADC, Support).
- * - Jungler threshold: 60 seconds (1 minute)
- * - Laners (Top, Mid, ADC, Support) threshold: 30 seconds
- * Dead players in fountain are an exception and cannot be MIA; their respawn timer is tracked.
- * When an enemy respawns, the inactivity baseline restarts from the moment of respawn.
- * Emits MIA alerts with soundKey: 'beware' when thresholds are reached.
+ * Tracks inactivity with domain-grounded rules:
+ * 1. Laners (Top, Mid, ADC, Support):
+ *    - Tracked strictly after death + respawn.
+ *    - Once respawned at fountain, walking time + 5s margin is counted:
+ *      (Mid = 25s, Top/Bot/Support = 30s).
+ *    - If no activity is shown once the walking threshold expires:
+ *      the player has NOT returned to their lane -> emit MIA alert with beware.wav!
+ *    - Any lane activity (CS, level, kill/assist, item change) cancels and confirms their return.
+ * 2. Jungler:
+ *    - Periodic checks: every 60s in early game (< 5 min / 300s), every 30s after 5 min.
+ *    - Emits MIA alerts until seen active.
  */
 export function trackEnemyInactivity(
   allPlayers: RiotPlayer[] = [],
@@ -162,7 +158,6 @@ export function trackEnemyInactivity(
     const key = player.summonerName || player.championName
     const role: PlayerPosition = player.position || 'MIDDLE'
     const roleLabel = getRoleLabel(role)
-    const thresholdSeconds = role === 'JUNGLE' ? 60 : 30
     const champ = player.championName
 
     const prev = previousStates?.get(key)
@@ -207,56 +202,147 @@ export function trackEnemyInactivity(
     let lastSeen = gameTime
     let alertTriggered = false
     let isMissing = false
+    let waitingForReturnToLane = false
+    let lastRespawnGameTime = 0
+    let lastAlertGameTime = 0
+    let inactivitySeconds = 0
+    let thresholdSeconds = 30
 
-    if (!prev) {
-      // First snapshot initialization: establish baseline
-      lastSeen = gameTime
-      alertTriggered = false
-      isMissing = false
-    } else if (isDead) {
-      // Dead players are in fountain and cannot roam/gank; timer does not advance while dead
-      lastSeen = gameTime
-      alertTriggered = false
-      isMissing = false
-    } else if (prev.isDead && !isDead) {
-      // Just respawned at fountain: timer restarts fresh from respawn time
-      lastSeen = gameTime
-      alertTriggered = false
-      isMissing = false
-    } else if (hasActivity || isEarlyGame) {
-      // Player was recently seen active: immediately reset timer to 0
-      lastSeen = gameTime
-      alertTriggered = false
-      isMissing = false
+    if (role === 'JUNGLE') {
+      thresholdSeconds = getJunglerThreshold(gameTime)
+
+      if (!prev) {
+        // Initial baseline
+        lastSeen = gameTime
+        alertTriggered = false
+        isMissing = false
+        lastAlertGameTime = 0
+      } else if (isDead) {
+        // Jungler is dead
+        lastSeen = gameTime
+        alertTriggered = false
+        isMissing = false
+        lastAlertGameTime = 0
+      } else if (prev.isDead && !isDead) {
+        // Just respawned
+        lastSeen = gameTime
+        alertTriggered = false
+        isMissing = false
+        lastAlertGameTime = 0
+      } else if (hasActivity || isEarlyGame) {
+        // Seen active
+        lastSeen = gameTime
+        alertTriggered = false
+        isMissing = false
+        lastAlertGameTime = 0
+      } else {
+        // Still not seen
+        lastSeen = prev.lastSeenGameTime
+        inactivitySeconds = Math.max(0, gameTime - lastSeen)
+        lastAlertGameTime = prev.lastAlertGameTime ?? 0
+
+        if (inactivitySeconds >= thresholdSeconds) {
+          isMissing = true
+
+          // Emit alert every thresholdSeconds period (e.g. every 60s in early, every 30s after)
+          const timeSinceLastAlert =
+            lastAlertGameTime > 0 ? gameTime - lastAlertGameTime : inactivitySeconds
+          if (timeSinceLastAlert >= thresholdSeconds) {
+            alertTriggered = true
+            lastAlertGameTime = gameTime
+            const formattedDuration =
+              inactivitySeconds >= 60
+                ? `${Math.floor(inactivitySeconds / 60)} min`
+                : `${Math.floor(inactivitySeconds)}s`
+
+            alerts.push({
+              id: `mia-jungle-${champ.toLowerCase()}-${Math.floor(gameTime)}`,
+              summonerName: player.summonerName,
+              championName: champ,
+              role,
+              roleLabel,
+              inactivitySeconds,
+              team: enemyTeam,
+              title: 'ATTENTION : JUNGLER ADVERSE DISPARU !',
+              subtitle: `Le jungler adverse (${champ}) n'a pas été vu depuis ${formattedDuration} !`,
+              soundKey: 'beware',
+            })
+          } else {
+            alertTriggered = prev.alertTriggered
+          }
+        }
+      }
     } else {
-      // Alive and no activity detected
-      lastSeen = prev.lastSeenGameTime
-      const inactivity = Math.max(0, gameTime - lastSeen)
+      // Laners: Post-death return-to-lane detection
+      thresholdSeconds = getLanerWalkingThreshold(role)
 
-      if (inactivity >= thresholdSeconds) {
-        isMissing = true
-        alertTriggered = prev.alertTriggered
+      if (!prev) {
+        lastSeen = gameTime
+        waitingForReturnToLane = false
+        lastRespawnGameTime = 0
+        alertTriggered = false
+        isMissing = false
+      } else if (isDead) {
+        // While dead, reset return flag and update baseline
+        lastSeen = gameTime
+        waitingForReturnToLane = false
+        lastRespawnGameTime = 0
+        alertTriggered = false
+        isMissing = false
+      } else if (prev.isDead && !isDead) {
+        // Respawned at fountain! Start walking countdown to lane
+        lastSeen = gameTime
+        waitingForReturnToLane = true
+        lastRespawnGameTime = gameTime
+        alertTriggered = false
+        isMissing = false
+      } else if (prev.waitingForReturnToLane) {
+        lastRespawnGameTime = prev.lastRespawnGameTime ?? gameTime
 
-        // Trigger alert only once per MIA period
-        if (!prev.alertTriggered) {
-          alertTriggered = true
-          const formattedDuration = role === 'JUNGLE' ? '1 min (60s)' : `${Math.floor(inactivity)}s`
-          alerts.push({
-            id: `mia-${String(role).toLowerCase()}-${champ.toLowerCase()}-${Math.floor(gameTime)}`,
-            summonerName: player.summonerName,
-            championName: champ,
-            role,
-            roleLabel,
-            inactivitySeconds: inactivity,
-            team: enemyTeam,
-            title: getAlertTitle(role),
-            subtitle: getAlertSubtitle(role, champ, formattedDuration),
-            soundKey: 'beware',
-          })
+        if (hasActivity) {
+          // Laner has shown activity in lane (CS, items, level, kills/assists)!
+          waitingForReturnToLane = false
+          lastSeen = gameTime
+          alertTriggered = false
+          isMissing = false
+          inactivitySeconds = 0
+        } else {
+          // Still waiting for them to show in lane
+          waitingForReturnToLane = true
+          lastSeen = prev.lastSeenGameTime
+          const timeSinceRespawn = Math.max(0, gameTime - lastRespawnGameTime)
+          inactivitySeconds = timeSinceRespawn
+
+          if (timeSinceRespawn >= thresholdSeconds) {
+            isMissing = true
+            alertTriggered = prev.alertTriggered
+
+            if (!prev.alertTriggered) {
+              alertTriggered = true
+              const formattedDuration = `${Math.floor(timeSinceRespawn)}s`
+              alerts.push({
+                id: `mia-${String(role).toLowerCase()}-${champ.toLowerCase()}-${Math.floor(gameTime)}`,
+                summonerName: player.summonerName,
+                championName: champ,
+                role,
+                roleLabel,
+                inactivitySeconds: timeSinceRespawn,
+                team: enemyTeam,
+                title: getLanerNotReturnedTitle(role),
+                subtitle: `Après sa réapparition, ${champ} n'est pas revenu sur sa voie (${formattedDuration}, roam probable) !`,
+                soundKey: 'beware',
+              })
+            }
+          }
         }
       } else {
-        isMissing = false
+        // Regular lane presence: active on lane, reset timer on any activity
+        waitingForReturnToLane = false
+        lastRespawnGameTime = 0
+        lastSeen = hasActivity ? gameTime : prev.lastSeenGameTime
         alertTriggered = false
+        isMissing = false
+        inactivitySeconds = 0
       }
     }
 
@@ -268,10 +354,13 @@ export function trackEnemyInactivity(
       roleLabel,
       thresholdSeconds,
       lastSeenGameTime: lastSeen,
-      inactivitySeconds: isDead ? 0 : Math.max(0, gameTime - lastSeen),
+      inactivitySeconds,
       isMissing,
       isDead,
       respawnTimer,
+      waitingForReturnToLane,
+      lastRespawnGameTime,
+      lastAlertGameTime,
       alertTriggered,
       lastCreepScore: cs,
       lastLevel: level,

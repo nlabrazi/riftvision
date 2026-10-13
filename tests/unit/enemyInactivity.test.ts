@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { mockGameData } from '../../server/data/mockGame'
 import type { RiotPlayer } from '../../shared/types/riot'
-import { trackEnemyInactivity } from '../../shared/utils/enemyInactivity'
+import {
+  getJunglerThreshold,
+  getLanerWalkingThreshold,
+  trackEnemyInactivity,
+} from '../../shared/utils/enemyInactivity'
 
 describe('enemyInactivity tracker', () => {
   const getPlayers = (): RiotPlayer[] => JSON.parse(JSON.stringify(mockGameData.allPlayers))
 
   it('initializes state on first snapshot for all 5 roles without firing alerts', () => {
     const players = getPlayers()
-    const result = trackEnemyInactivity(players, 'ORDER', 300, [], null)
+    // Game time 200 (< 5 min / 300s): jungler threshold 60s, midlaner 25s, other lanes 30s
+    const resultEarly = trackEnemyInactivity(players, 'ORDER', 200, [], null)
 
-    expect(result.alerts).toHaveLength(0)
-    // All 5 roles from CHAOS team should be tracked
-    const toplaner = Array.from(result.states.values()).find((s) => s.position === 'TOP')
-    const jungler = Array.from(result.states.values()).find((s) => s.position === 'JUNGLE')
-    const midlaner = Array.from(result.states.values()).find((s) => s.position === 'MIDDLE')
-    const adc = Array.from(result.states.values()).find((s) => s.position === 'BOTTOM')
-    const support = Array.from(result.states.values()).find((s) => s.position === 'UTILITY')
+    expect(resultEarly.alerts).toHaveLength(0)
+    const toplaner = Array.from(resultEarly.states.values()).find((s) => s.position === 'TOP')
+    const jungler = Array.from(resultEarly.states.values()).find((s) => s.position === 'JUNGLE')
+    const midlaner = Array.from(resultEarly.states.values()).find((s) => s.position === 'MIDDLE')
+    const adc = Array.from(resultEarly.states.values()).find((s) => s.position === 'BOTTOM')
+    const support = Array.from(resultEarly.states.values()).find((s) => s.position === 'UTILITY')
 
     expect(toplaner).toBeDefined()
     expect(toplaner?.roleLabel).toBe('Toplaner')
@@ -30,7 +34,7 @@ describe('enemyInactivity tracker', () => {
 
     expect(midlaner).toBeDefined()
     expect(midlaner?.roleLabel).toBe('Midlaner')
-    expect(midlaner?.thresholdSeconds).toBe(30)
+    expect(midlaner?.thresholdSeconds).toBe(25)
     expect(midlaner?.isMissing).toBe(false)
 
     expect(adc).toBeDefined()
@@ -42,9 +46,28 @@ describe('enemyInactivity tracker', () => {
     expect(support?.roleLabel).toBe('Support')
     expect(support?.thresholdSeconds).toBe(30)
     expect(support?.isMissing).toBe(false)
+
+    // After 5 minutes (gameTime >= 300s), jungler threshold becomes 30s
+    const resultLater = trackEnemyInactivity(players, 'ORDER', 350, [], null)
+    const junglerLater = Array.from(resultLater.states.values()).find(
+      (s) => s.position === 'JUNGLE',
+    )
+    expect(junglerLater?.thresholdSeconds).toBe(30)
   })
 
-  it('triggers MIA alert with beware sound for all lane roles (Top, Mid, ADC, Support) at 30 seconds', () => {
+  it('verifies helper thresholds for lanes and jungler', () => {
+    expect(getLanerWalkingThreshold('MIDDLE')).toBe(25)
+    expect(getLanerWalkingThreshold('TOP')).toBe(30)
+    expect(getLanerWalkingThreshold('BOTTOM')).toBe(30)
+    expect(getLanerWalkingThreshold('UTILITY')).toBe(30)
+
+    expect(getJunglerThreshold(100)).toBe(60)
+    expect(getJunglerThreshold(299)).toBe(60)
+    expect(getJunglerThreshold(300)).toBe(30)
+    expect(getJunglerThreshold(600)).toBe(30)
+  })
+
+  it('laners in normal play do not trigger false positive MIA alerts simply by farming without CS change', () => {
     const players = getPlayers()
     for (const p of players) {
       p.isDead = false
@@ -53,163 +76,204 @@ describe('enemyInactivity tracker', () => {
     // Initial snapshot at t = 300
     const initial = trackEnemyInactivity(players, 'ORDER', 300, [], null)
 
-    // Tick at t = 320 (20s elapsed -> none missing yet)
-    const tick20 = trackEnemyInactivity(players, 'ORDER', 320, [], initial.states)
-    expect(tick20.alerts).toHaveLength(0)
+    // Tick at t = 340 (40s elapsed with no CS changes because API rounds CS)
+    const tick40 = trackEnemyInactivity(players, 'ORDER', 340, [], initial.states)
 
-    // Tick at t = 331 (31s elapsed -> all 30s laners cross threshold, jungler at 60s does not)
-    const tick31 = trackEnemyInactivity(players, 'ORDER', 331, [], tick20.states)
-    const midAlert = tick31.alerts.find((a) => a.role === 'MIDDLE')
-    const topAlert = tick31.alerts.find((a) => a.role === 'TOP')
-    const adcAlert = tick31.alerts.find((a) => a.role === 'BOTTOM')
-    const supAlert = tick31.alerts.find((a) => a.role === 'UTILITY')
-    const jungleAlert = tick31.alerts.find((a) => a.role === 'JUNGLE')
+    // Laners should NOT be marked missing because they have not died and are still laning
+    const midState = Array.from(tick40.states.values()).find((s) => s.position === 'MIDDLE')
+    const topState = Array.from(tick40.states.values()).find((s) => s.position === 'TOP')
+    const adcState = Array.from(tick40.states.values()).find((s) => s.position === 'BOTTOM')
+    const supState = Array.from(tick40.states.values()).find((s) => s.position === 'UTILITY')
+
+    expect(midState?.isMissing).toBe(false)
+    expect(topState?.isMissing).toBe(false)
+    expect(adcState?.isMissing).toBe(false)
+    expect(supState?.isMissing).toBe(false)
+
+    const lanerAlerts = tick40.alerts.filter((a) => a.role !== 'JUNGLE')
+    expect(lanerAlerts).toHaveLength(0)
+  })
+
+  it('triggers MIA alert with beware sound post-respawn if laner does not return to lane within walking threshold', () => {
+    const players = getPlayers()
+    const midPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'MIDDLE')
+    const topPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'TOP')
+    if (!midPlayer || !topPlayer) throw new Error('Players missing')
+
+    // 1. Laners are dead at t = 200
+    midPlayer.isDead = true
+    midPlayer.respawnTimer = 15
+    topPlayer.isDead = true
+    topPlayer.respawnTimer = 15
+
+    const tickDead = trackEnemyInactivity(players, 'ORDER', 200, [], null)
+    expect(tickDead.alerts).toHaveLength(0)
+
+    // 2. Laners respawn at t = 215 (isDead = false, respawnTimer = 0)
+    midPlayer.isDead = false
+    midPlayer.respawnTimer = 0
+    topPlayer.isDead = false
+    topPlayer.respawnTimer = 0
+
+    const tickRespawn = trackEnemyInactivity(players, 'ORDER', 215, [], tickDead.states)
+    const midAfterRespawn = Array.from(tickRespawn.states.values()).find(
+      (s) => s.position === 'MIDDLE',
+    )
+    const topAfterRespawn = Array.from(tickRespawn.states.values()).find(
+      (s) => s.position === 'TOP',
+    )
+
+    expect(midAfterRespawn?.waitingForReturnToLane).toBe(true)
+    expect(midAfterRespawn?.isMissing).toBe(false)
+    expect(topAfterRespawn?.waitingForReturnToLane).toBe(true)
+    expect(topAfterRespawn?.isMissing).toBe(false)
+
+    // 3. At t = 235 (20s post-respawn) -> within walking threshold (Mid: 25s, Top: 30s) -> no alerts yet
+    const tick20 = trackEnemyInactivity(players, 'ORDER', 235, [], tickRespawn.states)
+    expect(tick20.alerts.filter((a) => a.role === 'MIDDLE' || a.role === 'TOP')).toHaveLength(0)
+
+    // 4. At t = 241 (26s post-respawn) -> Mid crosses 25s threshold -> alerts! Top at 26s (< 30s) does not alert yet
+    const tick26 = trackEnemyInactivity(players, 'ORDER', 241, [], tick20.states)
+    const midAlert = tick26.alerts.find((a) => a.role === 'MIDDLE')
+    const topAlertAt26 = tick26.alerts.find((a) => a.role === 'TOP')
 
     expect(midAlert).toBeDefined()
     expect(midAlert?.soundKey).toBe('beware')
-    expect(midAlert?.title).toContain('MIDLANER ADVERSE DISPARU')
-    expect(midAlert?.subtitle).toContain('a disparu depuis 31s')
+    expect(midAlert?.title).toContain('MIDLANER ADVERSE NON REVENU EN LANE')
+    expect(midAlert?.subtitle).toContain("n'est pas revenu sur sa voie")
+    expect(topAlertAt26).toBeUndefined()
 
-    expect(topAlert).toBeDefined()
-    expect(topAlert?.soundKey).toBe('beware')
-    expect(topAlert?.title).toContain('TOPLANER ADVERSE DISPARU')
+    // 5. At t = 246 (31s post-respawn) -> Top crosses 30s threshold -> alerts!
+    const tick31 = trackEnemyInactivity(players, 'ORDER', 246, [], tick26.states)
+    const topAlertAt31 = tick31.alerts.find((a) => a.role === 'TOP')
+    expect(topAlertAt31).toBeDefined()
+    expect(topAlertAt31?.soundKey).toBe('beware')
+    expect(topAlertAt31?.title).toContain('TOPLANER ADVERSE NON REVENU EN LANE')
 
-    expect(adcAlert).toBeDefined()
-    expect(adcAlert?.soundKey).toBe('beware')
-    expect(adcAlert?.title).toContain('ADC ADVERSE DISPARU')
-
-    expect(supAlert).toBeDefined()
-    expect(supAlert?.soundKey).toBe('beware')
-    expect(supAlert?.title).toContain('SUPPORT ADVERSE DISPARU')
-
-    // Jungler threshold is 60s so not triggered at 31s
-    expect(jungleAlert).toBeUndefined()
-
-    // Subsequent tick without new activity should NOT re-trigger alert (prevents spam)
-    const tick35 = trackEnemyInactivity(players, 'ORDER', 335, [], tick31.states)
-    expect(tick35.alerts).toHaveLength(0)
-    const mid35 = Array.from(tick35.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(mid35?.isMissing).toBe(true)
-    expect(mid35?.alertTriggered).toBe(true)
+    // Mid should NOT duplicate/spam alert on subsequent tick
+    const midDuplicateAlert = tick31.alerts.find((a) => a.role === 'MIDDLE')
+    expect(midDuplicateAlert).toBeUndefined()
   })
 
-  it('triggers MIA alert with beware sound when enemy jungler is missing for 60 seconds (1 min)', () => {
-    const players = getPlayers()
-    // Initial snapshot at t = 400
-    const initial = trackEnemyInactivity(players, 'ORDER', 400, [], null)
-
-    // Tick at t = 450 (50s elapsed -> laners triggered at 30s, jungler not yet at 50s)
-    const tick50 = trackEnemyInactivity(players, 'ORDER', 450, [], initial.states)
-    const j50 = Array.from(tick50.states.values()).find((s) => s.position === 'JUNGLE')
-    expect(j50?.isMissing).toBe(false)
-
-    // Tick at t = 461 (61s elapsed -> jungler crossed 60s threshold!)
-    const tick61 = trackEnemyInactivity(players, 'ORDER', 461, [], tick50.states)
-    const jungleAlert = tick61.alerts.find((a) => a.role === 'JUNGLE')
-    expect(jungleAlert).toBeDefined()
-    expect(jungleAlert?.soundKey).toBe('beware')
-    expect(jungleAlert?.title).toContain('JUNGLER ADVERSE DISPARU')
-    expect(jungleAlert?.subtitle).toContain("n'a pas été vu depuis 1 min (60s)")
-  })
-
-  it('resets inactivity timer and disarms alert when enemy player gains CS, level, or items', () => {
-    const players = getPlayers()
-    const initial = trackEnemyInactivity(players, 'ORDER', 300, [], null)
-
-    // Advance to 335s (midlaner becomes missing)
-    const tick35 = trackEnemyInactivity(players, 'ORDER', 335, [], initial.states)
-    const mid35 = Array.from(tick35.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(mid35?.isMissing).toBe(true)
-
-    // Player kills a minion at t = 340 (CS increases)
-    const midPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'MIDDLE')
-    if (midPlayer) {
-      midPlayer.scores.creepScore += 1
-    }
-
-    const tickSeen = trackEnemyInactivity(players, 'ORDER', 340, [], tick35.states)
-    const midSeen = Array.from(tickSeen.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midSeen?.isMissing).toBe(false)
-    expect(midSeen?.alertTriggered).toBe(false)
-    expect(midSeen?.lastSeenGameTime).toBe(340)
-  })
-
-  it('does not flag dead enemy players as MIA, handles respawn timer, and restarts timer fresh on respawn', () => {
+  it('clears return-to-lane state without alerting when laner shows activity in lane before walking threshold expires', () => {
     const players = getPlayers()
     const midPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'MIDDLE')
     if (!midPlayer) throw new Error('midPlayer missing')
 
-    // Player dies at t = 300 with 25s respawn timer
+    // 1. Dead at t = 200
     midPlayer.isDead = true
-    midPlayer.respawnTimer = 25
+    midPlayer.respawnTimer = 10
+    const tickDead = trackEnemyInactivity(players, 'ORDER', 200, [], null)
+
+    // 2. Respawn at t = 210
+    midPlayer.isDead = false
+    midPlayer.respawnTimer = 0
+    const tickRespawn = trackEnemyInactivity(players, 'ORDER', 210, [], tickDead.states)
+
+    // 3. At t = 225 (15s post-respawn < 25s), midlaner gets a CS in lane
+    midPlayer.scores.creepScore += 10
+    const tickSeen = trackEnemyInactivity(players, 'ORDER', 225, [], tickRespawn.states)
+    const midSeen = Array.from(tickSeen.states.values()).find((s) => s.position === 'MIDDLE')
+
+    expect(midSeen?.waitingForReturnToLane).toBe(false)
+    expect(midSeen?.isMissing).toBe(false)
+    expect(tickSeen.alerts).toHaveLength(0)
+
+    // 4. At t = 245 (35s post-respawn), still no alert because they returned to lane
+    const tickLater = trackEnemyInactivity(players, 'ORDER', 245, [], tickSeen.states)
+    const midLaterAlert = tickLater.alerts.find((a) => a.role === 'MIDDLE')
+    expect(midLaterAlert).toBeUndefined()
+  })
+
+  it('triggers periodic MIA alerts with beware sound for jungler (every 60s early game, every 30s late game)', () => {
+    const players = getPlayers()
+
+    // --- EARLY GAME (< 300s): Threshold is 60s ---
+    const initialEarly = trackEnemyInactivity(players, 'ORDER', 100, [], null)
+
+    // At t = 150 (50s elapsed < 60s) -> no alert
+    const tick50 = trackEnemyInactivity(players, 'ORDER', 150, [], initialEarly.states)
+    const j50 = Array.from(tick50.states.values()).find((s) => s.position === 'JUNGLE')
+    expect(j50?.isMissing).toBe(false)
+    expect(tick50.alerts).toHaveLength(0)
+
+    // At t = 162 (62s elapsed >= 60s) -> first jungler alert!
+    const tick62 = trackEnemyInactivity(players, 'ORDER', 162, [], tick50.states)
+    const jungleAlert1 = tick62.alerts.find((a) => a.role === 'JUNGLE')
+    expect(jungleAlert1).toBeDefined()
+    expect(jungleAlert1?.soundKey).toBe('beware')
+    expect(jungleAlert1?.title).toContain('JUNGLER ADVERSE DISPARU')
+    expect(jungleAlert1?.subtitle).toContain('1 min')
+
+    // At t = 190 (28s after alert1) -> under 60s repeat interval -> no duplicate
+    const tick90 = trackEnemyInactivity(players, 'ORDER', 190, [], tick62.states)
+    expect(tick90.alerts.find((a) => a.role === 'JUNGLE')).toBeUndefined()
+
+    // At t = 223 (61s after alert1) -> periodic second alert triggers!
+    const tickRepeat = trackEnemyInactivity(players, 'ORDER', 223, [], tick90.states)
+    const jungleAlert2 = tickRepeat.alerts.find((a) => a.role === 'JUNGLE')
+    expect(jungleAlert2).toBeDefined()
+    expect(jungleAlert2?.soundKey).toBe('beware')
+
+    // --- MID/LATE GAME (>= 300s): Threshold is 30s ---
+    const initialLate = trackEnemyInactivity(players, 'ORDER', 400, [], null)
+    // At t = 431 (31s elapsed >= 30s) -> 30s alert in late game!
+    const tickLate31 = trackEnemyInactivity(players, 'ORDER', 431, [], initialLate.states)
+    const jungleLateAlert = tickLate31.alerts.find((a) => a.role === 'JUNGLE')
+    expect(jungleLateAlert).toBeDefined()
+    expect(jungleLateAlert?.soundKey).toBe('beware')
+  })
+
+  it('resets inactivity timer and disarms jungler alert when jungler shows activity', () => {
+    const players = getPlayers()
+    const initial = trackEnemyInactivity(players, 'ORDER', 400, [], null)
+
+    // Advance to 435s (jungler missing)
+    const tick35 = trackEnemyInactivity(players, 'ORDER', 435, [], initial.states)
+    const j35 = Array.from(tick35.states.values()).find((s) => s.position === 'JUNGLE')
+    expect(j35?.isMissing).toBe(true)
+
+    // Jungler kills a camp or buys an item at t = 440
+    const junglerPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'JUNGLE')
+    if (junglerPlayer) {
+      junglerPlayer.scores.creepScore += 4
+    }
+
+    const tickSeen = trackEnemyInactivity(players, 'ORDER', 440, [], tick35.states)
+    const jSeen = Array.from(tickSeen.states.values()).find((s) => s.position === 'JUNGLE')
+    expect(jSeen?.isMissing).toBe(false)
+    expect(jSeen?.alertTriggered).toBe(false)
+    expect(jSeen?.lastSeenGameTime).toBe(440)
+  })
+
+  it('does not flag dead enemy players as MIA and handles respawn timer', () => {
+    const players = getPlayers()
+    const junglerPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'JUNGLE')
+    if (!junglerPlayer) throw new Error('junglerPlayer missing')
+
+    // Jungler dies at t = 300 with 25s respawn timer
+    junglerPlayer.isDead = true
+    junglerPlayer.respawnTimer = 25
 
     const initial = trackEnemyInactivity(players, 'ORDER', 300, [], null)
 
     // While dead at t = 320 (20s passed, 5s respawn left)
-    midPlayer.respawnTimer = 5
+    junglerPlayer.respawnTimer = 5
     const tickDead = trackEnemyInactivity(players, 'ORDER', 320, [], initial.states)
-    const midDead = Array.from(tickDead.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midDead?.isMissing).toBe(false)
-    expect(midDead?.isDead).toBe(true)
-    expect(midDead?.respawnTimer).toBe(5)
-    expect(midDead?.inactivitySeconds).toBe(0)
+    const jDead = Array.from(tickDead.states.values()).find((s) => s.position === 'JUNGLE')
+    expect(jDead?.isMissing).toBe(false)
+    expect(jDead?.isDead).toBe(true)
+    expect(jDead?.respawnTimer).toBe(5)
+    expect(jDead?.inactivitySeconds).toBe(0)
 
-    // Player respawns at t = 325 (isDead = false, respawnTimer = 0)
-    midPlayer.isDead = false
-    midPlayer.respawnTimer = 0
+    // Jungler respawns at t = 325 (isDead = false, respawnTimer = 0)
+    junglerPlayer.isDead = false
+    junglerPlayer.respawnTimer = 0
     const tickRespawn = trackEnemyInactivity(players, 'ORDER', 325, [], tickDead.states)
-    const midRespawn = Array.from(tickRespawn.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midRespawn?.isDead).toBe(false)
-    expect(midRespawn?.isMissing).toBe(false)
-    expect(midRespawn?.lastSeenGameTime).toBe(325)
-    expect(midRespawn?.inactivitySeconds).toBe(0)
-
-    // 20 seconds after respawning (t = 345) -> still within 30s threshold, NOT missing
-    const tick20AfterRespawn = trackEnemyInactivity(players, 'ORDER', 345, [], tickRespawn.states)
-    const mid20 = Array.from(tick20AfterRespawn.states.values()).find(
-      (s) => s.position === 'MIDDLE',
-    )
-    expect(mid20?.isMissing).toBe(false)
-    expect(mid20?.inactivitySeconds).toBe(20)
-
-    // 31 seconds after respawning (t = 356) -> crossed 30s threshold -> NOW MIA!
-    const tickMIA = trackEnemyInactivity(players, 'ORDER', 356, [], tick20AfterRespawn.states)
-    const midMIA = Array.from(tickMIA.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midMIA?.isMissing).toBe(true)
-    expect(tickMIA.alerts.some((a) => a.role === 'MIDDLE')).toBe(true)
-  })
-
-  it('requires 30 full continuous seconds: reappearing at 20s (e.g. item/trinket/CS update) resets timer and does NOT alert 10s later', () => {
-    const players = getPlayers()
-    const midPlayer = players.find((p) => p.team === 'CHAOS' && p.position === 'MIDDLE')
-    if (!midPlayer) throw new Error('midPlayer missing')
-
-    // 1. Baseline at t = 300
-    const initial = trackEnemyInactivity(players, 'ORDER', 300, [], null)
-
-    // 2. At t = 320 (20s later), midlaner reappears and uses an active item / trinket (same item count, canUse changes)
-    if (midPlayer.items[0]) {
-      midPlayer.items[0].canUse = false
-    }
-    const tick20 = trackEnemyInactivity(players, 'ORDER', 320, [], initial.states)
-    const midAt20 = Array.from(tick20.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midAt20?.lastSeenGameTime).toBe(320)
-    expect(midAt20?.inactivitySeconds).toBe(0)
-    expect(midAt20?.isMissing).toBe(false)
-
-    // 3. 10 seconds later at t = 330 (30s after initial 300, but only 10s after reappearing at 320)
-    // Must NOT trigger an alert for midlaner!
-    const tick30 = trackEnemyInactivity(players, 'ORDER', 330, [], tick20.states)
-    const midAlertAt30 = tick30.alerts.find((a) => a.role === 'MIDDLE')
-    expect(midAlertAt30).toBeUndefined()
-    const midAt30 = Array.from(tick30.states.values()).find((s) => s.position === 'MIDDLE')
-    expect(midAt30?.isMissing).toBe(false)
-    expect(midAt30?.inactivitySeconds).toBe(10)
-
-    // 4. Only after 30 true continuous seconds from 320 (at t = 350) does the alert fire
-    const tick50 = trackEnemyInactivity(players, 'ORDER', 350, [], tick30.states)
-    const midAlertAt50 = tick50.alerts.find((a) => a.role === 'MIDDLE')
-    expect(midAlertAt50).toBeDefined()
-    expect(midAlertAt50?.soundKey).toBe('beware')
+    const jRespawn = Array.from(tickRespawn.states.values()).find((s) => s.position === 'JUNGLE')
+    expect(jRespawn?.isDead).toBe(false)
+    expect(jRespawn?.isMissing).toBe(false)
+    expect(jRespawn?.lastSeenGameTime).toBe(325)
+    expect(jRespawn?.inactivitySeconds).toBe(0)
   })
 })
