@@ -13,7 +13,7 @@
 
 const path = require('node:path')
 const fs = require('node:fs')
-const { app, BrowserWindow, globalShortcut, screen, Tray, Menu, shell, Notification, nativeImage } = require('electron')
+const { app, BrowserWindow, globalShortcut, screen, Tray, Menu, shell, Notification, nativeImage, dialog } = require('electron')
 
 // Empêche les instances multiples
 const gotTheLock = app.requestSingleInstanceLock()
@@ -123,7 +123,46 @@ function createTray() {
       },
       { type: 'separator' },
       {
-        label: '❌ Quitter RiftVision',
+        label: '⚙️ Options',
+        click: () => {
+          shell.openExternal(getDashboardUrl())
+        },
+      },
+      {
+        label: 'ℹ️ À propos',
+        click: () => {
+          dialog
+            .showMessageBox({
+              type: 'info',
+              title: 'À propos de RiftVision',
+              message: 'RiftVision Overlay — v1.3.0',
+              detail:
+                'Copilote tactique et HUD in-game transparent pour League of Legends.\n\n' +
+                '• Version : 1.3.0\n' +
+                '• Auteur : Nabil Labrazi (nabster.dev)\n' +
+                '• Dashboard local : ' +
+                getDashboardUrl() +
+                '\n' +
+                '• Statut : Synchronisé localement via Server-Sent Events\n' +
+                '• Conforme aux Riot Developer Policies (Live Client Data API)',
+              buttons: ['Consulter le Changelog', 'Fermer'],
+              defaultId: 1,
+              cancelId: 1,
+              icon: trayIcon,
+            })
+            .then(({ response }) => {
+              if (response === 0) {
+                shell.openExternal(
+                  'https://github.com/nlabrazi/riftvision/blob/master/CHANGELOG.md',
+                )
+              }
+            })
+            .catch(() => {})
+        },
+      },
+      { type: 'separator' },
+      {
+        label: '❌ Quitter',
         click: () => {
           app.quit()
         },
@@ -138,13 +177,13 @@ function createTray() {
       shell.openExternal(getDashboardUrl())
     })
 
-    console.log('[RiftVision Overlay] ✓ Icône Tray active dans la zone de notification.')
+    console.log('[RiftVision Overlay] ✓ Icône Tray active dans la barre de notifications.')
 
     // Notification toast native au démarrage
     if (Notification.isSupported()) {
       new Notification({
         title: 'RiftVision Overlay est actif !',
-        body: 'Superposé à League of Legends. Retrouvez l’icône dans la zone de notification (près de l’horloge / flèche ^).',
+        body: 'Le compagnon in-game est prêt dans la barre de notifications (près de l’horloge / flèche ^). Faites un clic droit sur l’icône pour accéder aux options ou quitter.',
         icon: iconPath || trayIcon,
       }).show()
     }
@@ -183,12 +222,12 @@ function createOverlayWindow() {
     backgroundColor: '#00000000',
     alwaysOnTop: true,
     fullscreen: false,
-    skipTaskbar: false,
+    skipTaskbar: true,
     icon: appIcon,
     hasShadow: false,
     resizable: false,
     movable: false,
-    minimizable: false,
+    focusable: false,
     show: false,
     webPreferences: {
       nodeIntegration: false,
