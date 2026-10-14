@@ -51,25 +51,34 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 En complément du tableau de bord second écran, RiftVision propose un **overlay tête haute (HUD)** natif ultra-léger propulsé par Electron :
 
 - 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode *Plein écran fenêtré (Borderless)*.
-- 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté. Vous conservez un contrôle parfait et sans latence de votre personnage.
-- 📌 **Barre des tâches (System Tray)** : Se loge discrètement dans la zone de notification Windows avec notification native et menu contextuel clic-droit complet (Statut, Ouvrir le tableau de bord, Tester l'alerte F9, Masquer/Afficher, Quitter proprement sans passer par le Gestionnaire des tâches).
+- 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté en cours de jeu. Vous conservez un contrôle parfait et sans latence de votre personnage.
+- 🎯 **Positionnement rehaussé & Calibration Drag & Drop (F8)** : Par défaut, les alertes s'affichent à **8% du haut** de l'écran pour ne jamais masquer votre personnage ou vos sbires. Une pression sur **F8** active le mode calibration, permettant de glisser-déposer l'alerte à la souris où vous le souhaitez. Les coordonnées sont automatiquement enregistrées en local.
+- 📌 **Barre des tâches (System Tray)** : Se loge discrètement dans la zone de notification Windows avec notification native et menu contextuel clic-droit complet (Statut, Ouvrir le tableau de bord, Calibrer la position F8, Tester F9, Masquer/Afficher Ctrl+Shift+O, Options, À propos, et Quitter proprement).
 - 🌐 **Lancement automatique du Dashboard** : Ouvre immédiatement le tableau de bord tactique dans votre navigateur web par défaut dès le démarrage de l'exécutable.
 - ⚡ **Synchronisation instantanée (< 5ms)** : Relié au serveur RiftVision via un pont **Server-Sent Events (SSE)** (`/api/alerts/stream`). Tout événement déclenché depuis le second écran ou détecté en partie apparaît instantanément en jeu.
 - 🔌 **Indicateur d'état en direct** : La barre d'outils du dashboard affiche `Overlay HUD actif` avec une pastille lumineuse dès que le compagnon est connecté.
 - ⌨️ **Raccourcis & Commandes** :
+  - **F8** : Active / désactive le mode de calibration pour déplacer la bannière d'alerte à la souris (Drag & Drop) ou aux touches fléchées.
   - **F9** : Déclenche immédiatement une alerte de test in-game depuis n'importe où.
   - **Ctrl + Shift + O** : Masque ou réaffiche l'overlay à la volée en cours de partie.
   - **Bouton « Overlay HUD » (Dashboard)** : Envoie une alerte de test au compagnon ou ouvre la modale d'aide pas-à-pas s'il n'est pas encore connecté.
 
-### 🏆 Bilan de fin de match (Post-Game Recap)
+### 🏆 Bilan de fin de match & Historique des parties
 
-Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan de fin de match »**, RiftVision ouvre un récapitulatif complet de la partie :
+Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan de match »**, RiftVision ouvre un récapitulatif complet qui **reste affiché même après la fermeture du client de jeu League of Legends** :
+- **Persistance locale automatique** : Chaque partie complétée est archivée dans `server/data/match-history.json` (jusqu'à 50 matchs) avec miroir de secours `localStorage`.
+- **Modale « Historique des parties »** : Accessible via le bouton **Historique** dans l'en-tête et sur la page d'accueil avec affichage du résultat, du champion, de la durée, du ratio KDA, des CS/min et de l'écart économique.
+- **Réouverture en 1 clic** : Réouverture intégrale de n'importe quel rapport de match antérieur avec ses onglets détaillés.
 - **Bannière Victoire / Défaite** : Durée de jeu, carte et équipe associée.
 - **Fiche de performance individuelle** : KDA, ratio KDA, % participation aux éliminations (% KP), sbires totaux et rythme (CS/min), score de vision et valeur d'équipement.
 - **Équipement final** : Les 6 slots d'objets complétés avec portraits Data Dragon et la relique de vision.
 - **Comparatif face-à-face d'équipe** : Kills, Dragons abattus, Barons Nashor, Tourelles détruites et or total d'équipement (&Delta; Gold).
 - **Faits marquants** : Historique horodaté des moments décisifs (Premier Sang, Dragons, Barons, Hérauts, Séries d'éliminations, Ace).
 - **Export en 1 clic** : Bouton pour copier instantanément un résumé propre dans le presse-papier.
+
+### ⏱️ Précision des Timers d'Objectifs Neutres (Patch 14.8 Saison 14)
+- **Larves du Néant (Voidgrubs)** : Apparition initiale calée à **6:00** (360s). Gestion des vagues multiples (3 larves par vague, respawn de la vague 2 après 4:00 si éliminée avant 9:45), et despawn automatique à 13:45 pour le Héraut de 14:00.
+- **Dragon Ancestral** : Conditionné à l'obtention de l'Âme de Dragon (4 dragons d'une même équipe), garantissant des timers de respawn exacts à chaque étape de la partie.
 
 ### Lancement et distribution du compagnon
 
