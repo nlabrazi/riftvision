@@ -1,22 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { createError, defineEventHandler, sendStream, setHeader } from 'h3'
+import { findSetupInstaller } from '../../utils/overlayInstaller'
 
 export default defineEventHandler((event) => {
   const distDir = path.resolve(process.cwd(), 'dist-overlay')
-
-  if (!fs.existsSync(distDir)) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Le dossier des installateurs n’existe pas encore.',
-    })
-  }
-
-  const files = fs.readdirSync(distDir)
-  // Recherche en priorité de l'installateur NSIS Setup
-  const setupFile =
-    files.find((f) => f.startsWith('RiftVision-Overlay-Setup') && f.endsWith('.exe')) ||
-    files.find((f) => f.endsWith('.exe'))
+  const setupFile = findSetupInstaller(distDir)
 
   if (!setupFile) {
     throw createError({
