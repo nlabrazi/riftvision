@@ -15,8 +15,11 @@ const props = withDefaults(
 
 const gameTime = computed(() => props.gameData?.gameData?.gameTime ?? 0)
 const events = computed(() => props.gameData?.events?.Events ?? [])
+const players = computed(() => props.gameData?.allPlayers ?? [])
 
-const camps = computed<NeutralCamp[]>(() => calculateCampTimers(gameTime.value, events.value))
+const camps = computed<NeutralCamp[]>(() =>
+  calculateCampTimers(gameTime.value, events.value, players.value),
+)
 
 const epicCamps = computed(() => camps.value.filter((c) => c.category === 'epic'))
 

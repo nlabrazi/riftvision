@@ -50,7 +50,11 @@ const selectedLocation = computed(() =>
 )
 
 const camps = computed(() =>
-  calculateCampTimers(gameTime.value, props.gameData?.events?.Events || []),
+  calculateCampTimers(
+    gameTime.value,
+    props.gameData?.events?.Events || [],
+    props.gameData?.allPlayers || [],
+  ),
 )
 const dragonCamp = computed(() => camps.value.find((c) => c.id === 'DRAGON'))
 const baronCamp = computed(() => camps.value.find((c) => c.id === 'BARON'))

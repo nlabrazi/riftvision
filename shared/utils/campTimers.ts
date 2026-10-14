@@ -1,5 +1,5 @@
 import type { SoundEffectKey } from '../types/diff'
-import type { RiotEvent } from '../types/riot'
+import type { RiotEvent, RiotPlayer } from '../types/riot'
 import { OBJECTIVE_COORDINATES } from './mapCoordinates'
 
 export type NeutralCampId =
@@ -65,7 +65,11 @@ export const CAMP_LOCATIONS = {
 /**
  * Calculates current status and remaining seconds for all neutral camps on Summoner's Rift
  */
-export function calculateCampTimers(gameTime: number, events: RiotEvent[] = []): NeutralCamp[] {
+export function calculateCampTimers(
+  gameTime: number,
+  events: RiotEvent[] = [],
+  allPlayers: RiotPlayer[] = [],
+): NeutralCamp[] {
   const safeGameTime = Math.max(0, gameTime || 0)
 
   // 1. Dragon Calculations
@@ -74,9 +78,27 @@ export function calculateCampTimers(gameTime: number, events: RiotEvent[] = []):
   const lastDragonEvent = dragonKillCount > 0 ? dragonEvents[dragonKillCount - 1] : undefined
   const lastDragonKillTime = lastDragonEvent?.EventTime
 
-  // If 4 or more dragons are slain in total, elder dragon spawns next with 360s respawn
-  const isElder = dragonKillCount >= 4
-  const dragonRespawnDuration = isElder ? 360 : 300
+  // Determine if Dragon Soul has been claimed by either team (4 dragons by the same team)
+  let orderDragons = 0
+  let chaosDragons = 0
+  if (allPlayers.length > 0) {
+    for (const de of dragonEvents) {
+      if (de.DragonType === 'Elder') continue
+      const killer = (de.KillerName || '').trim().toLowerCase().split('#')[0]
+      const p = allPlayers.find((player) => {
+        const s = (player.summonerName || '').trim().toLowerCase().split('#')[0]
+        const r = (player.rawSummonerName || '').trim().toLowerCase().split('#')[0]
+        const g = (player.riotIdGameName || '').trim().toLowerCase().split('#')[0]
+        return s === killer || r === killer || g === killer
+      })
+      if (p?.team === 'ORDER') orderDragons++
+      else if (p?.team === 'CHAOS') chaosDragons++
+    }
+  }
+
+  const hasSoul = orderDragons >= 4 || chaosDragons >= 4
+  const isElder = hasSoul || lastDragonEvent?.DragonType === 'Elder' || dragonKillCount >= 8
+  const dragonRespawnDuration = isElder ? 360 : 300 // 6:00 for Elder, 5:00 for Elemental
   const dragonInitialSpawn = 300 // 5:00
 
   let dragonStatus: CampStatus = 'SPAWNING'
@@ -162,43 +184,80 @@ export function calculateCampTimers(gameTime: number, events: RiotEvent[] = []):
   }
 
   // 4. Voidgrubs (Larves du Néant) Calculations
+  // Since Patch 14.8, initial spawn is at 6:00 (360s).
+  // Grubs spawn in groups of 3. Each individual grub kill emits a HordeKill event.
+  // When the 3 grubs of batch 1 are slain before 9:45 (585s), batch 2 spawns 4:00 (240s) later.
+  // At 13:45 (825s), any remaining grubs despawn to make way for Rift Herald at 14:00.
   const grubsEvents = events.filter((e) => e.EventName === 'HordeKill')
-  const grubsKillCount = grubsEvents.length
-  const grubsInitialSpawn = 300 // 5:00
+  const totalGrubsKilled = grubsEvents.length // 0 to 6
+  const grubsInitialSpawn = 360 // 6:00 (Patch 14.8)
   const grubsDespawn = 825 // 13:45
 
   let grubsStatus: CampStatus = 'SPAWNING'
   let grubsNextSpawn = grubsInitialSpawn
   let grubsRemaining = 0
+  let grubsLabel = 'Larves du Néant'
 
-  if (grubsKillCount >= 2 || safeGameTime >= grubsDespawn) {
+  if (safeGameTime >= grubsDespawn || totalGrubsKilled >= 6) {
     grubsStatus = 'DESPAWNED'
     grubsNextSpawn = -1
     grubsRemaining = 0
-  } else if (grubsKillCount === 1) {
-    const lastGrubs = grubsEvents[0]
-    const nextGrubsTime = lastGrubs.EventTime + 240
-    if (nextGrubsTime >= grubsDespawn) {
+    grubsLabel =
+      totalGrubsKilled >= 6
+        ? 'Larves du Néant (Vagues terminées)'
+        : 'Larves du Néant (Héraut à 14:00)'
+  } else if (totalGrubsKilled < 3) {
+    // Vague 1 in progress or not spawned yet
+    if (safeGameTime < grubsInitialSpawn) {
+      grubsStatus = 'SPAWNING'
+      grubsNextSpawn = grubsInitialSpawn
+      grubsRemaining = Math.max(0, Math.ceil(grubsInitialSpawn - safeGameTime))
+      grubsLabel = 'Larves du Néant (Vague 1)'
+    } else {
+      grubsStatus = 'ALIVE'
+      grubsNextSpawn = grubsInitialSpawn
+      grubsRemaining = 0
+      grubsLabel =
+        totalGrubsKilled === 0
+          ? 'Larves du Néant (Vague 1)'
+          : `Larves du Néant (Vague 1 · ${totalGrubsKilled}/3)`
+    }
+  } else {
+    // At least 3 grubs killed (Vague 1 fully cleared)
+    const batch1ClearEvent = grubsEvents[2]
+    const batch1ClearTime = batch1ClearEvent?.EventTime ?? 0
+
+    if (batch1ClearTime >= 585) {
+      // Batch 1 cleared after 9:45 -> no second batch spawns
       grubsStatus = 'DESPAWNED'
       grubsNextSpawn = -1
       grubsRemaining = 0
-    } else if (safeGameTime >= nextGrubsTime) {
-      grubsStatus = 'ALIVE'
-      grubsNextSpawn = nextGrubsTime
-      grubsRemaining = 0
+      grubsLabel = 'Larves du Néant (Terminées)'
     } else {
-      grubsStatus = 'SPAWNING'
-      grubsRemaining = Math.max(0, Math.ceil(nextGrubsTime - safeGameTime))
-      grubsNextSpawn = nextGrubsTime
+      // Second batch spawns 4:00 (240s) after batch 1 clear
+      const batch2SpawnTime = batch1ClearTime + 240
+      if (batch2SpawnTime >= grubsDespawn) {
+        grubsStatus = 'DESPAWNED'
+        grubsNextSpawn = -1
+        grubsRemaining = 0
+        grubsLabel = 'Larves du Néant (Héraut à 14:00)'
+      } else if (safeGameTime < batch2SpawnTime) {
+        grubsStatus = 'SPAWNING'
+        grubsNextSpawn = batch2SpawnTime
+        grubsRemaining = Math.max(0, Math.ceil(batch2SpawnTime - safeGameTime))
+        grubsLabel = 'Larves du Néant (Vague 2)'
+      } else {
+        // Batch 2 is currently alive!
+        const grubsInBatch2 = totalGrubsKilled - 3
+        grubsStatus = 'ALIVE'
+        grubsNextSpawn = batch2SpawnTime
+        grubsRemaining = 0
+        grubsLabel =
+          grubsInBatch2 === 0
+            ? 'Larves du Néant (Vague 2)'
+            : `Larves du Néant (Vague 2 · ${grubsInBatch2}/3)`
+      }
     }
-  } else if (safeGameTime >= grubsInitialSpawn) {
-    grubsStatus = 'ALIVE'
-    grubsNextSpawn = grubsInitialSpawn
-    grubsRemaining = 0
-  } else {
-    grubsStatus = 'SPAWNING'
-    grubsRemaining = Math.max(0, Math.ceil(grubsInitialSpawn - safeGameTime))
-    grubsNextSpawn = grubsInitialSpawn
   }
 
   // 5. Buffs (Blue & Red)
@@ -308,7 +367,7 @@ export function calculateCampTimers(gameTime: number, events: RiotEvent[] = []):
     {
       id: 'VOIDGRUBS',
       name: 'Larves du Néant',
-      label: 'Larves du Néant',
+      label: grubsLabel,
       category: 'epic',
       iconType: 'herald',
       location: CAMP_LOCATIONS.VOIDGRUBS,
@@ -318,7 +377,7 @@ export function calculateCampTimers(gameTime: number, events: RiotEvent[] = []):
       despawnTime: grubsDespawn,
       nextSpawnTime: grubsNextSpawn,
       remainingSeconds: grubsRemaining,
-      killCount: grubsKillCount,
+      killCount: totalGrubsKilled,
     },
     computeBuff('BLUE_ORDER', 'Sentinelle Bleue', 'ORDER', CAMP_LOCATIONS.BLUE_ORDER),
     computeBuff('BLUE_CHAOS', 'Sentinelle Bleue', 'CHAOS', CAMP_LOCATIONS.BLUE_CHAOS),
