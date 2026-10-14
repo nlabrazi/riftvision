@@ -27,13 +27,8 @@ const emit = defineEmits<{
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          class="rv-icon-button"
-          aria-label="Fermer"
-          title="Fermer l'historique"
-          @click="$emit('close')"
-        >
+        <button type="button" class="rv-icon-button" aria-label="Fermer" title="Fermer l'historique"
+          @click="$emit('close')">
           <RvIcon name="close" :size="16" />
         </button>
       </div>
@@ -50,21 +45,16 @@ const emit = defineEmits<{
           </div>
           <h4>Aucune partie enregistrée</h4>
           <p>
-            Chaque fin de match jouée avec RiftVision sera automatiquement archivée ici. Vous pourrez rouvrir le bilan complet, comparer l'économie et analyser vos performances à tout moment.
+            Chaque fin de match jouée avec RiftVision sera automatiquement archivée ici. Vous pourrez rouvrir le bilan
+            complet, comparer l'économie et analyser vos performances à tout moment.
           </p>
         </div>
 
         <div v-else class="history-list" data-testid="history-list">
-          <article
-            v-for="m in matches"
-            :key="m.id"
-            class="history-card"
-            :class="{
-              'history-card--victory': m.result === 'VICTORY',
-              'history-card--defeat': m.result === 'DEFEAT',
-            }"
-            data-testid="history-card"
-          >
+          <article v-for="m in matches" :key="m.id" class="history-card" :class="{
+            'history-card--victory': m.result === 'VICTORY',
+            'history-card--defeat': m.result === 'DEFEAT',
+          }" data-testid="history-card">
             <div class="card-left">
               <div class="card-badge" :class="m.result === 'VICTORY' ? 'badge--win' : 'badge--loss'">
                 {{ m.result === 'VICTORY' ? 'VICTOIRE' : 'DÉFAITE' }}
@@ -93,10 +83,7 @@ const emit = defineEmits<{
               </div>
               <div v-if="m.goldDifference !== undefined" class="stat-item">
                 <span class="stat-label">&Delta; Gold</span>
-                <span
-                  class="stat-value"
-                  :class="m.goldDifference >= 0 ? 'gold-pos' : 'gold-neg'"
-                >
+                <span class="stat-value" :class="m.goldDifference >= 0 ? 'gold-pos' : 'gold-neg'">
                   {{ m.goldDifference >= 0 ? '+' : '' }}{{ Math.round(m.goldDifference) }}
                 </span>
                 <span class="stat-sub">{{ m.goldDifference >= 0 ? 'Lead équipe' : 'Retard' }}</span>
@@ -104,20 +91,12 @@ const emit = defineEmits<{
             </div>
 
             <div class="card-actions">
-              <button
-                type="button"
-                class="rv-button rv-button-primary card-action-btn"
-                title="Consulter le rapport complet de cette partie"
-                @click="$emit('selectMatch', m)"
-              >
+              <button type="button" class="rv-button rv-button-primary card-action-btn"
+                title="Consulter le rapport complet de cette partie" @click="$emit('selectMatch', m)">
                 <RvIcon name="dashboard" :size="13" /> Consulter le bilan
               </button>
-              <button
-                type="button"
-                class="rv-icon-button delete-btn"
-                title="Supprimer cette partie de l'historique"
-                @click="$emit('deleteMatch', m.id)"
-              >
+              <button type="button" class="rv-icon-button delete-btn" title="Supprimer cette partie de l'historique"
+                @click="$emit('deleteMatch', m.id)">
                 <RvIcon name="close" :size="14" />
               </button>
             </div>
@@ -407,4 +386,3 @@ const emit = defineEmits<{
   border-radius: 4px;
 }
 </style>
-
