@@ -13,7 +13,7 @@
 
 const path = require('node:path')
 const fs = require('node:fs')
-const { app, BrowserWindow, globalShortcut, screen, Tray, Menu, shell, Notification, nativeImage, dialog } = require('electron')
+const { app, BrowserWindow, globalShortcut, screen, Tray, Menu, shell, Notification, nativeImage, dialog, ipcMain } = require('electron')
 
 // Empêche les instances multiples
 const gotTheLock = app.requestSingleInstanceLock()
@@ -25,6 +25,34 @@ if (!gotTheLock) {
 
 let overlayWindow = null
 let tray = null
+let isCalibrating = false
+
+function toggleCalibration(forceState) {
+  isCalibrating = typeof forceState === 'boolean' ? forceState : !isCalibrating
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    // En calibration : on autorise la souris pour glisser/déposer l'alerte
+    // En HUD normal : on rend la fenêtre 100% traversante (click-through vers LoL)
+    overlayWindow.setIgnoreMouseEvents(!isCalibrating, { forward: true })
+    overlayWindow.webContents.send('toggle-calibration', isCalibrating)
+    overlayWindow.webContents.executeJavaScript(`
+      if (typeof window.__setCalibrationMode === 'function') {
+        window.__setCalibrationMode(${isCalibrating})
+      }
+    `).catch(() => {})
+  }
+  console.log(`[RiftVision Overlay] Mode calibration : ${isCalibrating ? 'ACTIF (souris capturée pour drag & drop)' : 'INACTIF (clics traversants vers LoL)'}`)
+}
+
+// Gestion des messages IPC depuis le Web (preload)
+ipcMain.on('set-ignore-mouse-events', (_event, ignore) => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setIgnoreMouseEvents(Boolean(ignore), { forward: true })
+  }
+})
+
+ipcMain.on('set-calibration-mode', (_event, enabled) => {
+  toggleCalibration(Boolean(enabled))
+})
 
 // Icône Hextech native 32x32 intégrée en Base64 (garantit un affichage 100% fiable en toutes circonstances)
 const FALLBACK_ICON_B64 = 'data:image/png;base64,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'
@@ -113,6 +141,12 @@ function createTray() {
         label: '⚡ Tester une alerte in-game (F9)',
         click: () => {
           triggerTestAlert()
+        },
+      },
+      {
+        label: '🎯 Calibrer la position (F8)',
+        click: () => {
+          toggleCalibration()
         },
       },
       {
@@ -211,6 +245,9 @@ function createOverlayWindow() {
   const { width, height, x, y } = displayToUse.bounds
   const { image: appIcon } = resolveIcon()
 
+  const preloadCandidate = path.join(__dirname, 'preload-overlay.cjs')
+  const preloadPath = fs.existsSync(preloadCandidate) ? preloadCandidate : undefined
+
   overlayWindow = new BrowserWindow({
     width,
     height,
@@ -233,6 +270,7 @@ function createOverlayWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       backgroundThrottling: false,
+      preload: preloadPath,
     },
   })
 
@@ -247,6 +285,7 @@ function createOverlayWindow() {
   console.log(`[RiftVision Overlay] Chargement de : ${targetUrl}`)
   console.log(`[RiftVision Overlay] Affichage sur écran : ${width}x${height} à (${x}, ${y})`)
   console.log('[RiftVision Overlay] Commandes globales :')
+  console.log('  • F8 : Calibrer / déplacer la position de l’alerte (Drag & Drop)')
   console.log('  • F9 : Déclencher une alerte de test immédiatement')
   console.log('  • Ctrl + Shift + O (lettre O) : Masquer / Afficher l’overlay')
 
@@ -285,6 +324,11 @@ app.whenReady().then(() => {
       shell.openExternal(getDashboardUrl()).catch(() => {})
     }, 1200)
   }
+
+  // Raccourci global F8 : calibrer et déplacer la zone de notification HUD (Drag & Drop)
+  globalShortcut.register('F8', () => {
+    toggleCalibration()
+  })
 
   // Raccourci global F9 : déclenche une alerte de test n'importe où
   globalShortcut.register('F9', () => {

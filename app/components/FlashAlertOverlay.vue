@@ -8,11 +8,13 @@ const props = withDefaults(
     inline?: boolean
     position?: 'corner' | 'center' | 'top'
     interactive?: boolean
+    customCoords?: { x: number; y: number } | null
   }>(),
   {
     inline: false,
     position: 'corner',
     interactive: true,
+    customCoords: null,
   },
 )
 const { activeAlert, alertQueue, dismissCurrentAlert } = useFlashAlerts()
@@ -62,9 +64,21 @@ const categoryLabel = computed(() => {
     class="flash-region"
     :class="{
       'flash-region--inline': inline,
-      'flash-region--center': position === 'center',
-      'flash-region--top': position === 'top',
+      'flash-region--center': position === 'center' && !customCoords,
+      'flash-region--top': position === 'top' && !customCoords,
+      'flash-region--custom': !!customCoords,
     }"
+    :style="
+      customCoords
+        ? {
+            left: `${customCoords.x}px`,
+            top: `${customCoords.y}px`,
+            bottom: 'auto',
+            right: 'auto',
+            transform: 'none',
+          }
+        : undefined
+    "
     aria-live="polite"
     aria-atomic="true"
   >
@@ -132,11 +146,17 @@ const categoryLabel = computed(() => {
 }
 
 .flash-region--center {
-  top: 20%;
+  top: 8%;
   bottom: auto;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px));
+  z-index: 9999;
+}
+
+.flash-region--custom {
+  position: fixed;
   width: min(520px, calc(100vw - 32px));
   z-index: 9999;
 }
