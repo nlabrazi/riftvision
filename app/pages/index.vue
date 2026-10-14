@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CombatLogFilter, GameDiffEvent } from '#shared/types/diff'
+import type { SavedMatch } from '#shared/types/history'
 import AlertTester from '../components/AlertTester.vue'
 import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
+import MatchHistoryModal from '../components/MatchHistoryModal.vue'
+import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
 import { useEnemyInactivity } from '../composables/useEnemyInactivity'
 import { useFlashAlerts } from '../composables/useFlashAlerts'
+import { useMatchHistory } from '../composables/useMatchHistory'
 import { useNeutralCamps } from '../composables/useNeutralCamps'
 import { useRiotLive } from '../composables/useRiotLive'
 
@@ -23,6 +27,10 @@ const {
   blueEconomy,
   redEconomy,
   goldDifference,
+  isGameOver,
+  gameResult,
+  triggerGameOver,
+  dismissGameOver,
   isPolling,
   lastError,
   isConnected,
@@ -38,6 +46,69 @@ const { isAudioMuted, toggleAudioMute, ingestDiffEvents, clearAlerts, triggerDem
   useFlashAlerts()
 useNeutralCamps(gameData)
 const { miaStates } = useEnemyInactivity(gameData)
+const {
+  matches,
+  isLoading: isHistoryLoading,
+  activeReportMatch,
+  recordCompletedMatch,
+  deleteMatch,
+  openMatchReport,
+  closeMatchReport,
+  buildMatchSnapshot,
+} = useMatchHistory()
+const isHistoryOpen = ref(false)
+
+// Sauvegarde automatique du match et découplage du récapitulatif pour qu'il ne disparaisse pas à la fermeture du client LoL
+watch(isGameOver, (ended) => {
+  if (ended && gameData.value) {
+    const snapshot = buildMatchSnapshot(
+      gameData.value,
+      blueEconomy.value,
+      redEconomy.value,
+      goldDifference.value,
+      formattedGameTime.value,
+      gameResult.value || 'VICTORY',
+      diffEvents.value,
+    )
+    recordCompletedMatch(snapshot)
+    activeReportMatch.value = snapshot
+  }
+})
+
+function handleShowGameOver(result?: 'VICTORY' | 'DEFEAT') {
+  if (gameData.value) {
+    const snapshot = buildMatchSnapshot(
+      gameData.value,
+      blueEconomy.value,
+      redEconomy.value,
+      goldDifference.value,
+      formattedGameTime.value,
+      result || gameResult.value || 'VICTORY',
+      diffEvents.value,
+    )
+    recordCompletedMatch(snapshot)
+    activeReportMatch.value = snapshot
+  } else {
+    triggerGameOver(result)
+  }
+}
+
+function handleCloseReport() {
+  closeMatchReport()
+  dismissGameOver()
+}
+
+function handleNewGameFromReport() {
+  closeMatchReport()
+  dismissGameOver()
+  changeMode(status.value.isMock ? stopMockMode : stopLiveMode)
+}
+
+function handleSelectHistoricalMatch(m: SavedMatch) {
+  isHistoryOpen.value = false
+  openMatchReport(m)
+}
+
 const currentView = ref<'tactical' | 'radar'>('tactical')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
@@ -111,6 +182,46 @@ async function refresh() {
   }
 }
 
+const isOverlayConnected = ref(false)
+const isOverlayModalOpen = ref(false)
+const overlayToast = ref<string | null>(null)
+let overlayToastTimer: ReturnType<typeof setTimeout> | null = null
+let overlayStatusInterval: ReturnType<typeof setInterval> | null = null
+
+async function checkOverlayStatus() {
+  try {
+    const res = await $fetch<{ connected: boolean; clientCount: number }>('/api/alerts/status')
+    isOverlayConnected.value = res.connected
+  } catch {
+    isOverlayConnected.value = false
+  }
+}
+
+function showOverlayToast(msg: string) {
+  overlayToast.value = msg
+  if (overlayToastTimer) clearTimeout(overlayToastTimer)
+  overlayToastTimer = setTimeout(() => {
+    overlayToast.value = null
+  }, 3500)
+}
+
+function triggerOverlayHudAction() {
+  // Déclenche une alerte de test transmise en direct via SSE à l'overlay desktop
+  triggerDemoAlert('DRAGON')
+
+  if (isOverlayConnected.value) {
+    showOverlayToast('Alerte de test envoyée sur votre écran de jeu !')
+  } else {
+    // Si le compagnon desktop n'est pas détecté, ouvrir la modale d'aide
+    isOverlayModalOpen.value = true
+  }
+}
+
+onMounted(() => {
+  checkOverlayStatus()
+  overlayStatusInterval = setInterval(checkOverlayStatus, 4000)
+})
+
 watch(latestLiveEvents, (fresh) => {
   if (fresh.length) ingestDiffEvents(fresh)
 })
@@ -123,7 +234,11 @@ watch(hasGame, (connected) => {
     currentView.value = 'tactical'
   }
 })
-onUnmounted(clearAlerts)
+onUnmounted(() => {
+  clearAlerts()
+  if (overlayStatusInterval) clearInterval(overlayStatusInterval)
+  if (overlayToastTimer) clearTimeout(overlayToastTimer)
+})
 </script>
 
 <template>
@@ -134,7 +249,7 @@ onUnmounted(clearAlerts)
         @click.exact.prevent="returnHome">
         <div class="brand-symbol" aria-hidden="true"><span>R</span><i></i></div>
         <div>
-          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.2</span></div>
+          <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.3</span></div>
           <p>VOTRE REGARD SUR LA FAILLE</p>
         </div>
       </a>
@@ -144,6 +259,24 @@ onUnmounted(clearAlerts)
           :aria-pressed="!isAudioMuted" @click="toggleAudioMute">
           <RvIcon :name="isAudioMuted ? 'volume-off' : 'volume'" :size="17" />
           <span>{{ isAudioMuted ? 'Son coupé' : 'Son activé' }}</span>
+        </button>
+        <button
+          type="button"
+          data-testid="open-history-btn"
+          class="rv-button"
+          title="Consulter l'historique des parties enregistrées"
+          @click="isHistoryOpen = true"
+        >
+          <RvIcon name="clock" :size="16" />
+          <span>Historique</span>
+          <span v-if="matches.length > 0" class="history-badge">{{ matches.length }}</span>
+        </button>
+        <button type="button" data-testid="open-overlay-btn" class="rv-button"
+          :class="{ 'rv-button-primary': isOverlayConnected }"
+          :title="isOverlayConnected ? 'Overlay in-game connecté · Cliquez pour tester' : 'Configurer l’overlay in-game'"
+          @click="triggerOverlayHudAction">
+          <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+          <span>{{ isOverlayConnected ? 'Overlay HUD actif' : 'Overlay HUD' }}</span>
         </button>
         <button v-if="!isHelpOpen" type="button" data-testid="view-diagnostic-btn" class="rv-button" @click="toggleHelp">
           <RvIcon name="settings" :size="17" /><span>Aide et réglages</span>
@@ -173,10 +306,16 @@ onUnmounted(clearAlerts)
             <button v-if="hasGame" type="button" class="rv-button" data-testid="test-alert-dragon" @click="triggerDemoAlert('DRAGON')">
               <RvIcon name="flask" :size="15" />Tester une alerte
             </button>
+            <button v-if="hasGame" type="button" class="rv-button" data-testid="test-game-over-btn" @click="handleShowGameOver('VICTORY')">
+              <RvIcon name="check" :size="15" />Bilan de fin de match
+            </button>
             <button type="button" data-testid="live-toggle-button" class="rv-button rv-button-primary" :disabled="isChangingMode" @click="changeMode(startLiveMode)">Connecter ma partie</button>
             <button type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(stopMockMode)">Quitter la démo</button>
           </template>
           <template v-else-if="hasGame">
+            <button type="button" class="rv-button" data-testid="show-game-over-btn" @click="handleShowGameOver()">
+              <RvIcon name="check" :size="15" />Bilan de match
+            </button>
             <button v-if="!isPolling" type="button" class="rv-button rv-button-primary" @click="togglePolling">Reprendre le suivi</button>
             <button type="button" data-testid="live-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(stopLiveMode)">Déconnecter</button>
           </template>
@@ -196,6 +335,11 @@ onUnmounted(clearAlerts)
           <h3 id="reading-help-title">Comprendre le tableau de bord</h3>
           <p>Sélectionnez un événement du journal pour afficher son détail sur la carte. Le bouton « Agrandir la carte » donne plus de place à la carte et aux alertes.</p>
           <p>Les champions sont placés selon leur rôle : ce ne sont pas leurs positions en temps réel. L’économie compare la valeur des objets équipés, pas l’or total gagné.</p>
+        </section>
+        <section class="rv-panel help-panel" aria-labelledby="overlay-help-title">
+          <h3 id="overlay-help-title">Overlay en jeu (Mode Tête Haute)</h3>
+          <p>Le bouton <strong>« Overlay HUD »</strong> détache une fenêtre flottante au-dessus de League of Legends (en mode <em>Plein écran fenêtré / Borderless</em>). Les alertes sont synchronisées instantanément avec votre session.</p>
+          <p>Pour un overlay 100% transparent et traversant pour la souris, lancez le compagnon desktop avec <code>npm run overlay</code>.</p>
         </section>
         <details class="rv-panel advanced-tools">
           <summary>Diagnostic technique <span>Connexion et données brutes</span><RvIcon name="chevron-down" :size="16" /></summary>
@@ -245,22 +389,54 @@ onUnmounted(clearAlerts)
           </template>
           <template v-else>
             <p>Retrouvez les scores, les événements et les alertes sur votre second écran.</p>
+            <div class="companion-status-pill" :class="{ 'companion-status-pill--live': isOverlayConnected }">
+              <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+              <span>{{ isOverlayConnected ? 'Compagnon desktop détecté & synchronisé' : 'Compagnon desktop non détecté' }}</span>
+            </div>
             <ol class="connection-steps standby-steps">
               <li><strong>Lancez une partie de League of Legends.</strong><span>Sur le même ordinateur que RiftVision.</span></li>
               <li><strong>Connectez votre partie ci-dessous.</strong><span>Le tableau de bord s’ouvre dès que la partie est détectée.</span></li>
             </ol>
           </template>
           <div v-if="!status.isMock" class="standby-actions">
-            <button type="button" data-testid="live-toggle-button" class="rv-button" :class="{ 'rv-button-primary': !isLiveActive }" :disabled="isChangingMode"
-              @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)">
+            <button
+              type="button"
+              data-testid="live-toggle-button"
+              class="rv-button"
+              :class="{ 'rv-button-primary': !isLiveActive }"
+              :disabled="isChangingMode"
+              @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)"
+            >
               <RvIcon :name="isLiveActive ? 'close' : 'signal'" :size="17" />
               {{ isChangingMode ? 'Connexion…' : isLiveActive ? 'Annuler la recherche' : 'Connecter ma partie' }}
             </button>
+            <a
+              v-if="!isLiveActive"
+              href="/api/download/overlay"
+              download
+              class="rv-button"
+              title="Télécharger l'installateur Windows officiel (.exe)"
+            >
+              <RvIcon name="download" :size="16" />
+              <span>Télécharger l’application (.exe)</span>
+            </a>
             <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(startMockMode)">
               Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
             </button>
+            <button
+              v-if="!isLiveActive && matches.length > 0"
+              type="button"
+              data-testid="landing-history-btn"
+              class="rv-button rv-button-quiet"
+              @click="isHistoryOpen = true"
+            >
+              <RvIcon name="clock" :size="15" />
+              <span>Historique ({{ matches.length }})</span>
+            </button>
           </div>
-          <p v-if="!isLiveActive && !status.isMock" class="standby-hint">Pas de partie en cours ? La démo permet de découvrir l’interface.</p>
+          <p v-if="!isLiveActive && !status.isMock" class="standby-hint">
+            {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : 'Pas encore installé ? Téléchargez l’application Windows ou découvrez la démo en 1 clic.' }}
+          </p>
         </div>
         <div class="standby-map" aria-hidden="true">
           <div class="standby-map-ring"></div><img src="/assets/images/sr-map.png" alt="" />
@@ -268,8 +444,110 @@ onUnmounted(clearAlerts)
           <span class="standby-map-point standby-map-point--blue"></span><span class="standby-map-point standby-map-point--red"></span>
         </div>
       </section>
+
+      <!-- Grille des piliers du produit (Landing page synthétique) -->
+      <section v-if="!hasGame && !status.isMock && !isLiveActive" class="standby-features-grid" aria-label="Fonctionnalités clés de RiftVision">
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="shield" :size="20" /></div>
+          <h4>Compagnon Sécurisé</h4>
+          <p>Connecté localement à la Live Client Data API de Riot. Aucune injection de code, 100% fair-play.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="dashboard" :size="20" /></div>
+          <h4>Dashboard Second Écran</h4>
+          <p>Radar tactique, KDA, inventaires complets, comparaison économique (&Delta; Gold) et timers de camps neutres.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><RvIcon name="bolt" :size="20" /></div>
+          <h4>Overlay HUD In-Game</h4>
+          <p>Bannières d’impact transparentes au centre de votre écran de jeu, 100% traversantes pour la souris.</p>
+        </div>
+      </section>
       <FlashAlertOverlay v-if="!isImmersive && hasGame" />
     </main>
     <AppFooter />
+
+    <!-- Bilan de fin de match (Post-Game Recap) persistant -->
+    <Teleport to="body">
+      <PostGameReport
+        v-if="activeReportMatch"
+        :game-data="activeReportMatch.gameData"
+        :blue-economy="activeReportMatch.blueEconomy"
+        :red-economy="activeReportMatch.redEconomy"
+        :gold-difference="activeReportMatch.goldDifference"
+        :formatted-game-time="activeReportMatch.formattedGameTime"
+        :result="activeReportMatch.result"
+        :diff-events="activeReportMatch.diffEvents || []"
+        @close="handleCloseReport"
+        @new-game="handleNewGameFromReport"
+      />
+    </Teleport>
+
+    <!-- Modale Historique des parties -->
+    <Teleport to="body">
+      <MatchHistoryModal
+        v-if="isHistoryOpen"
+        :matches="matches"
+        :is-loading="isHistoryLoading"
+        @close="isHistoryOpen = false"
+        @select-match="handleSelectHistoricalMatch"
+        @delete-match="deleteMatch"
+      />
+    </Teleport>
+
+    <!-- Modale de configuration et statut de l'Overlay In-Game -->
+    <Teleport to="body">
+      <div v-if="isOverlayModalOpen" class="rv-modal-backdrop" @click.self="isOverlayModalOpen = false">
+        <div class="rv-modal-card" role="dialog" aria-modal="true">
+          <div class="rv-modal-header">
+            <h3>🎮 Overlay In-Game (HUD Transparent)</h3>
+            <button type="button" class="rv-icon-button" aria-label="Fermer" @click="isOverlayModalOpen = false">
+              <RvIcon name="close" :size="15" />
+            </button>
+          </div>
+          <div class="rv-modal-body">
+            <div class="overlay-modal-status">
+              <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
+              <strong>{{ isOverlayConnected ? 'Compagnon détecté et connecté !' : 'Compagnon non détecté' }}</strong>
+            </div>
+            <p>L'overlay s'affiche en <strong>surimpression transparente</strong> en plein milieu de votre écran de jeu sans jamais bloquer vos clics de souris.</p>
+            <div class="overlay-modal-steps">
+              <div class="step-item">
+                <span class="step-num">1</span>
+                <div>
+                  <strong>Sous Windows :</strong>
+                  <p>Double-cliquez sur <code>scripts/start-overlay.bat</code> ou tapez :</p>
+                  <code>electron desktop-overlay.cjs</code>
+                </div>
+              </div>
+              <div class="step-item">
+                <span class="step-num">2</span>
+                <div>
+                  <strong>En jeu :</strong>
+                  <p>Mettez League of Legends en mode <em>Plein écran fenêtré (Borderless)</em>.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rv-modal-footer">
+            <button type="button" class="rv-button rv-button-primary" @click="triggerDemoAlert('DRAGON'); showOverlayToast('Alerte de test envoyée !')">
+              <RvIcon name="flask" :size="14" />
+              Tester l'alerte maintenant
+            </button>
+            <button type="button" class="rv-button" @click="isOverlayModalOpen = false">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Toast de confirmation overlay -->
+    <Transition name="fade">
+      <div v-if="overlayToast" class="rv-toast" role="status">
+        <span class="status-dot status-dot--live" />
+        <span>{{ overlayToast }}</span>
+      </div>
+    </Transition>
   </div>
 </template>

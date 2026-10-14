@@ -2,8 +2,8 @@
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import type { GameDiffEvent, TeamEconomySummary } from '#shared/types/diff'
 import type { RiotAllGameData, RiotPlayer } from '#shared/types/riot'
-import { formatSecondsToTime, getChampionIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
 import { calculateCampTimers } from '#shared/utils/campTimers'
+import { formatSecondsToTime, getChampionIconUrl, getObjectiveIconUrl } from '#shared/utils/ddragon'
 import {
   getChampionMapPosition,
   getDestroyedTurretIds,
@@ -50,7 +50,11 @@ const selectedLocation = computed(() =>
 )
 
 const camps = computed(() =>
-  calculateCampTimers(gameTime.value, props.gameData?.events?.Events || []),
+  calculateCampTimers(
+    gameTime.value,
+    props.gameData?.events?.Events || [],
+    props.gameData?.allPlayers || [],
+  ),
 )
 const dragonCamp = computed(() => camps.value.find((c) => c.id === 'DRAGON'))
 const baronCamp = computed(() => camps.value.find((c) => c.id === 'BARON'))

@@ -19,13 +19,14 @@
 
 ### ℹ️ Description
 
-**RiftVision** est un copilote web « second screen » pour **League of Legends**, conçu pour afficher des alertes dynamiques et des informations tactiques en temps réel sur un second écran ou une tablette, **sans overlay intrusif en jeu**.
+**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game**, affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
 - 🎮 **3 Modes de fonctionnement** :
   - **Veille (Standby)** : Démarrage propre et silencieux sans requêtes agressives ni erreurs de timeout dans le vide.
   - **Mode Simulation (Démo)** : Instantané réel d'une partie (16:45) pour prototyper et tester sans client LoL actif.
   - **Mode Live** : Écoute explicite et synchronisation automatique avec le jeu en cours.
+- 👓 **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger (Electron), 100% traversant à la souris (*click-through*), superposé au jeu en mode *Plein écran fenêtré (Borderless)*.
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🎨 **Icônes Font Awesome** : composant Vue officiel enregistré par un plugin Nuxt, utilisé pour l’interface et les liens du footer. Seules les icônes nécessaires sont importées.
 - 🔊 **Alertes audio** : 17 fichiers WAV intégrés, sons contextuels synthétisés et commande pour couper ou réactiver le son.
@@ -42,6 +43,65 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
 2. **Pas d'avantage déloyal (*Unfair Advantage*)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
 3. **Mention légale obligatoire** :
    > *RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.*
+
+---
+
+## 🎮 Compagnon Overlay In-Game (HUD Transparent)
+
+En complément du tableau de bord second écran, RiftVision propose un **overlay tête haute (HUD)** natif ultra-léger propulsé par Electron :
+
+- 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode *Plein écran fenêtré (Borderless)*.
+- 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté en cours de jeu. Vous conservez un contrôle parfait et sans latence de votre personnage.
+- 🎯 **Positionnement rehaussé & Calibration Drag & Drop (F8)** : Par défaut, les alertes s'affichent à **8% du haut** de l'écran pour ne jamais masquer votre personnage ou vos sbires. Une pression sur **F8** active le mode calibration, permettant de glisser-déposer l'alerte à la souris où vous le souhaitez. Les coordonnées sont automatiquement enregistrées en local.
+- 📌 **Barre des tâches (System Tray)** : Se loge discrètement dans la zone de notification Windows avec notification native et menu contextuel clic-droit complet (Statut, Ouvrir le tableau de bord, Calibrer la position F8, Tester F9, Masquer/Afficher Ctrl+Shift+O, Options, À propos, et Quitter proprement).
+- 🌐 **Lancement automatique du Dashboard** : Ouvre immédiatement le tableau de bord tactique dans votre navigateur web par défaut dès le démarrage de l'exécutable.
+- ⚡ **Synchronisation instantanée (< 5ms)** : Relié au serveur RiftVision via un pont **Server-Sent Events (SSE)** (`/api/alerts/stream`). Tout événement déclenché depuis le second écran ou détecté en partie apparaît instantanément en jeu.
+- 🔌 **Indicateur d'état en direct** : La barre d'outils du dashboard affiche `Overlay HUD actif` avec une pastille lumineuse dès que le compagnon est connecté.
+- ⌨️ **Raccourcis & Commandes** :
+  - **F8** : Active / désactive le mode de calibration pour déplacer la bannière d'alerte à la souris (Drag & Drop) ou aux touches fléchées.
+  - **F9** : Déclenche immédiatement une alerte de test in-game depuis n'importe où.
+  - **Ctrl + Shift + O** : Masque ou réaffiche l'overlay à la volée en cours de partie.
+  - **Bouton « Overlay HUD » (Dashboard)** : Envoie une alerte de test au compagnon ou ouvre la modale d'aide pas-à-pas s'il n'est pas encore connecté.
+
+### 🏆 Bilan de fin de match & Historique des parties
+
+Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan de match »**, RiftVision ouvre un récapitulatif complet qui **reste affiché même après la fermeture du client de jeu League of Legends** :
+- **Persistance locale automatique** : Chaque partie complétée est archivée dans `server/data/match-history.json` (jusqu'à 50 matchs) avec miroir de secours `localStorage`.
+- **Modale « Historique des parties »** : Accessible via le bouton **Historique** dans l'en-tête et sur la page d'accueil avec affichage du résultat, du champion, de la durée, du ratio KDA, des CS/min et de l'écart économique.
+- **Réouverture en 1 clic** : Réouverture intégrale de n'importe quel rapport de match antérieur avec ses onglets détaillés.
+- **Bannière Victoire / Défaite** : Durée de jeu, carte et équipe associée.
+- **Fiche de performance individuelle** : KDA, ratio KDA, % participation aux éliminations (% KP), sbires totaux et rythme (CS/min), score de vision et valeur d'équipement.
+- **Équipement final** : Les 6 slots d'objets complétés avec portraits Data Dragon et la relique de vision.
+- **Comparatif face-à-face d'équipe** : Kills, Dragons abattus, Barons Nashor, Tourelles détruites et or total d'équipement (&Delta; Gold).
+- **Faits marquants** : Historique horodaté des moments décisifs (Premier Sang, Dragons, Barons, Hérauts, Séries d'éliminations, Ace).
+- **Export en 1 clic** : Bouton pour copier instantanément un résumé propre dans le presse-papier.
+
+### ⏱️ Précision des Timers d'Objectifs Neutres (Patch 14.8 Saison 14)
+- **Larves du Néant (Voidgrubs)** : Apparition initiale calée à **6:00** (360s). Gestion des vagues multiples (3 larves par vague, respawn de la vague 2 après 4:00 si éliminée avant 9:45), et despawn automatique à 13:45 pour le Héraut de 14:00.
+- **Dragon Ancestral** : Conditionné à l'obtention de l'Âme de Dragon (4 dragons d'une même équipe), garantissant des timers de respawn exacts à chaque étape de la partie.
+
+### Lancement et distribution du compagnon
+
+#### En développement :
+```bash
+# Lancer l'overlay avec Electron (nécessite que le serveur Nuxt tourne sur http://localhost:3000)
+npm run overlay
+```
+Sous Windows, vous pouvez aussi double-cliquer sur `scripts/start-overlay.bat` ou exécuter `scripts/start-overlay.ps1`.
+
+#### En production (Installateur officiel Windows .exe) :
+Pour distribuer le compagnon aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
+```bash
+npm run overlay:build
+```
+Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.3.0.exe` dans le dossier `dist-overlay/` :
+- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier avec bouton *Parcourir...*, Raccourcis Bureau et Menu Démarrer, Installation, Lancement).
+- **Téléchargement direct depuis l'application web** : Le tableau de bord propose un bouton direct **« Télécharger l'application (.exe) »** connecté à la route `/api/download/overlay`.
+- **Détails & Informations** : Affichage des recommandations (mode Plein écran fenêtré) directement dans l'assistant.
+
+> [!NOTE]
+> **Avertissement « Éditeur inconnu » (Windows SmartScreen) :**
+> Lors du premier lancement sous Windows d'une application open-source sans certificat d'autorité payant, Windows Defender SmartScreen peut afficher un écran bleu protecteur. Cliquez simplement sur **« Informations complémentaires »** puis **« Exécuter quand même »** pour poursuivre l'installation.
 
 ---
 
@@ -77,6 +137,13 @@ RiftVision est conçu dans le respect strict des **Riot Games Developer Policies
   - [x] Navigation simplifiée, affichage responsive et identité Hextech conservée
   - [x] Intégration Font Awesome pour les icônes de l’interface et du footer
   - [x] Hot reload Docker / WSL2 avec polling et procédure de synchronisation des dépendances
+- [x] **v1.3 — Compagnon Desktop, Overlay HUD & Bilan de match**
+  - [x] Compagnon Electron transparent 100% traversant à la souris (*click-through*)
+  - [x] Intégration Barre des tâches (System Tray) avec menu contextuel et fermeture propre
+  - [x] Lancement automatique du tableau de bord dans le navigateur par défaut
+  - [x] Installateur Windows NSIS interactif avec choix de dossier d'installation (`RiftVision-Overlay-Setup-1.3.0.exe`)
+  - [x] Route de téléchargement direct `/api/download/overlay` et landing page avec statut compagnon
+  - [x] Bilan de fin de match complet (KDA, % KP, CS/min, inventaire final, comparatif d'objectifs, faits marquants et export presse-papier)
 - [ ] **Tests live entre amis sur VPS — à développer**
   - [ ] Programme compagnon Windows pour lire l’API locale sur le PC de chaque joueur
   - [ ] Association du compagnon au tableau de bord par code temporaire
@@ -216,6 +283,8 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 | `npm run format:check` | Vérifie le formatage sans modifier les fichiers (idéal pour la CI) |
 | `npm run test` | Exécute la suite de tests unitaires avec **Vitest** |
 | `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
+| `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
+| `npm run overlay:build` | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/` |
 
 ---
 

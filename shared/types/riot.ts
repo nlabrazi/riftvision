@@ -15,6 +15,7 @@ export type EventName =
   | 'HordeKill'
   | 'Multikill'
   | 'Ace'
+  | 'GameEnd'
 
 export interface RiotItem {
   canUse: boolean

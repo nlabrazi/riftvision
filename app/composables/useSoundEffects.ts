@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-
+import type { SoundEffectKey } from '#shared/types/diff'
 // Import all 20 WAV sound assets
 import archimondeUrl from '../assets/sounds/archimonde-aggro.wav'
 import bewareUrl from '../assets/sounds/beware.wav'
@@ -9,8 +9,8 @@ import deathwingUrl from '../assets/sounds/deathwing.wav'
 import doubleKillUrl from '../assets/sounds/doublekill.wav'
 import firstBloodUrl from '../assets/sounds/firstblood.wav'
 import godlikeUrl from '../assets/sounds/godlike.wav'
-import headshotUrl from '../assets/sounds/headshot.wav'
 import humiliatingDefeatUrl from '../assets/sounds/Humiliating_defeat.wav'
+import headshotUrl from '../assets/sounds/headshot.wav'
 import killingSpreeUrl from '../assets/sounds/killingspree.wav'
 import ludicrousKillUrl from '../assets/sounds/LudicrousKill.wav'
 import megaKillUrl from '../assets/sounds/megakill.wav'
@@ -20,7 +20,6 @@ import redTeamDominatingUrl from '../assets/sounds/red_team_dominating.wav'
 import redTeamWinnerUrl from '../assets/sounds/red_team_is_the_winner.wav'
 import tripleKillUrl from '../assets/sounds/triplekill.wav'
 import ultraKillUrl from '../assets/sounds/ultrakill.wav'
-import type { SoundEffectKey } from '#shared/types/diff'
 import unstoppableUrl from '../assets/sounds/unstoppable.wav'
 
 export type SoundKey =

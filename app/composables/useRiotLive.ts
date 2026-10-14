@@ -35,6 +35,8 @@ export function useRiotLive() {
   })
 
   const goldDifference = ref(0)
+  const isGameOver = ref(false)
+  const gameResult = ref<'VICTORY' | 'DEFEAT' | null>(null)
   const isLoading = ref(false)
   const isPolling = ref(true)
   const lastError = ref<string | null>(null)
@@ -104,7 +106,15 @@ export function useRiotLive() {
 
         previousGameData.value = res.data
         gameData.value = res.data
-        events.value = res.data.events?.Events || []
+        const rawEvents = res.data.events?.Events || []
+        events.value = rawEvents
+
+        const gameEndEvent = rawEvents.find((e) => e.EventName === 'GameEnd')
+        if (gameEndEvent && !isGameOver.value) {
+          isGameOver.value = true
+          const resultStr = String(gameEndEvent.Result || '').toLowerCase()
+          gameResult.value = resultStr.includes('win') ? 'VICTORY' : 'DEFEAT'
+        }
       }
     } catch (err) {
       if (seq === liveDataSeq) {
@@ -162,6 +172,8 @@ export function useRiotLive() {
       baronCount: 0,
     }
     goldDifference.value = 0
+    isGameOver.value = false
+    gameResult.value = null
   }
 
   async function stopMockMode() {
@@ -327,6 +339,15 @@ export function useRiotLive() {
     }
   })
 
+  function triggerGameOver(result: 'VICTORY' | 'DEFEAT' = 'VICTORY') {
+    isGameOver.value = true
+    gameResult.value = result
+  }
+
+  function dismissGameOver() {
+    isGameOver.value = false
+  }
+
   onUnmounted(() => {
     stopPolling()
   })
@@ -342,6 +363,10 @@ export function useRiotLive() {
     blueEconomy,
     redEconomy,
     goldDifference,
+    isGameOver,
+    gameResult,
+    triggerGameOver,
+    dismissGameOver,
     isLoading,
     isPolling,
     lastError,

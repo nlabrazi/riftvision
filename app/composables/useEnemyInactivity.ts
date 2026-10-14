@@ -6,7 +6,7 @@ import { identifyActivePlayer } from '#shared/utils/gameDiff'
 import { useFlashAlerts } from './useFlashAlerts'
 
 export function useEnemyInactivity(gameDataRef: { value: RiotAllGameData | null }) {
-  const { triggerAlert } = useFlashAlerts()
+  const { triggerAlert, revokeMIAAlert } = useFlashAlerts()
 
   const miaStates = ref<Map<string, EnemyMIAState>>(new Map())
   let previousGameTime = 0
@@ -48,6 +48,13 @@ export function useEnemyInactivity(gameDataRef: { value: RiotAllGameData | null 
       miaStates.value = result.states
       previousGameTime = gameTime
 
+      // Immediately revoke any queued or active MIA alert for enemies who have reappeared or died
+      for (const state of result.states.values()) {
+        if (!state.isMissing || state.isDead) {
+          revokeMIAAlert(state.championName)
+        }
+      }
+
       // Trigger alerts with beware.wav
       for (const alert of result.alerts) {
         triggerAlert({
@@ -56,6 +63,7 @@ export function useEnemyInactivity(gameDataRef: { value: RiotAllGameData | null 
           title: alert.title,
           subtitle: alert.subtitle,
           team: alert.team,
+          actorName: alert.championName,
           iconUrl: getChampionIconUrl(alert.championName),
           soundKey: alert.soundKey, // 'beware'
           durationMs: 5000,

@@ -177,4 +177,37 @@ describe('useRiotLive', () => {
     expect(live.isLiveActive.value).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
   })
+
+  it('detects GameEnd event and triggers game over with result', async () => {
+    const data = structuredClone(mockGameData)
+    data.events.Events = [
+      {
+        EventID: 200,
+        EventName: 'GameEnd',
+        EventTime: 1200,
+        Result: 'Win',
+      },
+    ]
+    const fetch = vi.fn(async (url: string) =>
+      url.includes('/status')
+        ? { status: 'IN_GAME', isMock: false }
+        : { success: true, data: structuredClone(data) },
+    )
+    vi.stubGlobal('$fetch', fetch)
+    const live = useRiotLive()
+
+    expect(live.isGameOver.value).toBe(false)
+    expect(live.gameResult.value).toBeNull()
+
+    await live.refreshAll()
+    expect(live.isGameOver.value).toBe(true)
+    expect(live.gameResult.value).toBe('VICTORY')
+
+    live.dismissGameOver()
+    expect(live.isGameOver.value).toBe(false)
+
+    live.triggerGameOver('DEFEAT')
+    expect(live.isGameOver.value).toBe(true)
+    expect(live.gameResult.value).toBe('DEFEAT')
+  })
 })

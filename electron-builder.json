@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.riftvision.overlay",
+  "productName": "RiftVision Overlay",
+  "electronVersion": "34.0.0",
+  "npmRebuild": false,
+  "nodeGypRebuild": false,
+  "directories": {
+    "output": "dist-overlay"
+  },
+  "files": [
+    "scripts/desktop-overlay.cjs",
+    "scripts/preload-overlay.cjs",
+    "package.json",
+    "public/favicon.ico"
+  ],
+  "extraResources": [
+    {
+      "from": "public/favicon.ico",
+      "to": "favicon.ico"
+    }
+  ],
+  "extraMetadata": {
+    "main": "scripts/desktop-overlay.cjs"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "public/favicon.ico",
+    "signExecutable": false,
+    "legalTrademarks": "RiftVision"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "RiftVision Overlay",
+    "uninstallDisplayName": "RiftVision Overlay",
+    "installerSidebar": "build/installer-sidebar.bmp",
+    "installerHeader": "build/installer-header.bmp",
+    "license": "build/installer-info.txt",
+    "runAfterFinish": true,
+    "artifactName": "RiftVision-Overlay-Setup-${version}.${ext}"
+  }
+}

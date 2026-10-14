@@ -3,7 +3,20 @@ import { computed } from 'vue'
 import { useFlashAlerts } from '../composables/useFlashAlerts'
 import RvIcon from './RvIcon.vue'
 
-withDefaults(defineProps<{ inline?: boolean }>(), { inline: false })
+const props = withDefaults(
+  defineProps<{
+    inline?: boolean
+    position?: 'corner' | 'center' | 'top'
+    interactive?: boolean
+    customCoords?: { x: number; y: number } | null
+  }>(),
+  {
+    inline: false,
+    position: 'corner',
+    interactive: true,
+    customCoords: null,
+  },
+)
 const { activeAlert, alertQueue, dismissCurrentAlert } = useFlashAlerts()
 const accent = computed(() => {
   if (activeAlert.value?.type === 'MIA') return '#f97316'
@@ -47,16 +60,52 @@ const categoryLabel = computed(() => {
 </script>
 
 <template>
-  <div class="flash-region" :class="{ 'flash-region--inline': inline }" aria-live="polite" aria-atomic="true">
+  <div
+    class="flash-region"
+    :class="{
+      'flash-region--inline': inline,
+      'flash-region--center': position === 'center' && !customCoords,
+      'flash-region--top': position === 'top' && !customCoords,
+      'flash-region--custom': !!customCoords,
+    }"
+    :style="
+      customCoords
+        ? {
+            left: `${customCoords.x}px`,
+            top: `${customCoords.y}px`,
+            bottom: 'auto',
+            right: 'auto',
+            transform: 'none',
+          }
+        : undefined
+    "
+    aria-live="polite"
+    aria-atomic="true"
+  >
     <Transition name="flash">
-      <article v-if="activeAlert" :key="activeAlert.id" data-testid="flash-alert-overlay" class="flash-card"
-        :style="{ '--alert-accent': accent }">
+      <article
+        v-if="activeAlert"
+        :key="activeAlert.id"
+        data-testid="flash-alert-overlay"
+        class="flash-card"
+        :class="{
+          'flash-card--hud': !interactive || position === 'center' || position === 'top',
+        }"
+        :style="{ '--alert-accent': accent }"
+      >
         <div class="flash-heading">
           <span class="flash-category">
             <RvIcon name="activity" :size="13" />{{ categoryLabel }}
           </span>
-          <button type="button" data-testid="dismiss-alert-btn" class="rv-icon-button" aria-label="Masquer l’alerte"
-            title="Masquer l’alerte" @click="dismissCurrentAlert">
+          <button
+            v-if="interactive"
+            type="button"
+            data-testid="dismiss-alert-btn"
+            class="rv-icon-button"
+            aria-label="Masquer l’alerte"
+            title="Masquer l’alerte"
+            @click="dismissCurrentAlert"
+          >
             <RvIcon name="close" :size="15" />
           </button>
         </div>
@@ -96,6 +145,32 @@ const categoryLabel = computed(() => {
   pointer-events: none;
 }
 
+.flash-region--center {
+  top: 8%;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px));
+  z-index: 9999;
+}
+
+.flash-region--custom {
+  position: fixed;
+  width: min(520px, calc(100vw - 32px));
+  z-index: 9999;
+}
+
+.flash-region--top {
+  top: 32px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px));
+  z-index: 9999;
+}
+
 .flash-region--inline {
   position: relative;
   inset: auto;
@@ -113,6 +188,15 @@ const categoryLabel = computed(() => {
   padding: 12px 14px 14px;
   box-shadow: 0 8px 28px #0004;
   pointer-events: auto;
+}
+
+.flash-card--hud {
+  pointer-events: none;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--alert-accent) 18%, rgba(10, 18, 28, 0.95)), rgba(10, 18, 28, 0.95));
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 24px color-mix(in srgb, var(--alert-accent) 30%, transparent);
+  border-width: 1.5px;
+  border-left-width: 4px;
+  backdrop-filter: blur(10px);
 }
 
 .flash-heading {

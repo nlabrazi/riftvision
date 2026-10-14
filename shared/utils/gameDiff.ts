@@ -244,11 +244,12 @@ export function parseTurretDetails(turretId?: string): {
     return { destroyedTeam: 'UNKNOWN', lane: 'UNKNOWN' }
   }
 
-  const destroyedTeam: TeamType = turretId.includes('TOrder')
-    ? 'ORDER'
-    : turretId.includes('TChaos')
-      ? 'CHAOS'
-      : 'UNKNOWN'
+  const destroyedTeam: TeamType =
+    turretId.includes('TOrder') || turretId.includes('T1_')
+      ? 'ORDER'
+      : turretId.includes('TChaos') || turretId.includes('T2_')
+        ? 'CHAOS'
+        : 'UNKNOWN'
 
   let lane: 'TOP' | 'MID' | 'BOT' | 'UNKNOWN' = 'UNKNOWN'
   if (turretId.includes('_L_')) {

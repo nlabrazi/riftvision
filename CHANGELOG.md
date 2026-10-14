@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-14
+
+### Objectifs & Timers Neutres (Patch 14.8 Saison 14)
+- **Larves du Néant (Voidgrubs)** : Alignement de l'apparition initiale à **6:00 (360s)** au lieu de 5:00 pour respecter les règles officielles du Patch 14.8 (supprimant le chevauchement avec le premier dragon).
+- **Vagues multiples de Larves** : Comptage granulaire des éliminations de larves (`HordeKill`, 3 larves par vague). Déclenchement automatique du compte à rebours de 4:00 (240s) pour la vague 2 dès que la première vague est entièrement neutralisée avant 9:45 (585s).
+- **Despawn automatique du Néant** : Retrait automatique des larves à 13:45 (825s) pour préparer l'apparition du Héraut de la Faille à 14:00.
+- **Conditions du Dragon Ancestral & Âme de Dragon** : Calcul basé sur l'obtention de l'Âme par une seule et même équipe (4 dragons par une équipe) ou sur le tag `DragonType === 'Elder'`, évitant d'annoncer à tort un Dragon Ancestral prématuré lors d'un score partagé de 2-2.
+
+### HUD Overlay In-Game & Calibration Drag & Drop
+- **Positionnement rehaussé (8% haut)** : Déplacement de la position par défaut des bannières d'alerte à **8% du haut** de l'écran (au lieu de 20%), dégageant la zone de combat, les sbires et le champion.
+- **Mode Calibration interactif (Touche F8 & Menu Tray)** : Possibilité de déverrouiller la souris pour glisser-déposer librement la zone d'alerte où vous le souhaitez.
+- **Persistance locale des coordonnées** : Sauvegarde immédiate des coordonnées `(X, Y)` dans le `localStorage` de votre machine.
+- **Contrôles clavier avancés** : Micro-ajustement par pas de 5px (ou 20px avec Shift) via les touches fléchées, touche Entrée pour sauvegarder et Échap pour annuler.
+- **Bouton de réinitialisation** : Retour en un clic vers la position centrée en haut par défaut.
+- **Pont sécurisé contextBridge Electron** : Bascule dynamique du mode `setIgnoreMouseEvents` entre le mode calibration interactif et le mode de jeu 100% traversant.
+
+### Historique des parties & Persistance du Récapitulatif
+- **Résolution de la disparition instantanée** : Découplage complet de la modale de récapitulatif post-game du polling live. Le bilan reste affiché à l'écran même lorsque le client de jeu League of Legends se ferme.
+- **Archivage automatique local** : Sauvegarde des 50 dernières parties jouées dans `server/data/match-history.json` avec miroir de secours `localStorage`.
+- **Visionneuse Hextech « Historique des parties »** : Modale dédiée accessible depuis la barre d'en-tête (avec compteur) et la page d'accueil, affichant pour chaque partie le résultat (Victoire/Défaite), le champion, la durée, le score KDA, les CS/min et l'écart économique (&Delta; Gold).
+- **Réouverture complète en 1 clic** : Réouverture intégrale du `PostGameReport` pour n'importe quelle partie passée avec tous ses onglets d'analyse (synthèse, kills, vision, faits marquants).
+- **Endpoints REST `/api/history`** : Routes `GET`, `POST` et `DELETE` pour la gestion des archives de parties.
+
+### Compagnon Desktop & Distribution
+- **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger propulsé par Electron, superposé à League of Legends (mode fenêtré borderless) avec fenêtre transparente, sans bordure et 100% traversante à la souris (`setIgnoreMouseEvents(true)`).
+- **Intégration Barre des tâches (System Tray)** : Icône Windows dans la zone de notification avec notification native de démarrage et menu contextuel complet (Statut, Ouvrir le tableau de bord, Calibrer la position F8, Tester F9, Masquer/Afficher Ctrl+Shift+O, Options, À propos, et Quitter).
+- **Lancement automatique du Dashboard** : Ouverture automatique du tableau de bord dans le navigateur par défaut dès le démarrage du compagnon.
+- **Installateur Windows NSIS interactif** : Assistant d'installation graphique pas-à-pas (`RiftVision-Overlay-Setup-1.3.0.exe`) avec choix du répertoire (bouton Parcourir), raccourcis Bureau et Menu Démarrer, et consignes de jeu.
+- **Landing Page & Téléchargement direct** :
+  - Détection temps réel de la présence du compagnon desktop avec badge d'état.
+  - Route de téléchargement direct `/api/download/overlay` streamant l'exécutable d'installation officiel.
+  - Verrouillage du bouton de partie live si le compagnon n'est pas encore lancé avec invitation au téléchargement, tout en conservant l'accès direct en 1 clic au mode démo.
+  - Grille de présentation des 3 piliers du produit (Compagnon sécurisé, Dashboard second écran, Overlay HUD).
+- **Bilan de fin de match (Post-Game Recap)** :
+  - Détection automatique de l'événement `GameEnd` ou ouverture manuelle via le bouton dédié.
+  - Fiche de performance individuelle : KDA, ratio KDA, % participation aux éliminations (% KP), sbires (CS et CS/min), score de vision, et valeur totale d'inventaire.
+  - Équipement final complet (6 slots d'objets + relique).
+  - Comparatif face-à-face des équipes (Kills, Dragons, Barons Nashor, Tourelles détruites, or d'équipement).
+  - Moments clés du match (Premier Sang, Dragons, Barons, Hérauts, Séries d'éliminations, Ace).
+  - Export instantané du récapitulatif dans le presse-papier pour partage facile.
+- **Synchronisation Server-Sent Events (SSE)** : Hub temps réel (`/api/alerts/stream`, `/api/alerts/broadcast`, `/api/alerts/status`) synchronisant instantanément les alertes entre le dashboard second écran et l'overlay in-game.
+- **Contrôles & Raccourcis globaux** :
+  - Touche `F9` pour déclencher une alerte de test immédiatement sur l'écran de jeu.
+  - Raccourci `Ctrl + Shift + O` pour masquer ou réafficher l'overlay in-game.
+  - Bouton `Overlay HUD` dans la barre d'outils du dashboard avec statut de connexion en direct (point lumineux) et envoi d'alerte de test via SSE.
+
 ## [1.2.3] - 2026-10-12
 
 ### Maintenance & CI

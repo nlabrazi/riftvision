@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { RiotEvent } from '../../shared/types/riot'
+import type { RiotEvent, RiotPlayer } from '../../shared/types/riot'
 import { calculateCampTimers, detectCampAlerts } from '../../shared/utils/campTimers'
 
 describe('campTimers utility', () => {
@@ -134,5 +134,82 @@ describe('campTimers utility', () => {
     const baronAlert = baronAlerts.find((a) => a.campId === 'BARON')
     expect(baronAlert).toBeDefined()
     expect(baronAlert?.soundKey).toBe('archimonde')
+  })
+
+  it('manages Voidgrubs initial spawn at 6:00 (360s), batch kills and despawn at 13:45', () => {
+    // Before 6:00 (e.g. 100s) -> remaining = 260s
+    const early = calculateCampTimers(100, [])
+    const grubsEarly = early.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsEarly?.status).toBe('SPAWNING')
+    expect(grubsEarly?.nextSpawnTime).toBe(360)
+    expect(grubsEarly?.remainingSeconds).toBe(260)
+
+    // At 5:00 (300s) -> dragon spawns, but Voidgrubs still have 60s left
+    const at5Min = calculateCampTimers(300, [])
+    const grubsAt5 = at5Min.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsAt5?.status).toBe('SPAWNING')
+    expect(grubsAt5?.remainingSeconds).toBe(60)
+
+    // At 6:00 (360s) -> ALIVE
+    const at6Min = calculateCampTimers(360, [])
+    const grubsAt6 = at6Min.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsAt6?.status).toBe('ALIVE')
+    expect(grubsAt6?.remainingSeconds).toBe(0)
+
+    // Batch 1 cleared at 420s (3 HordeKill events)
+    const batch1Events: RiotEvent[] = [
+      { EventID: 1, EventName: 'HordeKill', EventTime: 410 },
+      { EventID: 2, EventName: 'HordeKill', EventTime: 415 },
+      { EventID: 3, EventName: 'HordeKill', EventTime: 420 },
+    ]
+    // Batch 2 should spawn at 420 + 240 = 660s (11:00)
+    const afterBatch1 = calculateCampTimers(450, batch1Events)
+    const grubsAfterBatch1 = afterBatch1.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsAfterBatch1?.status).toBe('SPAWNING')
+    expect(grubsAfterBatch1?.nextSpawnTime).toBe(660)
+    expect(grubsAfterBatch1?.remainingSeconds).toBe(210)
+
+    // At 660s -> Batch 2 is ALIVE
+    const atBatch2 = calculateCampTimers(665, batch1Events)
+    const grubsBatch2 = atBatch2.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsBatch2?.status).toBe('ALIVE')
+
+    // At 13:45 (825s) -> DESPAWNED for Herald
+    const late = calculateCampTimers(830, batch1Events)
+    const grubsLate = late.find((c) => c.id === 'VOIDGRUBS')
+    expect(grubsLate?.status).toBe('DESPAWNED')
+  })
+
+  it('determines Elder Dragon based on single-team Dragon Soul (4 drakes by one team)', () => {
+    const players = [
+      { summonerName: 'Faker', team: 'ORDER' },
+      { summonerName: 'Caps', team: 'CHAOS' },
+    ] as unknown as RiotPlayer[]
+
+    // 2 drakes ORDER, 2 drakes CHAOS -> total 4, but NO SOUL yet
+    const splitDrakes: RiotEvent[] = [
+      { EventID: 1, EventName: 'DragonKill', EventTime: 300, KillerName: 'Faker' },
+      { EventID: 2, EventName: 'DragonKill', EventTime: 600, KillerName: 'Caps' },
+      { EventID: 3, EventName: 'DragonKill', EventTime: 900, KillerName: 'Faker' },
+      { EventID: 4, EventName: 'DragonKill', EventTime: 1200, KillerName: 'Caps' },
+    ]
+    const splitCamp = calculateCampTimers(1250, splitDrakes, players)
+    const drakeSplit = splitCamp.find((c) => c.id === 'DRAGON')
+    // Next dragon is STILL elemental (5 min respawn = 300s -> nextSpawn = 1500), not Elder
+    expect(drakeSplit?.name).toBe('Dragon')
+    expect(drakeSplit?.nextSpawnTime).toBe(1500)
+
+    // Now ORDER gets 4 drakes -> SOUL claimed
+    const soulDrakes: RiotEvent[] = [
+      { EventID: 1, EventName: 'DragonKill', EventTime: 300, KillerName: 'Faker' },
+      { EventID: 2, EventName: 'DragonKill', EventTime: 600, KillerName: 'Faker' },
+      { EventID: 3, EventName: 'DragonKill', EventTime: 900, KillerName: 'Faker' },
+      { EventID: 4, EventName: 'DragonKill', EventTime: 1200, KillerName: 'Faker' },
+    ]
+    const soulCamp = calculateCampTimers(1250, soulDrakes, players)
+    const drakeSoul = soulCamp.find((c) => c.id === 'DRAGON')
+    // Next dragon is ELDER (6 min respawn = 360s -> nextSpawn = 1560)
+    expect(drakeSoul?.name).toBe('Dragon Ancestral')
+    expect(drakeSoul?.nextSpawnTime).toBe(1560)
   })
 })

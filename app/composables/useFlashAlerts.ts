@@ -46,53 +46,185 @@ const alertQueue = ref<FlashAlert[]>([])
 
 let activeTimeout: ReturnType<typeof setTimeout> | null = null
 
+const BROADCAST_CHANNEL_NAME = 'riftvision-sync'
+let syncChannel: BroadcastChannel | null = null
+
+function getSyncChannel(): BroadcastChannel | null {
+  if (typeof BroadcastChannel !== 'undefined') {
+    if (!syncChannel) {
+      try {
+        syncChannel = new BroadcastChannel(BROADCAST_CHANNEL_NAME)
+        syncChannel.onmessage = (event) => {
+          const msg = event.data
+          if (!msg || typeof msg !== 'object') return
+          switch (msg.type) {
+            case 'TRIGGER_ALERT':
+              if (msg.alert) triggerAlertInternal(msg.alert, false)
+              break
+            case 'DISMISS_ALERT':
+              dismissCurrentAlertInternal(false)
+              break
+            case 'CLEAR_ALERTS':
+              clearAlertsInternal(false)
+              break
+            case 'REVOKE_MIA':
+              if (msg.championName) revokeMIAAlertInternal(msg.championName, false)
+              break
+          }
+        }
+      } catch {
+        syncChannel = null
+      }
+    }
+    return syncChannel
+  }
+  return null
+}
+
+function broadcastSync(msg: unknown) {
+  try {
+    getSyncChannel()?.postMessage(msg)
+  } catch {
+    // Channel closed or unsupported
+  }
+}
+
+export function closeBroadcastSync() {
+  if (syncChannel) {
+    syncChannel.close()
+    syncChannel = null
+  }
+}
+
 export function playSynthesizedSound(
   soundType: 'objective' | 'danger' | 'kill' | 'item' | 'ace' = 'kill',
 ) {
   playSynthesizedFallback(soundType)
 }
 
-export function useFlashAlerts() {
-  function clearAlerts() {
-    if (activeTimeout) clearTimeout(activeTimeout)
+function clearAlertsInternal(broadcast = true) {
+  if (activeTimeout) clearTimeout(activeTimeout)
+  activeTimeout = null
+  alertQueue.value = []
+  activeAlert.value = null
+  if (broadcast) {
+    broadcastSync({ type: 'CLEAR_ALERTS' })
+    pushPayloadToServer({ type: 'CLEAR_ALERTS' })
+  }
+}
+
+function dismissCurrentAlertInternal(broadcast = true) {
+  if (activeTimeout) {
+    clearTimeout(activeTimeout)
     activeTimeout = null
-    alertQueue.value = []
-    activeAlert.value = null
+  }
+  activeAlert.value = null
+
+  if (broadcast) {
+    broadcastSync({ type: 'DISMISS_ALERT' })
+    pushPayloadToServer({ type: 'DISMISS_ALERT' })
   }
 
-  function dismissCurrentAlert() {
-    if (activeTimeout) {
-      clearTimeout(activeTimeout)
-      activeTimeout = null
-    }
-    activeAlert.value = null
-
-    // Process next queued alert if available
-    if (alertQueue.value.length > 0) {
-      const next = alertQueue.value.shift()
-      if (next) {
-        triggerAlert(next)
-      }
+  // Process next queued alert if available (do not re-broadcast items already in queue)
+  if (alertQueue.value.length > 0) {
+    const next = alertQueue.value.shift()
+    if (next) {
+      triggerAlertInternal(next, false)
     }
   }
+}
 
-  function triggerAlert(alert: FlashAlert) {
-    if (activeAlert.value) {
-      // Put in queue if current alert is playing
-      alertQueue.value.push(alert)
+function pushPayloadToServer(payload: unknown) {
+  if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+    try {
+      fetch('/api/alerts/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {})
+    } catch {
+      // ignore network errors
+    }
+  }
+}
+
+function triggerAlertInternal(alert: FlashAlert, broadcast = true) {
+  // Prevent duplicate queuing of the exact same alert ID
+  if (activeAlert.value?.id === alert.id || alertQueue.value.some((a) => a.id === alert.id)) {
+    return
+  }
+
+  if (alert.type === 'MIA' && alert.actorName) {
+    const normActor = alert.actorName.toLowerCase()
+    const alreadyActive =
+      activeAlert.value?.type === 'MIA' && activeAlert.value?.actorName?.toLowerCase() === normActor
+    const alreadyQueued = alertQueue.value.some(
+      (a) => a.type === 'MIA' && a.actorName?.toLowerCase() === normActor,
+    )
+    if (alreadyActive || alreadyQueued) {
       return
     }
+  }
 
-    activeAlert.value = alert
-    if (alert.soundKey) {
-      playGameSound(alert.soundKey)
-    } else {
-      playSynthesizedSound(alert.soundType || 'kill')
-    }
+  if (broadcast) {
+    broadcastSync({ type: 'TRIGGER_ALERT', alert })
+    pushPayloadToServer(alert)
+  }
 
-    activeTimeout = setTimeout(() => {
-      dismissCurrentAlert()
-    }, alert.durationMs || 4000)
+  if (activeAlert.value) {
+    // Put in queue if current alert is playing
+    alertQueue.value.push(alert)
+    return
+  }
+
+  activeAlert.value = alert
+  if (alert.soundKey) {
+    playGameSound(alert.soundKey)
+  } else {
+    playSynthesizedSound(alert.soundType || 'kill')
+  }
+
+  activeTimeout = setTimeout(() => {
+    dismissCurrentAlertInternal(true)
+  }, alert.durationMs || 4000)
+}
+
+function revokeMIAAlertInternal(championName: string, broadcast = true) {
+  if (!championName) return
+  const norm = championName.toLowerCase()
+
+  if (broadcast) {
+    broadcastSync({ type: 'REVOKE_MIA', championName })
+  }
+
+  // Remove any pending MIA alert for this champion from the queue
+  alertQueue.value = alertQueue.value.filter(
+    (a) => !(a.type === 'MIA' && a.actorName?.toLowerCase() === norm),
+  )
+
+  // If the currently displayed alert is an MIA alert for this champion, dismiss it immediately
+  if (activeAlert.value?.type === 'MIA' && activeAlert.value?.actorName?.toLowerCase() === norm) {
+    dismissCurrentAlertInternal(false)
+  }
+}
+
+export function useFlashAlerts() {
+  getSyncChannel()
+
+  function clearAlerts(broadcast = true) {
+    clearAlertsInternal(broadcast)
+  }
+
+  function dismissCurrentAlert(broadcast = true) {
+    dismissCurrentAlertInternal(broadcast)
+  }
+
+  function triggerAlert(alert: FlashAlert, broadcast = true) {
+    triggerAlertInternal(alert, broadcast)
+  }
+
+  function revokeMIAAlert(championName: string, broadcast = true) {
+    revokeMIAAlertInternal(championName, broadcast)
   }
 
   interface EventAlertMeta {
@@ -523,6 +655,7 @@ export function useFlashAlerts() {
     dismissCurrentAlert,
     clearAlerts,
     triggerAlert,
+    revokeMIAAlert,
     toggleAudioMute,
     ingestDiffEvents,
     triggerDemoAlert,

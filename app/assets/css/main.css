@@ -45,6 +45,15 @@ body {
   font-size: 14px;
 }
 
+html.rv-overlay-mode,
+body.rv-overlay-mode,
+html.rv-overlay-mode #__nuxt {
+  background: transparent !important;
+  background-color: transparent !important;
+  overflow: hidden;
+  user-select: none;
+}
+
 button,
 summary,
 a {
@@ -733,6 +742,224 @@ button:disabled {
 .advanced-tools[open] > summary svg { transform: rotate(180deg); }
 .advanced-content { padding: 0 20px 20px; display: grid; gap: 16px; }
 .advanced-content .diagnostic-connection { padding: 0; flex-wrap: wrap; }
+
+/* Modale Overlay HUD & Toasts */
+.rv-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(3, 8, 14, 0.75);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.rv-modal-card {
+  width: min(520px, calc(100vw - 32px));
+  background: linear-gradient(135deg, #0e1925, #08111a);
+  border: 1px solid rgba(200, 170, 110, 0.35);
+  border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(200, 170, 110, 0.15);
+  overflow: hidden;
+}
+
+.rv-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(200, 170, 110, 0.2);
+  background: rgba(200, 170, 110, 0.04);
+}
+
+.rv-modal-header h3 {
+  margin: 0;
+  font: 700 16px 'Rajdhani', sans-serif;
+  color: #f0e6d2;
+}
+
+.rv-modal-body {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  font-size: 13px;
+  color: #c0ccd8;
+  line-height: 1.6;
+}
+
+.overlay-modal-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(10, 20, 32, 0.7);
+  border: 1px solid rgba(200, 170, 110, 0.2);
+  border-radius: 4px;
+  color: #e4e8ed;
+}
+
+.overlay-modal-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.step-item {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(200, 170, 110, 0.15);
+  border: 1px solid rgba(200, 170, 110, 0.4);
+  color: #d1b57c;
+  border-radius: 50%;
+  font: 700 12px 'Rajdhani', sans-serif;
+}
+
+.step-item p {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.step-item code {
+  display: inline-block;
+  background: #050b12;
+  border: 1px solid rgba(200, 170, 110, 0.2);
+  color: #f0e6d2;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.rv-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(6, 13, 21, 0.5);
+}
+
+.rv-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(10, 20, 32, 0.95);
+  border: 1px solid rgba(200, 170, 110, 0.4);
+  border-radius: 9999px;
+  color: #f0e6d2;
+  font: 600 13px 'Rajdhani', sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+/* Statut Compagnon sur la landing page */
+.companion-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(6, 13, 21, 0.7);
+  border: 1px solid rgba(200, 170, 110, 0.25);
+  border-radius: 9999px;
+  font-size: 12px;
+  color: #97a6b7;
+  margin: 14px 0 6px;
+  width: fit-content;
+}
+
+.companion-status-pill--live {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  background: rgba(6, 28, 20, 0.6);
+}
+
+.rv-button-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(200, 170, 110, 0.2);
+  color: #8c9bad;
+}
+
+/* Grille des fonctionnalités sur la landing page */
+.standby-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.feature-card {
+  background: rgba(6, 13, 21, 0.75);
+  border: 1px solid rgba(200, 170, 110, 0.2);
+  border-radius: 6px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.feature-card:hover {
+  border-color: rgba(200, 170, 110, 0.45);
+  transform: translateY(-2px);
+}
+
+.feature-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(200, 170, 110, 0.12);
+  color: #c8aa6e;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.feature-card h4 {
+  font: 600 15px 'Rajdhani', sans-serif;
+  color: #f0e6d2;
+  margin: 0;
+}
+
+.feature-card p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8c9bad;
+  margin: 0;
+}
+
+.history-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: #c8aa6e;
+  color: #060d15;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
 
 @media (max-width: 700px) {
   .session-bar--demo { padding: 12px; }

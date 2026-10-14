@@ -9,8 +9,11 @@ export function useNeutralCamps(gameDataRef: { value: RiotAllGameData | null }) 
 
   const gameTime = computed(() => gameDataRef.value?.gameData?.gameTime ?? 0)
   const events = computed(() => gameDataRef.value?.events?.Events ?? [])
+  const players = computed(() => gameDataRef.value?.allPlayers ?? [])
 
-  const camps = computed<NeutralCamp[]>(() => calculateCampTimers(gameTime.value, events.value))
+  const camps = computed<NeutralCamp[]>(() =>
+    calculateCampTimers(gameTime.value, events.value, players.value),
+  )
 
   let previousCamps: NeutralCamp[] | null = null
   let previousGameTime: number | null = null
