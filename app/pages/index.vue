@@ -6,11 +6,13 @@ import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
+import MatchHistoryModal from '../components/MatchHistoryModal.vue'
 import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
 import TacticalDashboard from '../components/TacticalDashboard.vue'
 import { useEnemyInactivity } from '../composables/useEnemyInactivity'
 import { useFlashAlerts } from '../composables/useFlashAlerts'
+import { useMatchHistory } from '../composables/useMatchHistory'
 import { useNeutralCamps } from '../composables/useNeutralCamps'
 import { useRiotLive } from '../composables/useRiotLive'
 
@@ -43,6 +45,53 @@ const { isAudioMuted, toggleAudioMute, ingestDiffEvents, clearAlerts, triggerDem
   useFlashAlerts()
 useNeutralCamps(gameData)
 const { miaStates } = useEnemyInactivity(gameData)
+const {
+  matches,
+  isLoading: isHistoryLoading,
+  activeReportMatch,
+  recordCompletedMatch,
+  deleteMatch,
+  openMatchReport,
+  closeMatchReport,
+  buildMatchSnapshot,
+} = useMatchHistory()
+const isHistoryOpen = ref(false)
+
+// Sauvegarde automatique du match et découplage du récapitulatif pour qu'il ne disparaisse pas à la fermeture du client LoL
+watch(isGameOver, (ended) => {
+  if (ended && gameData.value) {
+    const snapshot = buildMatchSnapshot(
+      gameData.value,
+      blueEconomy.value,
+      redEconomy.value,
+      goldDifference.value,
+      formattedGameTime.value,
+      gameResult.value || 'VICTORY',
+      diffEvents.value,
+    )
+    recordCompletedMatch(snapshot)
+    activeReportMatch.value = snapshot
+  }
+})
+
+function handleShowGameOver(result?: 'VICTORY' | 'DEFEAT') {
+  if (gameData.value) {
+    const snapshot = buildMatchSnapshot(
+      gameData.value,
+      blueEconomy.value,
+      redEconomy.value,
+      goldDifference.value,
+      formattedGameTime.value,
+      result || gameResult.value || 'VICTORY',
+      diffEvents.value,
+    )
+    recordCompletedMatch(snapshot)
+    activeReportMatch.value = snapshot
+  } else {
+    triggerGameOver(result)
+  }
+}
+
 const currentView = ref<'tactical' | 'radar'>('tactical')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
@@ -194,6 +243,17 @@ onUnmounted(() => {
           <RvIcon :name="isAudioMuted ? 'volume-off' : 'volume'" :size="17" />
           <span>{{ isAudioMuted ? 'Son coupé' : 'Son activé' }}</span>
         </button>
+        <button
+          type="button"
+          data-testid="open-history-btn"
+          class="rv-button"
+          title="Consulter l'historique des parties enregistrées"
+          @click="isHistoryOpen = true"
+        >
+          <RvIcon name="clock" :size="16" />
+          <span>Historique</span>
+          <span v-if="matches.length > 0" class="history-badge">{{ matches.length }}</span>
+        </button>
         <button type="button" data-testid="open-overlay-btn" class="rv-button"
           :class="{ 'rv-button-primary': isOverlayConnected }"
           :title="isOverlayConnected ? 'Overlay in-game connecté · Cliquez pour tester' : 'Configurer l’overlay in-game'"
@@ -229,14 +289,14 @@ onUnmounted(() => {
             <button v-if="hasGame" type="button" class="rv-button" data-testid="test-alert-dragon" @click="triggerDemoAlert('DRAGON')">
               <RvIcon name="flask" :size="15" />Tester une alerte
             </button>
-            <button v-if="hasGame" type="button" class="rv-button" data-testid="test-game-over-btn" @click="triggerGameOver('VICTORY')">
+            <button v-if="hasGame" type="button" class="rv-button" data-testid="test-game-over-btn" @click="handleShowGameOver('VICTORY')">
               <RvIcon name="check" :size="15" />Bilan de fin de match
             </button>
             <button type="button" data-testid="live-toggle-button" class="rv-button rv-button-primary" :disabled="isChangingMode" @click="changeMode(startLiveMode)">Connecter ma partie</button>
             <button type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(stopMockMode)">Quitter la démo</button>
           </template>
           <template v-else-if="hasGame">
-            <button type="button" class="rv-button" data-testid="show-game-over-btn" @click="triggerGameOver()">
+            <button type="button" class="rv-button" data-testid="show-game-over-btn" @click="handleShowGameOver()">
               <RvIcon name="check" :size="15" />Bilan de match
             </button>
             <button v-if="!isPolling" type="button" class="rv-button rv-button-primary" @click="togglePolling">Reprendre le suivi</button>
@@ -342,6 +402,16 @@ onUnmounted(() => {
             <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(startMockMode)">
               Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
             </button>
+            <button
+              v-if="!isLiveActive && matches.length > 0"
+              type="button"
+              data-testid="landing-history-btn"
+              class="rv-button rv-button-quiet"
+              @click="isHistoryOpen = true"
+            >
+              <RvIcon name="clock" :size="15" />
+              <span>Historique ({{ matches.length }})</span>
+            </button>
           </div>
           <p v-if="!isLiveActive && !status.isMock" class="standby-hint">
             {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : 'Pas encore installé ? Téléchargez l’application Windows ou découvrez la démo en 1 clic.' }}
@@ -376,19 +446,43 @@ onUnmounted(() => {
     </main>
     <AppFooter />
 
-    <!-- Bilan de fin de match (Post-Game Recap) -->
+    <!-- Bilan de fin de match (Post-Game Recap) persistant -->
     <Teleport to="body">
       <PostGameReport
-        v-if="isGameOver && hasGame && gameData"
-        :game-data="gameData"
-        :blue-economy="blueEconomy"
-        :red-economy="redEconomy"
-        :gold-difference="goldDifference"
-        :formatted-game-time="formattedGameTime"
-        :result="gameResult || 'VICTORY'"
-        :diff-events="diffEvents"
-        @close="dismissGameOver"
-        @new-game="dismissGameOver(); changeMode(status.isMock ? stopMockMode : stopLiveMode)"
+        v-if="activeReportMatch"
+        :game-data="activeReportMatch.gameData"
+        :blue-economy="activeReportMatch.blueEconomy"
+        :red-economy="activeReportMatch.redEconomy"
+        :gold-difference="activeReportMatch.goldDifference"
+        :formatted-game-time="activeReportMatch.formattedGameTime"
+        :result="activeReportMatch.result"
+        :diff-events="activeReportMatch.diffEvents || []"
+        @close="
+          closeMatchReport()
+          dismissGameOver()
+        "
+        @new-game="
+          closeMatchReport()
+          dismissGameOver()
+          changeMode(status.isMock ? stopMockMode : stopLiveMode)
+        "
+      />
+    </Teleport>
+
+    <!-- Modale Historique des parties -->
+    <Teleport to="body">
+      <MatchHistoryModal
+        v-if="isHistoryOpen"
+        :matches="matches"
+        :is-loading="isHistoryLoading"
+        @close="isHistoryOpen = false"
+        @select-match="
+          (m) => {
+            isHistoryOpen = false
+            openMatchReport(m)
+          }
+        "
+        @delete-match="deleteMatch"
       />
     </Teleport>
 
