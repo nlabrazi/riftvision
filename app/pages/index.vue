@@ -399,23 +399,27 @@ onUnmounted(() => {
             </ol>
           </template>
           <div v-if="!status.isMock" class="standby-actions">
-            <!-- Si compagnon connecté OU recherche live déjà active : bouton normal actif -->
-            <button v-if="isOverlayConnected || isLiveActive" type="button" data-testid="live-toggle-button" class="rv-button" :class="{ 'rv-button-primary': !isLiveActive }" :disabled="isChangingMode"
-              @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)">
+            <button
+              type="button"
+              data-testid="live-toggle-button"
+              class="rv-button"
+              :class="{ 'rv-button-primary': !isLiveActive }"
+              :disabled="isChangingMode"
+              @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)"
+            >
               <RvIcon :name="isLiveActive ? 'close' : 'signal'" :size="17" />
               {{ isChangingMode ? 'Connexion…' : isLiveActive ? 'Annuler la recherche' : 'Connecter ma partie' }}
             </button>
-            <!-- Si compagnon absent : bouton téléchargement mis en avant + bouton live verrouillé -->
-            <template v-else>
-              <a href="/api/download/overlay" download class="rv-button rv-button-primary" title="Télécharger l'installateur Windows officiel (.exe)">
-                <RvIcon name="download" :size="16" />
-                <span>Télécharger l’application (.exe)</span>
-              </a>
-              <button type="button" class="rv-button rv-button-locked" disabled title="Installez et lancez le compagnon desktop pour connecter votre partie réelle">
-                <RvIcon name="lock" :size="15" />
-                <span>Partie live (Compagnon requis)</span>
-              </button>
-            </template>
+            <a
+              v-if="!isLiveActive"
+              href="/api/download/overlay"
+              download
+              class="rv-button"
+              title="Télécharger l'installateur Windows officiel (.exe)"
+            >
+              <RvIcon name="download" :size="16" />
+              <span>Télécharger l’application (.exe)</span>
+            </a>
             <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(startMockMode)">
               Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
             </button>
