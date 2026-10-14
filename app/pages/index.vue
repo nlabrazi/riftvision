@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CombatLogFilter, GameDiffEvent } from '#shared/types/diff'
+import type { SavedMatch } from '#shared/types/history'
 import AlertTester from '../components/AlertTester.vue'
 import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
@@ -90,6 +91,22 @@ function handleShowGameOver(result?: 'VICTORY' | 'DEFEAT') {
   } else {
     triggerGameOver(result)
   }
+}
+
+function handleCloseReport() {
+  closeMatchReport()
+  dismissGameOver()
+}
+
+function handleNewGameFromReport() {
+  closeMatchReport()
+  dismissGameOver()
+  changeMode(status.value.isMock ? stopMockMode : stopLiveMode)
+}
+
+function handleSelectHistoricalMatch(m: SavedMatch) {
+  isHistoryOpen.value = false
+  openMatchReport(m)
 }
 
 const currentView = ref<'tactical' | 'radar'>('tactical')
@@ -457,15 +474,8 @@ onUnmounted(() => {
         :formatted-game-time="activeReportMatch.formattedGameTime"
         :result="activeReportMatch.result"
         :diff-events="activeReportMatch.diffEvents || []"
-        @close="
-          closeMatchReport()
-          dismissGameOver()
-        "
-        @new-game="
-          closeMatchReport()
-          dismissGameOver()
-          changeMode(status.isMock ? stopMockMode : stopLiveMode)
-        "
+        @close="handleCloseReport"
+        @new-game="handleNewGameFromReport"
       />
     </Teleport>
 
@@ -476,12 +486,7 @@ onUnmounted(() => {
         :matches="matches"
         :is-loading="isHistoryLoading"
         @close="isHistoryOpen = false"
-        @select-match="
-          (m) => {
-            isHistoryOpen = false
-            openMatchReport(m)
-          }
-        "
+        @select-match="handleSelectHistoricalMatch"
         @delete-match="deleteMatch"
       />
     </Teleport>
