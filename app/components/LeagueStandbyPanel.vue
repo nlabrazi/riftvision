@@ -17,7 +17,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section class="standby-panel rv-panel" aria-labelledby="standby-title">
+  <section id="league-of-legends" class="standby-panel rv-panel" aria-labelledby="standby-title">
     <div class="standby-copy">
       <span class="standby-badge">{{ isLiveActive ? 'CONNEXION AUTOMATIQUE' : 'VOTRE COMPAGNON DE PARTIE' }}</span>
       <h3 id="standby-title">

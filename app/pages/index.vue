@@ -7,6 +7,7 @@ import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
+import GamePortal from '../components/GamePortal.vue'
 import LeagueStandbyPanel from '../components/LeagueStandbyPanel.vue'
 import MatchHistoryModal from '../components/MatchHistoryModal.vue'
 import PostGameReport from '../components/PostGameReport.vue'
@@ -322,6 +323,8 @@ onUnmounted(() => {
           </template>
         </div>
       </div>
+
+      <GamePortal v-if="!hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
 
       <div v-if="isHelpOpen" class="diagnostic-workspace">
         <section class="rv-panel help-panel" aria-labelledby="connection-help-title">
