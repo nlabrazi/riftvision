@@ -9,6 +9,7 @@ import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
 import GamePortal from '../components/GamePortal.vue'
 import LeagueStandbyPanel from '../components/LeagueStandbyPanel.vue'
+import LeagueHome from '../components/LeagueHome.vue'
 import MatchHistoryModal from '../components/MatchHistoryModal.vue'
 import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
@@ -112,6 +113,8 @@ function handleSelectHistoricalMatch(m: SavedMatch) {
 }
 
 const currentView = ref<'tactical' | 'radar'>('tactical')
+const route = useRoute()
+const isLeaguePage = computed(() => route.path === '/league')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
 const isRefreshing = ref(false)
@@ -150,6 +153,10 @@ function switchView(view: 'tactical' | 'radar') {
 
 function returnHome() {
   isHelpOpen.value = false
+  if (isLeaguePage.value && !hasGame.value) {
+    navigateTo('/')
+    return
+  }
   switchView('tactical')
 }
 
@@ -324,7 +331,8 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <GamePortal v-if="!hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
+      <GamePortal v-if="!isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
+      <LeagueHome v-if="isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
 
       <div v-if="isHelpOpen" class="diagnostic-workspace">
         <section class="rv-panel help-panel" aria-labelledby="connection-help-title">

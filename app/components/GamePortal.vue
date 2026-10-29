@@ -39,7 +39,7 @@ function showGenre(genre: Genre) {
           :aria-pressed="selectedGenre === genre" @click="selectedGenre = genre">{{ genre }}</button>
       </div>
       <div class="game-grid">
-        <a v-if="showGenre('MOBA')" class="game-card game-card--league" href="#league-of-legends">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--league" to="/league">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/league.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
@@ -47,7 +47,7 @@ function showGenre(genre: Genre) {
             <p>Suivez votre partie et retrouvez votre tableau de bord tactique.</p>
             <span class="game-card__link">Accéder à League of Legends <span aria-hidden="true">↗</span></span>
           </div>
-        </a>
+        </NuxtLink>
         <article v-if="showGenre('Stratégie')" class="game-card game-card--tft">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/tft.mp4" /></div>
           <div class="game-card__body">
