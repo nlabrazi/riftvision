@@ -158,7 +158,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
 - [ ] **Accueil multijeu & encyclopédies — vision à construire**
   - [ ] Repenser l'accueil autour d'une galerie de jeux inspirée de MetaBot : cartes illustrées, animations au survol, navigation responsive et accessible
-  - [ ] Présenter League of Legends, Teamfight Tactics, Valorant et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
+  - [ ] Présenter League of Legends, Teamfight Tactics, Valorant, Counter-Strike 2, Heroes of the Storm et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
   - [ ] Préserver l'identité RiftVision et les parcours existants : suivi LoL, démo, historique et compagnon desktop
   - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
 - [ ] **Encyclopédie League of Legends**
