@@ -156,6 +156,23 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)
   - [ ] Graphique temps réel d'évolution de la courbe d'or ($\Delta$ Gold)
   - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
+- [ ] **Accueil multijeu & encyclopédies — vision à construire**
+  - [ ] Repenser l'accueil autour d'une galerie de jeux inspirée de MetaBot : cartes illustrées, animations au survol, navigation responsive et accessible
+  - [ ] Présenter League of Legends, Teamfight Tactics, Valorant et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
+  - [ ] Préserver l'identité RiftVision et les parcours existants : suivi LoL, démo, historique et compagnon desktop
+  - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
+- [ ] **Encyclopédie League of Legends**
+  - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
+  - [ ] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
+  - [ ] Ajouter les catalogues d'objets et de runes, puis une recherche commune aux contenus disponibles
+  - [ ] Proposer les notes de patch et leur historique à partir d'une source autorisée, avec lien vers la publication officielle
+  - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
+- [ ] **Encyclopédies des autres jeux**
+  - [ ] Teamfight Tactics : explorer les données de sets, unités, traits et objets ; ajouter recherche et fiches selon les données disponibles
+  - [ ] Valorant : explorer les données d'agents, armes et cartes ; ajouter recherche et fiches selon les données disponibles
+  - [ ] World of Warcraft : définir le périmètre (versions du jeu et contenus), puis explorer les sources et les possibilités de recherche et de fiches
+  - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
+  - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
 
 ---
 
