@@ -187,6 +187,16 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
 
 **Lecture de la carte :** les données exploitées ne fournissent pas les coordonnées des champions. Leurs positions sont des repères indicatifs par rôle ; les alertes d'objectifs et de tourelles s'appuient sur les repères correspondants. La valeur des inventaires sert d'indicateur d'économie et ne représente pas l'or total gagné.
 
+## Données Data Dragon
+
+Le serveur prépare l'encyclopédie League of Legends à partir des fichiers officiels [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Il utilise la dernière version disponible et la langue `fr_FR` :
+
+- `GET /api/ddragon/version` : version et langue utilisées.
+- `GET /api/ddragon/champions` : catalogue des champions.
+- `GET /api/ddragon/champions/Ahri` : fiche d'un champion identifié par son identifiant Data Dragon.
+
+La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
+
 ---
 
 ## 💻 Installation & Démarrage
