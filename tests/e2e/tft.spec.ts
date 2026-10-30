@@ -68,3 +68,62 @@ test('permet de réessayer si le catalogue TFT est indisponible', async ({ page 
   await page.getByRole('button', { name: 'Réessayer' }).click()
   await expect(page.getByText('3 unités', { exact: true })).toBeVisible()
 })
+
+test('consulte et recherche les traits TFT depuis la navigation', async ({ page }) => {
+  const traits = [
+    { id: 'DA_18_Solar', name: 'Solaire', icon: 'solar.png' },
+    { id: 'TFT17_Solar', name: 'Solaire', icon: 'solar.png' },
+    { id: 'TFTTutorial_Blademaster', name: 'Maître des lames', icon: 'blade.png' },
+  ]
+  await page.route('**/api/ddragon/tft/champions', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data } }),
+  )
+  await page.route('**/api/ddragon/tft/traits', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data: traits } }),
+  )
+  await openHome(page)
+  await page.locator('.game-card--tft').click()
+  await page.getByRole('link', { name: 'Traits', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Les traits TFT.' })).toBeVisible()
+  await expect(page.getByText('3 traits', { exact: true })).toBeVisible()
+  await page.getByLabel('Rechercher un trait').fill('maitre')
+  await expect(page.getByText('Maître des lames')).toBeVisible()
+  await expect(page.getByText('1 trait', { exact: true })).toBeVisible()
+  await page.getByLabel('Rechercher un trait').fill('DA_18')
+  await expect(page.getByText('DA_18_Solar')).toBeVisible()
+  await page.getByLabel('Rechercher un trait').fill('introuvable')
+  await expect(page.getByText('Aucun trait ne correspond à votre recherche.')).toBeVisible()
+  await page.getByRole('button', { name: 'Effacer la recherche' }).click()
+  await expect(page.getByText('3 traits', { exact: true })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  )
+})
+
+test('permet de réessayer si les traits TFT sont indisponibles', async ({ page }) => {
+  let available = false
+  await page.route('**/api/ddragon/tft/champions', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data } }),
+  )
+  await page.route('**/api/ddragon/tft/traits', (route) =>
+    available
+      ? route.fulfill({
+          json: {
+            version,
+            locale: 'fr_FR',
+            data: [{ id: 'DA_18_Solar', name: 'Solaire', icon: 'solar.png' }],
+          },
+        })
+      : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openHome(page)
+  await page.locator('.game-card--tft').click()
+  await page.getByRole('link', { name: 'Traits', exact: true }).click()
+  await expect(page.locator('.tft-notice[role="alert"]')).toContainText(
+    'momentanément indisponible',
+  )
+  available = true
+  await page.getByRole('button', { name: 'Réessayer' }).click()
+  await expect(page.getByText('Solaire')).toBeVisible()
+})

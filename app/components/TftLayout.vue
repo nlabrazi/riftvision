@@ -5,7 +5,8 @@
       <NuxtLink to="/" class="tft-brand">RiftVision</NuxtLink>
       <nav aria-label="Navigation Teamfight Tactics" class="tft-nav">
         <NuxtLink to="/">Tous les jeux</NuxtLink>
-        <NuxtLink to="/tft">Teamfight Tactics</NuxtLink>
+        <NuxtLink to="/tft">Unités</NuxtLink>
+        <NuxtLink to="/tft/traits">Traits</NuxtLink>
       </nav>
     </header>
     <main id="tft-content" class="tft-main"><slot /></main>

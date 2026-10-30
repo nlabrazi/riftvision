@@ -92,3 +92,64 @@ describe('Data Dragon TFT', () => {
     expect(fetcher).not.toHaveBeenCalled()
   })
 })
+
+describe('traits Data Dragon TFT', () => {
+  const traitsSource = {
+    data: {
+      trait: { id: 'DA_18_Solar', name: 'Solaire', image: { full: 'Trait_Icon_18_Solar.png' } },
+      tutorial: { id: 'TFTTutorial_Assassin', name: 'Assassin', image: { full: 'Assassin.png' } },
+    },
+  }
+
+  it('normalise les traits, partage les requêtes et renouvelle le cache par version et expiration', async () => {
+    let version = '16.21.1'
+    let clock = 0
+    const fetcher = vi.fn<typeof fetch>(async () => new Response(JSON.stringify(traitsSource)))
+    const client = createTftDataDragonClient(
+      fetcher,
+      async () => version,
+      () => clock,
+    )
+    const [result] = await Promise.all([client.getTraits(), client.getTraits()])
+    expect(result).toEqual({
+      version,
+      locale: 'fr_FR',
+      data: [
+        { id: 'DA_18_Solar', name: 'Solaire', icon: 'Trait_Icon_18_Solar.png' },
+        { id: 'TFTTutorial_Assassin', name: 'Assassin', icon: 'Assassin.png' },
+      ],
+    })
+    expect(String(fetcher.mock.calls[0]?.[0])).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/16.21.1/data/fr_FR/tft-trait.json',
+    )
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    clock += 24 * 60 * 60 * 1000 + 1
+    await client.getTraits()
+    version = '16.22.1'
+    expect((await client.getTraits()).version).toBe(version)
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+
+  it('refuse les données mal formées et permet une nouvelle tentative', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: { bad: { id: 'bad', name: 'Bad', image: { full: '../bad.png' } } },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify(traitsSource)))
+    const client = createTftDataDragonClient(fetcher, async () => '16.21.1')
+    await expect(client.getTraits()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+    expect((await client.getTraits()).data).toHaveLength(2)
+  })
+
+  it('refuse une version invalide avant toute requête', async () => {
+    const fetcher = vi.fn<typeof fetch>()
+    const client = createTftDataDragonClient(fetcher, async () => '../invalid')
+    await expect(client.getTraits()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+})
