@@ -13,6 +13,16 @@ export interface TftChampionsResponse {
   data: TftChampion[]
 }
 
+export interface TftAbility {
+  name: string
+  description: string
+}
+
+export interface TftAbilityResponse {
+  ability: TftAbility | null
+  sourceVersion: string
+}
+
 export interface TftTrait {
   id: string
   name: string

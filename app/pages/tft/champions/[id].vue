@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { TftChampionsResponse } from '#shared/types/tft'
+import type { TftAbilityResponse, TftChampionsResponse } from '#shared/types/tft'
 
 const route = useRoute()
 const id = computed(() => String(route.params.id ?? ''))
@@ -8,6 +8,13 @@ const { data, status, error, refresh } = await useFetch<TftChampionsResponse>(
   '/api/ddragon/tft/champions',
 )
 const unit = computed(() => data.value?.data.find((entry) => entry.id === id.value))
+const abilityUrl = computed(() => `/api/tft/champions/${encodeURIComponent(id.value)}/ability`)
+const {
+  data: abilityData,
+  status: abilityStatus,
+  error: abilityError,
+  refresh: refreshAbility,
+} = await useLazyFetch<TftAbilityResponse>(abilityUrl, { server: false })
 useHead({ title: computed(() => `${unit.value?.name ?? 'Unité TFT'} — RiftVision`) })
 </script>
 
@@ -24,7 +31,18 @@ useHead({ title: computed(() => `${unit.value?.name ?? 'Unité TFT'} — RiftVis
       <section class="tft-details" aria-labelledby="tft-details-title">
         <h2 id="tft-details-title">Informations</h2>
         <dl><div><dt>Coût</dt><dd>{{ unit.cost }} PO{{ unit.cost === 0 ? ' (donnée Riot)' : '' }}</dd></div><div><dt>Palier</dt><dd>{{ unit.tier }}</dd></div></dl>
-        <p>Les traits et compétences ne sont pas encore disponibles dans cette fiche. Le set indiqué est déduit de l’identifiant fourni par Riot.</p>
+        <p>Les traits associés ne sont pas encore disponibles dans cette fiche. Le set indiqué est déduit de l’identifiant fourni par Riot.</p>
+      </section>
+      <section class="tft-details tft-ability" aria-labelledby="tft-ability-title">
+        <h2 id="tft-ability-title">Compétence</h2>
+        <p v-if="abilityStatus === 'pending' || abilityStatus === 'idle'" role="status">Chargement de la compétence…</p>
+        <div v-else-if="abilityError" role="alert"><p>La compétence est momentanément indisponible.</p><button type="button" class="rv-button" @click="refreshAbility()">Réessayer</button></div>
+        <template v-else-if="abilityData?.ability">
+          <h3>{{ abilityData.ability.name }}</h3>
+          <p class="tft-ability-description">{{ abilityData.ability.description }}</p>
+          <p class="tft-ability-source">Données CommunityDragon · patch {{ abilityData.sourceVersion }}. Certaines valeurs dépendent du contexte de jeu et sont indiquées comme variables.</p>
+        </template>
+        <p v-else>La compétence de cette unité n’est pas disponible pour cette version.</p>
       </section>
     </template>
     <div v-else class="tft-notice" role="alert">Cette unité est introuvable.</div>
@@ -43,5 +61,10 @@ useHead({ title: computed(() => `${unit.value?.name ?? 'Unité TFT'} — RiftVis
 .tft-details dt { color: #aebbc8; font-size: 12px; }
 .tft-details dd { margin: 5px 0 0; color: #e3c78d; font-weight: 700; }
 .tft-details p { margin: 24px 0 0; color: #c6d0d9; line-height: 1.6; }
+.tft-ability h3 { margin: 0; color: #e3c78d; font: 700 20px 'Rajdhani', sans-serif; }
+.tft-ability p { margin-top: 12px; }
+.tft-ability-description { white-space: pre-line; }
+.tft-ability .tft-ability-source { color: #aebbc8; font-size: 13px; }
+.tft-ability button { margin-top: 14px; }
 @media (max-width: 600px) { .tft-unit { padding: 20px; gap: 16px; } .tft-unit img { width: 64px; height: 64px; flex-basis: 64px; } }
 </style>

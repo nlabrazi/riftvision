@@ -24,6 +24,14 @@ test('explore les unités TFT par set et coût puis ouvre une fiche', async ({ p
   await page.route('**/api/ddragon/tft/champions', (route) =>
     route.fulfill({ json: { version, locale: 'fr_FR', data } }),
   )
+  await page.route('**/api/tft/champions/*/ability', (route) =>
+    route.fulfill({
+      json: {
+        ability: { name: 'Éclair', description: 'Inflige valeur variable points de dégâts.' },
+        sourceVersion: '16.21',
+      },
+    }),
+  )
   await openHome(page)
   await page.locator('.game-card--tft').click()
   await expect(page).toHaveURL(/\/tft$/)
@@ -38,7 +46,9 @@ test('explore les unités TFT par set et coût puis ouvre une fiche', async ({ p
   await expect(page).toHaveURL(/\/tft\/champions\/DA_Ahri$/)
   await expect(page.getByRole('heading', { name: 'Ahri' })).toBeVisible()
   await expect(page.getByText('3 PO', { exact: true })).toBeVisible()
-  await expect(page.getByText(/traits et compétences ne sont pas encore disponibles/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Éclair' })).toBeVisible()
+  await expect(page.getByText(/Inflige valeur variable/)).toBeVisible()
+  await expect(page.getByText(/Données CommunityDragon/)).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,
@@ -186,4 +196,31 @@ test('permet de réessayer si les objets TFT sont indisponibles', async ({ page 
   available = true
   await page.getByRole('button', { name: 'Réessayer' }).click()
   await expect(page.getByText('BF Glaive')).toBeVisible()
+})
+
+test('la fiche reste utilisable si la compétence est indisponible puis permet de réessayer', async ({
+  page,
+}) => {
+  let available = false
+  await page.route('**/api/ddragon/tft/champions', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data } }),
+  )
+  await page.route('**/api/tft/champions/*/ability', (route) =>
+    available
+      ? route.fulfill({ json: { ability: null, sourceVersion: '16.21' } })
+      : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openHome(page)
+  await page.locator('.game-card--tft').click()
+  await page.getByRole('link', { name: /Ahri.*Set 18/ }).click()
+  await expect(page.getByRole('heading', { name: 'Ahri' })).toBeVisible()
+  await expect(page.getByText('3 PO', { exact: true })).toBeVisible()
+  await expect(page.locator('.tft-ability [role="alert"]')).toContainText(
+    'La compétence est momentanément indisponible',
+  )
+  available = true
+  await page.getByRole('button', { name: 'Réessayer' }).click()
+  await expect(
+    page.getByText('La compétence de cette unité n’est pas disponible pour cette version.'),
+  ).toBeVisible()
 })
