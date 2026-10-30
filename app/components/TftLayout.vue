@@ -7,6 +7,7 @@
         <NuxtLink to="/">Tous les jeux</NuxtLink>
         <NuxtLink to="/tft">Unités</NuxtLink>
         <NuxtLink to="/tft/traits">Traits</NuxtLink>
+        <NuxtLink to="/tft/items">Objets</NuxtLink>
       </nav>
     </header>
     <main id="tft-content" class="tft-main"><slot /></main>

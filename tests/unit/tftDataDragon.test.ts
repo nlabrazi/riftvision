@@ -153,3 +153,73 @@ describe('traits Data Dragon TFT', () => {
     expect(fetcher).not.toHaveBeenCalled()
   })
 })
+
+describe('objets Data Dragon TFT', () => {
+  const itemsSource = {
+    data: {
+      sword: { id: 'TFT_Item_BFSword', name: 'BF Glaive', image: { full: 'TFT_Item_BFSword.png' } },
+      blank: { id: 'TFT_Item_EmptyBag', name: '', image: { full: 'TFT_Item_EmptyBag.png' } },
+      tutorial: {
+        id: 'TFTTutorial_Item_RecurveBow',
+        name: 'Arc courbe',
+        image: { full: 'bow.png' },
+      },
+    },
+  }
+
+  it('normalise les objets nommés, partage les requêtes et renouvelle le cache', async () => {
+    let version = '16.21.1'
+    let clock = 0
+    const fetcher = vi.fn<typeof fetch>(async () => new Response(JSON.stringify(itemsSource)))
+    const client = createTftDataDragonClient(
+      fetcher,
+      async () => version,
+      () => clock,
+    )
+    const [result] = await Promise.all([client.getItems(), client.getItems()])
+    expect(result).toEqual({
+      version,
+      locale: 'fr_FR',
+      data: [
+        { id: 'TFT_Item_BFSword', name: 'BF Glaive', icon: 'TFT_Item_BFSword.png' },
+        { id: 'TFTTutorial_Item_RecurveBow', name: 'Arc courbe', icon: 'bow.png' },
+      ],
+    })
+    expect(String(fetcher.mock.calls[0]?.[0])).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/16.21.1/data/fr_FR/tft-item.json',
+    )
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    clock += 24 * 60 * 60 * 1000 + 1
+    await client.getItems()
+    version = '16.22.1'
+    expect((await client.getItems()).version).toBe(version)
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+
+  it('refuse les données mal formées et permet une nouvelle tentative', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: { bad: { id: 'bad', name: 'Bad', image: { full: '../bad.png' } } },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify(itemsSource)))
+    const client = createTftDataDragonClient(fetcher, async () => '16.21.1')
+    await expect(client.getItems()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+    expect((await client.getItems()).data).toHaveLength(2)
+  })
+
+  it('refuse les versions invalides et un catalogue sans objets nommés', async () => {
+    const fetcher = vi.fn<typeof fetch>(
+      async () => new Response(JSON.stringify({ data: { blank: itemsSource.data.blank } })),
+    )
+    const client = createTftDataDragonClient(fetcher, async () => '../invalid')
+    await expect(client.getItems()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+    expect(fetcher).not.toHaveBeenCalled()
+    const emptyClient = createTftDataDragonClient(fetcher, async () => '16.21.1')
+    await expect(emptyClient.getItems()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+  })
+})

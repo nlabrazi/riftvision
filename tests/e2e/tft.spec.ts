@@ -127,3 +127,63 @@ test('permet de réessayer si les traits TFT sont indisponibles', async ({ page 
   await page.getByRole('button', { name: 'Réessayer' }).click()
   await expect(page.getByText('Solaire')).toBeVisible()
 })
+
+test('consulte et recherche les objets TFT depuis la navigation', async ({ page }) => {
+  const items = [
+    { id: 'TFT_Item_BFSword', name: 'BF Glaive', icon: 'sword.png' },
+    { id: 'TFTTutorial_Item_BFSword', name: 'BF Glaive', icon: 'sword.png' },
+    { id: 'TFT_Item_GuinsoosRageblade', name: 'Lame enragée de Guinsoo', icon: 'blade.png' },
+  ]
+  await page.route('**/api/ddragon/tft/champions', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data } }),
+  )
+  await page.route('**/api/ddragon/tft/items', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data: items } }),
+  )
+  await openHome(page)
+  await page.locator('.game-card--tft').click()
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Les objets TFT.' })).toBeVisible()
+  await expect(page.getByText('3 objets', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Les entrées sans nom ne sont pas affichées/)).toBeVisible()
+  await page.getByLabel('Rechercher un objet').fill('enragee')
+  await expect(page.getByText('Lame enragée de Guinsoo')).toBeVisible()
+  await expect(page.getByText('1 objet', { exact: true })).toBeVisible()
+  await page.getByLabel('Rechercher un objet').fill('TFTTutorial_Item')
+  await expect(page.getByText('TFTTutorial_Item_BFSword')).toBeVisible()
+  await page.getByLabel('Rechercher un objet').fill('introuvable')
+  await expect(page.getByText('Aucun objet ne correspond à votre recherche.')).toBeVisible()
+  await page.getByRole('button', { name: 'Effacer la recherche' }).click()
+  await expect(page.getByText('3 objets', { exact: true })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  )
+})
+
+test('permet de réessayer si les objets TFT sont indisponibles', async ({ page }) => {
+  let available = false
+  await page.route('**/api/ddragon/tft/champions', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data } }),
+  )
+  await page.route('**/api/ddragon/tft/items', (route) =>
+    available
+      ? route.fulfill({
+          json: {
+            version,
+            locale: 'fr_FR',
+            data: [{ id: 'TFT_Item_BFSword', name: 'BF Glaive', icon: 'sword.png' }],
+          },
+        })
+      : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openHome(page)
+  await page.locator('.game-card--tft').click()
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
+  await expect(page.locator('.tft-notice[role="alert"]')).toContainText(
+    'momentanément indisponible',
+  )
+  available = true
+  await page.getByRole('button', { name: 'Réessayer' }).click()
+  await expect(page.getByText('BF Glaive')).toBeVisible()
+})

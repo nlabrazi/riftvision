@@ -1,6 +1,8 @@
 import type {
   TftChampion,
   TftChampionsResponse,
+  TftItem,
+  TftItemsResponse,
   TftTrait,
   TftTraitsResponse,
 } from '#shared/types/tft'
@@ -22,6 +24,8 @@ export function createTftDataDragonClient(
   const pending = new Map<string, Promise<TftChampionsResponse>>()
   let traitsCache: { value: TftTraitsResponse; expiresAt: number } | null = null
   const pendingTraits = new Map<string, Promise<TftTraitsResponse>>()
+  let itemsCache: { value: TftItemsResponse; expiresAt: number } | null = null
+  const pendingItems = new Map<string, Promise<TftItemsResponse>>()
 
   async function getChampions(): Promise<TftChampionsResponse> {
     const version = await getVersion()
@@ -142,7 +146,63 @@ export function createTftDataDragonClient(
     }
   }
 
-  return { getChampions, getTraits }
+  async function getItems(): Promise<TftItemsResponse> {
+    const version = await getVersion()
+    if (!/^\d+\.\d+\.\d+$/.test(version))
+      throw new DataDragonUnavailableError('Version TFT invalide.')
+    if (itemsCache?.value.version === version && itemsCache.expiresAt > now())
+      return itemsCache.value
+    const inFlight = pendingItems.get(version)
+    if (inFlight) return inFlight
+
+    const request = (async () => {
+      let body: unknown
+      try {
+        const response = await fetcher(`${ORIGIN}/cdn/${version}/data/fr_FR/tft-item.json`, {
+          signal: AbortSignal.timeout(5000),
+        })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        body = await response.json()
+      } catch {
+        throw new DataDragonUnavailableError(
+          'Le catalogue des objets TFT est temporairement indisponible.',
+        )
+      }
+      if (!isRecord(body) || !isRecord(body.data))
+        throw new DataDragonUnavailableError('Le catalogue des objets TFT reçu est invalide.')
+      const data: TftItem[] = []
+      const ids = new Set<string>()
+      for (const item of Object.values(body.data)) {
+        if (
+          !isRecord(item) ||
+          typeof item.id !== 'string' ||
+          !/^[A-Za-z0-9_]+$/.test(item.id) ||
+          ids.has(item.id) ||
+          typeof item.name !== 'string' ||
+          !isRecord(item.image) ||
+          typeof item.image.full !== 'string' ||
+          !/^[A-Za-z0-9_.-]+\.png$/.test(item.image.full)
+        )
+          throw new DataDragonUnavailableError('Le catalogue des objets TFT reçu est invalide.')
+        ids.add(item.id)
+        if (!item.name.trim()) continue
+        data.push({ id: item.id, name: item.name, icon: item.image.full })
+      }
+      if (!data.length)
+        throw new DataDragonUnavailableError('Le catalogue des objets TFT reçu est vide.')
+      const value: TftItemsResponse = { version, locale: 'fr_FR', data }
+      itemsCache = { value, expiresAt: now() + TTL }
+      return value
+    })()
+    pendingItems.set(version, request)
+    try {
+      return await request
+    } finally {
+      pendingItems.delete(version)
+    }
+  }
+
+  return { getChampions, getTraits, getItems }
 }
 
 export const tftDataDragon = createTftDataDragonClient()

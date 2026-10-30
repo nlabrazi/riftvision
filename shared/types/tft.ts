@@ -24,3 +24,15 @@ export interface TftTraitsResponse {
   locale: 'fr_FR'
   data: TftTrait[]
 }
+
+export interface TftItem {
+  id: string
+  name: string
+  icon: string
+}
+
+export interface TftItemsResponse {
+  version: string
+  locale: 'fr_FR'
+  data: TftItem[]
+}
