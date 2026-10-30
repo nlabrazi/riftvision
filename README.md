@@ -175,7 +175,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Teamfight Tactics : compétences disponibles sur les fiches d'unités avec les données CommunityDragon
   - [x] Valorant : catalogue des agents, recherche par nom et rôle, fiches et compétences
   - [x] Valorant : catalogue des armes, recherche par nom et catégorie, fiches et caractéristiques disponibles
-  - [ ] Valorant : explorer les cartes ; ajouter recherche et fiches selon les données disponibles
+  - [x] Valorant : catalogue des cartes, recherche par nom, fiches avec plans et noms de zones disponibles
   - [ ] World of Warcraft : définir le périmètre (versions du jeu et contenus), puis explorer les sources et les possibilités de recherche et de fiches
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
@@ -223,7 +223,7 @@ Les compétences sont issues de [CommunityDragon](https://www.communitydragon.or
 
 ## Données Valorant
 
-La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents` et `GET /api/valorant/weapons` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source. La recherche commune ne couvre pas encore Valorant.
+La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Le catalogue des cartes présente les plans et les noms de zones lorsqu'ils sont disponibles. Il inclut plusieurs modes et n'indique pas la rotation actuelle ; les noms de zones sont affichés dans la langue fournie par la source. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents`, `GET /api/valorant/weapons` et `GET /api/valorant/maps` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source. La recherche commune ne couvre pas encore Valorant.
 
 ---
 

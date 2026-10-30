@@ -45,3 +45,23 @@ export interface ValorantWeaponsResponse {
   locale: 'fr-FR'
   data: ValorantWeapon[]
 }
+
+export interface ValorantCallout {
+  region: string
+  area: string
+}
+
+export interface ValorantMap {
+  id: string
+  name: string
+  splash: string | null
+  minimap: string | null
+  tacticalDescription: string | null
+  narrativeDescription: string | null
+  callouts: ValorantCallout[]
+}
+
+export interface ValorantMapsResponse {
+  locale: 'fr-FR'
+  data: ValorantMap[]
+}
