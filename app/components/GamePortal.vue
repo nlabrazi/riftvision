@@ -57,15 +57,15 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">Accéder au catalogue <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <article v-if="showGenre('FPS')" class="game-card game-card--valorant">
+        <NuxtLink v-if="showGenre('FPS')" class="game-card game-card--valorant" to="/valorant">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/valorant.mp4" /></div>
           <div class="game-card__body">
-            <div class="game-card__meta"><span>FPS TACTIQUE</span><span class="game-card__status">À venir</span></div>
+            <div class="game-card__meta"><span>FPS TACTIQUE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Valorant</h3>
-            <p>Un espace dédié aux agents, aux armes et aux cartes est prévu.</p>
-            <span class="game-card__link">En préparation</span>
+            <p>Découvrez les agents, leurs rôles et leurs compétences.</p>
+            <span class="game-card__link">Accéder aux agents <span aria-hidden="true">↗</span></span>
           </div>
-        </article>
+        </NuxtLink>
         <article v-if="showGenre('FPS')" class="game-card game-card--cs2">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/cs2.mp4" /></div>
           <div class="game-card__body">

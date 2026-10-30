@@ -173,7 +173,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Teamfight Tactics : catalogue des traits et recherche à partir des données Data Dragon disponibles
   - [x] Teamfight Tactics : catalogue des objets nommés et recherche à partir des données Data Dragon disponibles
   - [x] Teamfight Tactics : compétences disponibles sur les fiches d'unités avec les données CommunityDragon
-  - [ ] Valorant : explorer les données d'agents, armes et cartes ; ajouter recherche et fiches selon les données disponibles
+  - [x] Valorant : catalogue des agents, recherche par nom et rôle, fiches et compétences
+  - [ ] Valorant : explorer les armes et cartes ; ajouter recherche et fiches selon les données disponibles
   - [ ] World of Warcraft : définir le périmètre (versions du jeu et contenus), puis explorer les sources et les possibilités de recherche et de fiches
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
@@ -218,6 +219,10 @@ La version est conservée en mémoire une heure et les fichiers de données 24 h
 Les catalogues TFT peuvent contenir plusieurs sets et modes. Pour les unités, le numéro de set n'est déduit que lorsque la clé fournie par Riot contient un identifiant numérique reconnaissable ; il ne permet pas d'identifier automatiquement le set actuel. Les unités sans numéro identifiable restent visibles séparément. Les fichiers Data Dragon des traits et objets fournissent leur nom et leur icône, mais pas leurs effets, recettes ou liens avec les unités. Les objets sans nom sont exclus du catalogue.
 
 Les compétences sont issues de [CommunityDragon](https://www.communitydragon.org/docs/assets), une source communautaire qui rassemble des données du client Riot. Le serveur utilise le même numéro de patch majeur et mineur que Data Dragon, fait correspondre l'identifiant et, s'il est connu, le set de l'unité. En cas de correspondance ambiguë, la compétence n'est pas affichée. Les variables présentes dans les descriptions sont indiquées comme telles, car leur calcul dépend du contexte de jeu. Les données sont conservées en mémoire 24 heures par processus ; une panne de CommunityDragon ne bloque pas l'affichage de la fiche d'unité.
+
+## Données Valorant
+
+La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents` ; en cas d'indisponibilité, la page propose une nouvelle tentative. La recherche commune ne couvre pas encore Valorant.
 
 ---
 
