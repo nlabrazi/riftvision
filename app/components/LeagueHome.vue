@@ -37,12 +37,12 @@
           <p>Explorez les équipements et les runes de la Faille.</p>
           <div class="league-section__links"><NuxtLink to="/league/items">Objets →</NuxtLink><NuxtLink to="/league/runes">Runes →</NuxtLink></div>
         </article>
-        <article class="league-section">
+        <NuxtLink to="/league/patch-notes" class="league-section league-section--link">
           <span class="league-section__number" aria-hidden="true">03</span>
-          <span class="league-section__status">À venir</span>
+          <span class="league-section__status league-section__status--available">Disponible</span>
           <h3>Notes de patch</h3>
           <p>Retrouvez les mises à jour et les changements du jeu.</p>
-        </article>
+        </NuxtLink>
       </div>
     </section>
     <div class="league-tracking-heading">

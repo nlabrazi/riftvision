@@ -34,7 +34,7 @@ test('ouvre directement l’espace League of Legends et revient au portail', asy
   await page.goto('/league')
 
   await expect(page.getByRole('heading', { name: 'Bienvenue dans la Faille.' })).toBeVisible()
-  await expect(page.locator('.league-section').filter({ hasText: 'À venir' })).toHaveCount(1)
+  await expect(page.locator('.league-section').filter({ hasText: 'À venir' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Explorer la démo' })).toBeVisible()
   await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)

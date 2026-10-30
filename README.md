@@ -166,7 +166,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
   - [x] Ajouter les catalogues d'objets et de runes avec recherche, filtres et fiches
   - [x] Ajouter une recherche commune aux champions, objets et runes disponibles
-  - [ ] Proposer les notes de patch et leur historique à partir d'une source autorisée, avec lien vers la publication officielle
+  - [x] Proposer les notes de patch et leur historique, avec liens vers les publications officielles
   - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
 - [ ] **Encyclopédies des autres jeux**
   - [ ] Teamfight Tactics : explorer les données de sets, unités, traits et objets ; ajouter recherche et fiches selon les données disponibles
@@ -197,6 +197,8 @@ Depuis l'espace League of Legends, la rubrique **Champions** permet de recherche
 Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
 
 Le bouton **Rechercher** permet aussi de trouver ces contenus depuis l'accueil et les pages de l'encyclopédie. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Cette recherche ne couvre pas les comptes de joueurs.
+
+La rubrique **Notes de patch** liste les titres et dates de l'[archive officielle Riot](https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. Le serveur lit les métadonnées intégrées à cette page et les conserve en mémoire pendant une heure. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
 - `GET /api/ddragon/version` : version et langue utilisées.
 - `GET /api/ddragon/champions` : catalogue des champions.

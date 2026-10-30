@@ -8,6 +8,7 @@
         <NuxtLink to="/league/champions">Champions</NuxtLink>
         <NuxtLink to="/league/items">Objets</NuxtLink>
         <NuxtLink to="/league/runes">Runes</NuxtLink>
+        <NuxtLink to="/league/patch-notes">Notes de patch</NuxtLink>
         <NuxtLink to="/league#league-of-legends">Suivre ma partie</NuxtLink>
       </nav>
       <EncyclopediaSearch />
