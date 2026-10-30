@@ -176,7 +176,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Valorant : catalogue des agents, recherche par nom et rôle, fiches et compétences
   - [x] Valorant : catalogue des armes, recherche par nom et catégorie, fiches et caractéristiques disponibles
   - [x] Valorant : catalogue des cartes, recherche par nom, fiches avec plans et noms de zones disponibles
-  - [ ] World of Warcraft : définir le périmètre (versions du jeu et contenus), puis explorer les sources et les possibilités de recherche et de fiches
+  - [x] World of Warcraft Retail : catalogue des classes, recherche et fiches avec spécialisations
+  - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
 
@@ -224,6 +225,12 @@ Les compétences sont issues de [CommunityDragon](https://www.communitydragon.or
 ## Données Valorant
 
 La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Le catalogue des cartes présente les plans et les noms de zones lorsqu'ils sont disponibles. Il inclut plusieurs modes et n'indique pas la rotation actuelle ; les noms de zones sont affichés dans la langue fournie par la source. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents`, `GET /api/valorant/weapons` et `GET /api/valorant/maps` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source. La recherche commune ne couvre pas encore Valorant.
+
+## Données World of Warcraft
+
+Le catalogue WoW couvre les classes Retail en Europe et leurs spécialisations, en français, à partir de l'[API Blizzard](https://community.developer.battle.net/documentation/world-of-warcraft/game-data-apis). Pour l'activer, créez un client sur le [portail développeur Battle.net](https://community.developer.battle.net/access/clients), puis définissez `NUXT_BLIZZARD_CLIENT_ID` et `NUXT_BLIZZARD_CLIENT_SECRET` dans l'environnement serveur (voir `.env.example`). Ces identifiants restent côté serveur et ne doivent pas être commités. Sans configuration ou en cas d'erreur de Blizzard, le catalogue est indisponible et propose de réessayer.
+
+Le serveur obtient un jeton OAuth avec les identifiants du client, puis conserve les données de classes en mémoire une heure par processus. Les icônes sont facultatives si leur récupération échoue. Les routes sont `GET /api/wow/classes` et `GET /api/wow/classes/{id}`. La recherche commune ne couvre pas encore WoW ; les fiches listent les noms des spécialisations sans fiches détaillées pour celles-ci.
 
 ---
 

@@ -84,15 +84,15 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">En préparation</span>
           </div>
         </article>
-        <article v-if="showGenre('MMO')" class="game-card game-card--wow">
+        <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/wow.mp4" /></div>
           <div class="game-card__body">
-            <div class="game-card__meta"><span>MMORPG</span><span class="game-card__status">À venir</span></div>
+            <div class="game-card__meta"><span>MMORPG</span><span class="game-card__status game-card__status--available">Retail</span></div>
             <h3>World of Warcraft</h3>
-            <p>Un futur espace pour explorer les richesses d’Azeroth.</p>
-            <span class="game-card__link">En préparation</span>
+            <p>Découvrez les classes et spécialisations de World of Warcraft Retail.</p>
+            <span class="game-card__link">Accéder aux classes <span aria-hidden="true">↗</span></span>
           </div>
-        </article>
+        </NuxtLink>
         <article v-if="selectedGenre === 'Tous'" class="game-card game-card--future">
           <div class="game-card__art" aria-hidden="true"></div>
           <div class="game-card__body">

@@ -14,7 +14,7 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   await expect(page.getByRole('heading', { name: 'World of Warcraft' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Counter-Strike 2' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Heroes of the Storm' })).toBeVisible()
-  await expect(page.locator('article.game-card').filter({ hasText: 'À venir' })).toHaveCount(4)
+  await expect(page.locator('article.game-card').filter({ hasText: 'À venir' })).toHaveCount(3)
 
   await page.getByRole('link', { name: /Accéder à League of Legends/ }).click()
   await expect(page).toHaveURL(/\/league$/)
