@@ -263,6 +263,7 @@ onUnmounted(() => {
         </div>
       </a>
       <div class="header-controls">
+        <EncyclopediaSearch v-if="!hasGame && !isLiveActive && !isHelpOpen" />
         <button v-if="hasGame" type="button" data-testid="audio-toggle-btn" class="rv-button"
           :aria-label="isAudioMuted ? 'Activer les alertes sonores' : 'Couper les alertes sonores'"
           :aria-pressed="!isAudioMuted" @click="toggleAudioMute">

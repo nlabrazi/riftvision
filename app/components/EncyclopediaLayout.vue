@@ -10,6 +10,7 @@
         <NuxtLink to="/league/runes">Runes</NuxtLink>
         <NuxtLink to="/league#league-of-legends">Suivre ma partie</NuxtLink>
       </nav>
+      <EncyclopediaSearch />
     </header>
     <main id="encyclopedia-content" class="encyclopedia-main">
       <slot />
