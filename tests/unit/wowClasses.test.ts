@@ -262,3 +262,96 @@ describe('races WoW Retail', () => {
     expect((await client.getRaces()).data).toHaveLength(3)
   })
 })
+
+describe('spécialisations WoW Retail', () => {
+  const specialization = {
+    id: 62,
+    name: 'Arcanes',
+    playable_class: { id: 8, name: 'Mage' },
+    role: { name: 'Dégâts' },
+    power_type: { name: 'Mana' },
+    primary_stat_type: { name: 'Intelligence' },
+    gender_description: { male: 'Manipule les arcanes.', female: 'Manipule les arcanes.' },
+  }
+  function specFetcher() {
+    return vi.fn<typeof fetch>(async (url) => {
+      const path = String(url)
+      if (path.includes('oauth.battle.net'))
+        return response({ access_token: 'private-token', expires_in: 3600 })
+      if (path.includes('/media/playable-specialization/62'))
+        return response({
+          assets: [
+            { key: 'icon', value: 'https://render.worldofwarcraft.com/eu/icons/56/135932.jpg' },
+          ],
+        })
+      if (path.includes('/playable-specialization/62')) return response(specialization)
+      return response({}, 404)
+    })
+  }
+  it('normalise la description, le rôle, les caractéristiques et l’icône', async () => {
+    const client = createWowClassesClient(credentials, specFetcher())
+    expect(await client.getSpecialization(62)).toEqual({
+      locale: 'fr_FR',
+      edition: 'retail',
+      data: {
+        id: 62,
+        name: 'Arcanes',
+        class: { id: 8, name: 'Mage' },
+        role: 'Dégâts',
+        powerType: 'Mana',
+        primaryStat: 'Intelligence',
+        descriptionMale: 'Manipule les arcanes.',
+        descriptionFemale: 'Manipule les arcanes.',
+        icon: 'https://render.worldofwarcraft.com/eu/icons/56/135932.jpg',
+      },
+    })
+  })
+  it('partage les requêtes et renouvelle le cache', async () => {
+    let clock = 0
+    const fetcher = specFetcher()
+    const client = createWowClassesClient(credentials, fetcher, () => clock)
+    await Promise.all([client.getSpecialization(62), client.getSpecialization(62)])
+    expect(
+      fetcher.mock.calls.filter(([url]) =>
+        String(url).includes('/data/wow/playable-specialization/62?'),
+      ),
+    ).toHaveLength(1)
+    clock += 60 * 60 * 1000 + 1
+    await client.getSpecialization(62)
+    expect(
+      fetcher.mock.calls.filter(([url]) =>
+        String(url).includes('/data/wow/playable-specialization/62?'),
+      ),
+    ).toHaveLength(2)
+  })
+  it('conserve le texte si l’icône et des champs facultatifs sont absents', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (url) => {
+      if (String(url).includes('oauth.battle.net'))
+        return response({ access_token: 'private-token', expires_in: 3600 })
+      if (String(url).includes('/media/')) return response({}, 503)
+      return response({ id: 62, name: 'Arcanes', playable_class: { id: 8, name: 'Mage' } })
+    })
+    const client = createWowClassesClient(credentials, fetcher)
+    expect((await client.getSpecialization(62)).data).toMatchObject({
+      icon: null,
+      role: null,
+      powerType: null,
+      primaryStat: null,
+      descriptionMale: null,
+      descriptionFemale: null,
+    })
+  })
+  it('distingue les spécialisations inconnues et les données invalides sans mettre les erreurs en cache', async () => {
+    const fallback = specFetcher()
+    let attempt = 0
+    const fetcher = vi.fn<typeof fetch>(async (url, init) => {
+      if (String(url).includes('/playable-specialization/62?') && attempt++ === 0)
+        return response({ id: 63, name: 'Erreur' })
+      return fallback(url, init)
+    })
+    const client = createWowClassesClient(credentials, fetcher)
+    await expect(client.getSpecialization(62)).rejects.toBeInstanceOf(WowUnavailableError)
+    expect((await client.getSpecialization(62)).data.name).toBe('Arcanes')
+    await expect(client.getSpecialization(999)).rejects.toThrow('Spécialisation introuvable.')
+  })
+})

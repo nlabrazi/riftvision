@@ -26,6 +26,24 @@ export interface WowClassResponse {
   data: WowClassDetails
 }
 
+export interface WowSpecializationDetails {
+  id: number
+  name: string
+  class: { id: number; name: string }
+  role: string | null
+  powerType: string | null
+  primaryStat: string | null
+  descriptionMale: string | null
+  descriptionFemale: string | null
+  icon: string | null
+}
+
+export interface WowSpecializationResponse {
+  locale: 'fr_FR'
+  edition: 'retail'
+  data: WowSpecializationDetails
+}
+
 export interface WowRace {
   id: number
   name: string

@@ -5,6 +5,8 @@ import type {
   WowRace,
   WowRacesResponse,
   WowSpecialization,
+  WowSpecializationDetails,
+  WowSpecializationResponse,
 } from '#shared/types/wow'
 
 const API_ORIGIN = 'https://eu.api.blizzard.com'
@@ -13,6 +15,7 @@ const TTL = 60 * 60 * 1000
 
 export class WowUnavailableError extends Error {}
 export class WowClassNotFoundError extends Error {}
+export class WowSpecializationNotFoundError extends Error {}
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -287,7 +290,67 @@ export function createWowClassesClient(
     })
   }
 
-  return { getClasses, getClass, getRaces }
+  async function getSpecialization(id: number): Promise<WowSpecializationResponse> {
+    if (!validId(id)) throw new WowSpecializationNotFoundError('Spécialisation introuvable.')
+    return cached(`specialization:${id}`, async () => {
+      let body: unknown
+      try {
+        body = await request(`/data/wow/playable-specialization/${id}`)
+      } catch (error) {
+        if (error instanceof WowClassNotFoundError)
+          throw new WowSpecializationNotFoundError('Spécialisation introuvable.')
+        throw error
+      }
+      if (
+        !isRecord(body) ||
+        body.id !== id ||
+        typeof body.name !== 'string' ||
+        !body.name.trim() ||
+        !isRecord(body.playable_class) ||
+        !validId(body.playable_class.id) ||
+        typeof body.playable_class.name !== 'string' ||
+        !body.playable_class.name.trim()
+      )
+        throw new WowUnavailableError('Spécialisation invalide.')
+
+      function localizedName(value: unknown): string | null {
+        return isRecord(value) && typeof value.name === 'string' && value.name.trim()
+          ? value.name.trim()
+          : null
+      }
+      const description = isRecord(body.gender_description) ? body.gender_description : {}
+      let icon: string | null = null
+      try {
+        const media = await request(`/data/wow/media/playable-specialization/${id}`)
+        if (isRecord(media) && Array.isArray(media.assets)) {
+          const asset = media.assets.find((item: unknown) => isRecord(item) && item.key === 'icon')
+          if (isRecord(asset)) icon = imageUrl(asset.value)
+        }
+      } catch {
+        /* Le texte reste disponible si le visuel est indisponible. */
+      }
+      const data: WowSpecializationDetails = {
+        id,
+        name: body.name.trim(),
+        class: { id: body.playable_class.id, name: body.playable_class.name.trim() },
+        role: localizedName(body.role),
+        powerType: localizedName(body.power_type),
+        primaryStat: localizedName(body.primary_stat_type),
+        descriptionMale:
+          typeof description.male === 'string' && description.male.trim()
+            ? description.male.trim()
+            : null,
+        descriptionFemale:
+          typeof description.female === 'string' && description.female.trim()
+            ? description.female.trim()
+            : null,
+        icon,
+      }
+      return { locale: 'fr_FR', edition: 'retail', data }
+    })
+  }
+
+  return { getClasses, getClass, getRaces, getSpecialization }
 }
 
 let shared: {
