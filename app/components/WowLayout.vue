@@ -3,7 +3,7 @@
     <a class="skip-link" href="#wow-content">Aller au contenu</a>
     <header class="wow-header">
       <NuxtLink to="/" class="wow-brand">RiftVision</NuxtLink>
-      <nav aria-label="Navigation World of Warcraft" class="wow-nav"><NuxtLink to="/">Tous les jeux</NuxtLink><NuxtLink to="/wow">Classes WoW</NuxtLink></nav>
+      <nav aria-label="Navigation World of Warcraft" class="wow-nav"><NuxtLink to="/">Tous les jeux</NuxtLink><NuxtLink to="/wow">Classes WoW</NuxtLink><NuxtLink to="/wow/races">Races WoW</NuxtLink></nav>
     </header>
     <main id="wow-content" class="wow-main"><slot /></main>
     <AppFooter />

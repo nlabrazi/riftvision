@@ -2,6 +2,8 @@ import type {
   WowClassDetails,
   WowClassResponse,
   WowClassesResponse,
+  WowRace,
+  WowRacesResponse,
   WowSpecialization,
 } from '#shared/types/wow'
 
@@ -211,7 +213,81 @@ export function createWowClassesClient(
       return { locale: 'fr_FR', edition: 'retail', data }
     })
   }
-  return { getClasses, getClass }
+  async function getRaces(): Promise<WowRacesResponse> {
+    return cached('races', async () => {
+      const index = await request('/data/wow/playable-race/index')
+      if (
+        !isRecord(index) ||
+        !Array.isArray(index.races) ||
+        !index.races.length ||
+        index.races.length > 100
+      )
+        throw new WowUnavailableError('Catalogue des races invalide.')
+      const ids = new Set<number>()
+      const entries = index.races.map((entry: unknown) => {
+        if (
+          !isRecord(entry) ||
+          !validId(entry.id) ||
+          ids.has(entry.id) ||
+          typeof entry.name !== 'string' ||
+          !entry.name.trim()
+        )
+          throw new WowUnavailableError('Catalogue des races invalide.')
+        ids.add(entry.id)
+        return { id: entry.id, name: entry.name.trim() }
+      })
+      const data: WowRace[] = new Array(entries.length)
+      let next = 0
+      const worker = async () => {
+        while (next < entries.length) {
+          const position = next++
+          const entry = entries[position]
+          let body: unknown
+          try {
+            body = await request(`/data/wow/playable-race/${entry.id}`)
+          } catch {
+            throw new WowUnavailableError('Catalogue des races indisponible.')
+          }
+          if (
+            !isRecord(body) ||
+            body.id !== entry.id ||
+            typeof body.name !== 'string' ||
+            !body.name.trim() ||
+            !Array.isArray(body.playable_classes)
+          )
+            throw new WowUnavailableError('Race invalide.')
+          const faction =
+            isRecord(body.faction) &&
+            typeof body.faction.type === 'string' &&
+            typeof body.faction.name === 'string' &&
+            body.faction.name.trim()
+              ? { type: body.faction.type, name: body.faction.name.trim() }
+              : null
+          const classes = body.playable_classes.map((item: unknown) => {
+            if (
+              !isRecord(item) ||
+              !validId(item.id) ||
+              typeof item.name !== 'string' ||
+              !item.name.trim()
+            )
+              throw new WowUnavailableError('Classes de race invalides.')
+            return { id: item.id, name: item.name.trim() }
+          })
+          data[position] = {
+            id: entry.id,
+            name: body.name.trim(),
+            faction,
+            allied: typeof body.is_allied_race === 'boolean' ? body.is_allied_race : null,
+            classes,
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(entries.length, 6) }, () => worker()))
+      return { locale: 'fr_FR', edition: 'retail', data }
+    })
+  }
+
+  return { getClasses, getClass, getRaces }
 }
 
 let shared: {

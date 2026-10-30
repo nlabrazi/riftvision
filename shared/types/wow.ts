@@ -25,3 +25,17 @@ export interface WowClassResponse {
   edition: 'retail'
   data: WowClassDetails
 }
+
+export interface WowRace {
+  id: number
+  name: string
+  faction: { type: string; name: string } | null
+  allied: boolean | null
+  classes: { id: number; name: string }[]
+}
+
+export interface WowRacesResponse {
+  locale: 'fr_FR'
+  edition: 'retail'
+  data: WowRace[]
+}

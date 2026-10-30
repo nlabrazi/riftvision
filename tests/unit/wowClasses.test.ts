@@ -136,3 +136,129 @@ describe('classes WoW Retail', () => {
     expect((await client.getClasses()).data[0]?.icon).toBeNull()
   })
 })
+
+describe('races WoW Retail', () => {
+  const raceIndex = {
+    races: [
+      { id: 1, name: 'Humain' },
+      { id: 25, name: 'Pandaren' },
+      { id: 26, name: 'Pandaren' },
+    ],
+  }
+  const races: Record<number, unknown> = {
+    1: {
+      id: 1,
+      name: 'Humain',
+      faction: { type: 'ALLIANCE', name: 'Alliance' },
+      is_allied_race: false,
+      playable_classes: [{ id: 8, name: 'Mage' }],
+    },
+    25: {
+      id: 25,
+      name: 'Pandaren',
+      faction: { type: 'ALLIANCE', name: 'Alliance' },
+      is_allied_race: false,
+      playable_classes: [{ id: 8, name: 'Mage' }],
+    },
+    26: {
+      id: 26,
+      name: 'Pandaren',
+      faction: { type: 'HORDE', name: 'Horde' },
+      is_allied_race: false,
+      playable_classes: [{ id: 8, name: 'Mage' }],
+    },
+  }
+  function raceFetcher() {
+    return vi.fn<typeof fetch>(async (url) => {
+      const path = String(url)
+      if (path.includes('oauth.battle.net'))
+        return response({ access_token: 'private-token', expires_in: 3600 })
+      if (path.includes('/playable-race/index')) return response(raceIndex)
+      const id = Number(path.match(/\/playable-race\/(\d+)/)?.[1])
+      if (id in races) return response(races[id])
+      return response({}, 404)
+    })
+  }
+  it('présente séparément les variantes de faction et les classes disponibles', async () => {
+    const fetcher = raceFetcher()
+    const client = createWowClassesClient(credentials, fetcher)
+    expect(await client.getRaces()).toEqual({
+      locale: 'fr_FR',
+      edition: 'retail',
+      data: [
+        {
+          id: 1,
+          name: 'Humain',
+          faction: { type: 'ALLIANCE', name: 'Alliance' },
+          allied: false,
+          classes: [{ id: 8, name: 'Mage' }],
+        },
+        {
+          id: 25,
+          name: 'Pandaren',
+          faction: { type: 'ALLIANCE', name: 'Alliance' },
+          allied: false,
+          classes: [{ id: 8, name: 'Mage' }],
+        },
+        {
+          id: 26,
+          name: 'Pandaren',
+          faction: { type: 'HORDE', name: 'Horde' },
+          allied: false,
+          classes: [{ id: 8, name: 'Mage' }],
+        },
+      ],
+    })
+  })
+  it('partage les requêtes, limite la concurrence et renouvelle le cache', async () => {
+    let clock = 0
+    let current = 0
+    let max = 0
+    const fallback = raceFetcher()
+    const manyIndex = {
+      races: Array.from({ length: 14 }, (_, i) => ({ id: i + 1, name: `Race ${i + 1}` })),
+    }
+    const fetcher = vi.fn<typeof fetch>(async (url, init) => {
+      const path = String(url)
+      if (path.includes('/playable-race/index')) return response(manyIndex)
+      const id = Number(path.match(/\/playable-race\/(\d+)/)?.[1])
+      if (id) {
+        current++
+        max = Math.max(max, current)
+        await Promise.resolve()
+        current--
+        return response({
+          id,
+          name: `Race ${id}`,
+          faction: null,
+          is_allied_race: null,
+          playable_classes: [],
+        })
+      }
+      return fallback(url, init)
+    })
+    const client = createWowClassesClient(credentials, fetcher, () => clock)
+    await Promise.all([client.getRaces(), client.getRaces()])
+    expect(
+      fetcher.mock.calls.filter(([url]) => String(url).includes('/playable-race/index')),
+    ).toHaveLength(1)
+    expect(max).toBeLessThanOrEqual(6)
+    expect(max).toBeGreaterThan(1)
+    clock += 60 * 60 * 1000 + 1
+    await client.getRaces()
+    expect(
+      fetcher.mock.calls.filter(([url]) => String(url).includes('/playable-race/index')),
+    ).toHaveLength(2)
+  })
+  it('ne met pas en cache un catalogue partiel en cas d’échec', async () => {
+    let fails = true
+    const fallback = raceFetcher()
+    const fetcher = vi.fn<typeof fetch>(async (url, init) =>
+      String(url).includes('/playable-race/26?') && fails ? response({}, 503) : fallback(url, init),
+    )
+    const client = createWowClassesClient(credentials, fetcher)
+    await expect(client.getRaces()).rejects.toBeInstanceOf(WowUnavailableError)
+    fails = false
+    expect((await client.getRaces()).data).toHaveLength(3)
+  })
+})

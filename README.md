@@ -177,6 +177,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Valorant : catalogue des armes, recherche par nom et catégorie, fiches et caractéristiques disponibles
   - [x] Valorant : catalogue des cartes, recherche par nom, fiches avec plans et noms de zones disponibles
   - [x] World of Warcraft Retail : catalogue des classes, recherche et fiches avec spécialisations
+  - [x] World of Warcraft Retail : catalogue des races, filtre par faction et fiches avec classes disponibles
   - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
@@ -231,6 +232,8 @@ La rubrique Valorant présente les agents jouables, leur rôle et leurs compéte
 Le catalogue WoW couvre les classes Retail en Europe et leurs spécialisations, en français, à partir de l'[API Blizzard](https://community.developer.battle.net/documentation/world-of-warcraft/game-data-apis). Pour l'activer, créez un client sur le [portail développeur Battle.net](https://community.developer.battle.net/access/clients), puis définissez `NUXT_BLIZZARD_CLIENT_ID` et `NUXT_BLIZZARD_CLIENT_SECRET` dans l'environnement serveur (voir `.env.example`). Ces identifiants restent côté serveur et ne doivent pas être commités. Sans configuration ou en cas d'erreur de Blizzard, le catalogue est indisponible et propose de réessayer.
 
 Le serveur obtient un jeton OAuth avec les identifiants du client, puis conserve les données de classes en mémoire une heure par processus. Les icônes sont facultatives si leur récupération échoue. Les routes sont `GET /api/wow/classes` et `GET /api/wow/classes/{id}`. La recherche commune ne couvre pas encore WoW ; les fiches listent les noms des spécialisations sans fiches détaillées pour celles-ci.
+
+Le catalogue `GET /api/wow/races` présente les races Retail et leurs variantes de faction telles que fournies par Blizzard. Le serveur regroupe l'index et les fiches de races, avec six requêtes simultanées au maximum et un cache d'une heure. Les fiches renvoient aux classes présentes dans le catalogue ; les éventuelles classes absentes restent affichées sans lien. Le visuel des cartes est commun à WoW, l'API utilisée ne fournissant pas d'icône de race.
 
 ---
 
