@@ -169,7 +169,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Proposer les notes de patch et leur historique, avec liens vers les publications officielles
   - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
 - [ ] **Encyclopédies des autres jeux**
-  - [ ] Teamfight Tactics : explorer les données de sets, unités, traits et objets ; ajouter recherche et fiches selon les données disponibles
+  - [x] Teamfight Tactics : catalogue des unités, recherche, filtres et fiches à partir des données Data Dragon disponibles
+  - [ ] Teamfight Tactics : explorer les traits, objets et compétences selon les données disponibles
   - [ ] Valorant : explorer les données d'agents, armes et cartes ; ajouter recherche et fiches selon les données disponibles
   - [ ] World of Warcraft : définir le périmètre (versions du jeu et contenus), puis explorer les sources et les possibilités de recherche et de fiches
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
@@ -205,8 +206,11 @@ La rubrique **Notes de patch** liste les titres et dates de l'[archive officiell
 - `GET /api/ddragon/champions/Ahri` : fiche d'un champion identifié par son identifiant Data Dragon.
 - `GET /api/ddragon/items` : objets achetables dans la Faille de l'invocateur.
 - `GET /api/ddragon/runes` : runes regroupées par voie.
+- `GET /api/ddragon/tft/champions` : unités Teamfight Tactics disponibles dans les données Riot.
 
 La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
+
+Le catalogue TFT peut contenir plusieurs sets et modes. Le numéro de set n'est déduit que lorsque la clé fournie par Riot contient un identifiant numérique reconnaissable ; il ne permet pas d'identifier automatiquement le set actuel. Les unités sans numéro identifiable restent visibles séparément. Les traits et compétences ne sont pas encore intégrés.
 
 ---
 

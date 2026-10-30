@@ -48,15 +48,15 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">Accéder à League of Legends <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <article v-if="showGenre('Stratégie')" class="game-card game-card--tft">
+        <NuxtLink v-if="showGenre('Stratégie')" class="game-card game-card--tft" to="/tft">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/tft.mp4" /></div>
           <div class="game-card__body">
-            <div class="game-card__meta"><span>STRATÉGIE</span><span class="game-card__status">À venir</span></div>
+            <div class="game-card__meta"><span>STRATÉGIE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Teamfight Tactics</h3>
-            <p>Un espace dédié aux sets, unités et compositions est prévu.</p>
-            <span class="game-card__link">En préparation</span>
+            <p>Explorez les unités disponibles dans le catalogue TFT.</p>
+            <span class="game-card__link">Accéder au catalogue <span aria-hidden="true">↗</span></span>
           </div>
-        </article>
+        </NuxtLink>
         <article v-if="showGenre('FPS')" class="game-card game-card--valorant">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/valorant.mp4" /></div>
           <div class="game-card__body">
