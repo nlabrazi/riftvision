@@ -164,7 +164,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
 - [ ] **Encyclopédie League of Legends**
   - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
   - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
-  - [ ] Ajouter les catalogues d'objets et de runes, puis une recherche commune aux contenus disponibles
+  - [x] Ajouter les catalogues d'objets et de runes avec recherche, filtres et fiches
+  - [ ] Ajouter une recherche commune aux contenus disponibles
   - [ ] Proposer les notes de patch et leur historique à partir d'une source autorisée, avec lien vers la publication officielle
   - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
 - [ ] **Encyclopédies des autres jeux**
@@ -193,9 +194,13 @@ Le serveur prépare l'encyclopédie League of Legends à partir des fichiers off
 
 Depuis l'espace League of Legends, la rubrique **Champions** permet de rechercher un champion par nom ou titre, de filtrer par classe et d'ouvrir sa fiche. Les descriptions et statistiques affichées proviennent de la version Data Dragon indiquée sur la page.
 
+Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
+
 - `GET /api/ddragon/version` : version et langue utilisées.
 - `GET /api/ddragon/champions` : catalogue des champions.
 - `GET /api/ddragon/champions/Ahri` : fiche d'un champion identifié par son identifiant Data Dragon.
+- `GET /api/ddragon/items` : objets achetables dans la Faille de l'invocateur.
+- `GET /api/ddragon/runes` : runes regroupées par voie.
 
 La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
 

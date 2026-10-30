@@ -105,4 +105,86 @@ describe('Data Dragon', () => {
     await expect(client.getChampions()).rejects.toBeInstanceOf(DataDragonUnavailableError)
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
+
+  it('ne conserve que les objets achetables sur la Faille et met le catalogue en cache', async () => {
+    const item = {
+      name: 'Bottes',
+      description: '<stats>Vitesse</stats>',
+      plaintext: 'Déplacement',
+      image: { full: '1001.png' },
+      gold: { total: 300, sell: 210, purchasable: true },
+      maps: { '11': true },
+      tags: ['Boots'],
+      into: ['3006'],
+    }
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/versions.json')
+        ? response(['16.21.1'])
+        : response({
+            version: '16.21.1',
+            data: {
+              '1001': item,
+              '1002': { ...item, maps: { '11': false } },
+              '1003': { ...item, gold: { ...item.gold, purchasable: false } },
+            },
+          }),
+    )
+    const client = createDataDragonClient(fetcher)
+    const result = await client.getItems()
+    expect(result).toMatchObject({
+      version: '16.21.1',
+      locale: 'fr_FR',
+      data: [{ id: '1001', name: 'Bottes', totalGold: 300, into: ['3006'] }],
+    })
+    expect(result.data).toHaveLength(1)
+    await client.getItems()
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('conserve les voies et distingue les runes fondamentales', async () => {
+    const rune = {
+      id: 8112,
+      name: 'Électrocution',
+      icon: 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
+      shortDesc: 'Court',
+      longDesc: 'Long',
+    }
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/versions.json')
+        ? response(['16.21.1'])
+        : response([
+            {
+              id: 8100,
+              name: 'Domination',
+              icon: 'perk-images/Styles/7200_Domination.png',
+              slots: [{ runes: [rune] }, { runes: [{ ...rune, id: 8126, name: 'Coup bas' }] }],
+            },
+          ]),
+    )
+    const result = await createDataDragonClient(fetcher).getRunes()
+    expect(result).toMatchObject({
+      version: '16.21.1',
+      data: [
+        {
+          name: 'Domination',
+          runes: [
+            { name: 'Électrocution', keystone: true },
+            { name: 'Coup bas', keystone: false },
+          ],
+        },
+      ],
+    })
+    expect(String(fetcher.mock.calls[1]?.[0])).toContain('/16.21.1/data/fr_FR/runesReforged.json')
+  })
+
+  it('rejette les catalogues d’objets et de runes mal formés', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/versions.json')
+        ? response(['16.21.1'])
+        : response({ version: '16.21.1', data: {} }),
+    )
+    const client = createDataDragonClient(fetcher)
+    await expect(client.getItems()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+    await expect(client.getRunes()).rejects.toBeInstanceOf(DataDragonUnavailableError)
+  })
 })

@@ -20,3 +20,44 @@ export interface DataDragonChampionDetails {
   locale: 'fr_FR'
   data: DataDragonChampion
 }
+
+export interface DataDragonItem {
+  id: string
+  name: string
+  description: string
+  summary: string
+  icon: string
+  totalGold: number
+  sellGold: number
+  tags: string[]
+  from: string[]
+  into: string[]
+}
+
+export interface DataDragonItems {
+  version: string
+  locale: 'fr_FR'
+  data: DataDragonItem[]
+}
+
+export interface DataDragonRune {
+  id: number
+  name: string
+  icon: string
+  shortDescription: string
+  longDescription: string
+  keystone: boolean
+}
+
+export interface DataDragonRunePath {
+  id: number
+  name: string
+  icon: string
+  runes: DataDragonRune[]
+}
+
+export interface DataDragonRunes {
+  version: string
+  locale: 'fr_FR'
+  data: DataDragonRunePath[]
+}

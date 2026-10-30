@@ -2,6 +2,11 @@ import type {
   DataDragonChampion,
   DataDragonChampionDetails,
   DataDragonChampions,
+  DataDragonItem,
+  DataDragonItems,
+  DataDragonRune,
+  DataDragonRunePath,
+  DataDragonRunes,
 } from '#shared/types/dataDragon'
 
 const ORIGIN = 'https://ddragon.leagueoflegends.com'
@@ -122,7 +127,104 @@ export function createDataDragonClient(fetcher: Fetcher = fetch, now: () => numb
     })
   }
 
-  return { getVersion, getChampions, getChampion }
+  async function getItems(): Promise<DataDragonItems> {
+    const version = await getVersion()
+    return cached(`items:${version}`, DATA_TTL, async () => {
+      const body = await fetchJson(`/cdn/${version}/data/${LOCALE}/item.json`)
+      if (!isRecord(body) || body.version !== version || !isRecord(body.data)) {
+        throw new DataDragonUnavailableError('Le catalogue des objets reçu est invalide.')
+      }
+      const data: DataDragonItem[] = []
+      for (const [id, item] of Object.entries(body.data)) {
+        if (!isRecord(item) || !isRecord(item.maps) || !isRecord(item.gold)) {
+          throw new DataDragonUnavailableError('Le catalogue des objets reçu est invalide.')
+        }
+        if (item.maps['11'] !== true || item.gold.purchasable !== true) continue
+        if (
+          !/^\d+$/.test(id) ||
+          typeof item.name !== 'string' ||
+          typeof item.description !== 'string' ||
+          typeof item.plaintext !== 'string' ||
+          !isRecord(item.image) ||
+          typeof item.image.full !== 'string' ||
+          typeof item.gold.total !== 'number' ||
+          typeof item.gold.sell !== 'number' ||
+          !Array.isArray(item.tags) ||
+          !item.tags.every((tag: unknown) => typeof tag === 'string')
+        )
+          throw new DataDragonUnavailableError('Le catalogue des objets reçu est invalide.')
+        data.push({
+          id,
+          name: item.name,
+          description: item.description,
+          summary: item.plaintext,
+          icon: item.image.full,
+          totalGold: item.gold.total,
+          sellGold: item.gold.sell,
+          tags: item.tags,
+          from: Array.isArray(item.from)
+            ? item.from.filter((value): value is string => typeof value === 'string')
+            : [],
+          into: Array.isArray(item.into)
+            ? item.into.filter((value): value is string => typeof value === 'string')
+            : [],
+        })
+      }
+      if (!data.length)
+        throw new DataDragonUnavailableError('Le catalogue des objets reçu est vide.')
+      return { version, locale: LOCALE, data }
+    })
+  }
+
+  async function getRunes(): Promise<DataDragonRunes> {
+    const version = await getVersion()
+    return cached(`runes:${version}`, DATA_TTL, async () => {
+      const body = await fetchJson(`/cdn/${version}/data/${LOCALE}/runesReforged.json`)
+      if (!Array.isArray(body) || !body.length) {
+        throw new DataDragonUnavailableError('Le catalogue des runes reçu est invalide.')
+      }
+      const data: DataDragonRunePath[] = body.map((path: unknown) => {
+        if (
+          !isRecord(path) ||
+          typeof path.id !== 'number' ||
+          typeof path.name !== 'string' ||
+          typeof path.icon !== 'string' ||
+          !Array.isArray(path.slots)
+        ) {
+          throw new DataDragonUnavailableError('Le catalogue des runes reçu est invalide.')
+        }
+        const runes: DataDragonRune[] = path.slots.flatMap((slot: unknown, index: number) => {
+          if (!isRecord(slot) || !Array.isArray(slot.runes)) {
+            throw new DataDragonUnavailableError('Le catalogue des runes reçu est invalide.')
+          }
+          return slot.runes.map((rune: unknown) => {
+            if (
+              !isRecord(rune) ||
+              typeof rune.id !== 'number' ||
+              typeof rune.name !== 'string' ||
+              typeof rune.icon !== 'string' ||
+              typeof rune.shortDesc !== 'string' ||
+              typeof rune.longDesc !== 'string'
+            ) {
+              throw new DataDragonUnavailableError('Le catalogue des runes reçu est invalide.')
+            }
+            return {
+              id: rune.id,
+              name: rune.name,
+              icon: rune.icon,
+              shortDescription: rune.shortDesc,
+              longDescription: rune.longDesc,
+              keystone: index === 0,
+            }
+          })
+        })
+        return { id: path.id, name: path.name, icon: path.icon, runes }
+      })
+      return { version, locale: LOCALE, data }
+    })
+  }
+
+  return { getVersion, getChampions, getChampion, getItems, getRunes }
 }
 
 export const dataDragon = createDataDragonClient()

@@ -10,7 +10,7 @@
       <div class="league-hero__content">
         <p class="league-kicker">RIFTVISION · LEAGUE OF LEGENDS</p>
         <h2 id="league-home-title">Bienvenue dans<br /><span>la Faille.</span></h2>
-        <p>Votre espace League of Legends : suivez votre partie et découvrez les champions de la Faille.</p>
+        <p>Votre espace League of Legends : suivez votre partie et explorez les champions, objets et runes de la Faille.</p>
         <a class="league-cta" href="#league-of-legends">Suivre ma partie <span aria-hidden="true">↘</span></a>
       </div>
     </section>
@@ -32,9 +32,10 @@
         </NuxtLink>
         <article class="league-section">
           <span class="league-section__number" aria-hidden="true">02</span>
-          <span class="league-section__status">À venir</span>
+          <span class="league-section__status league-section__status--available">Disponible</span>
           <h3>Objets &amp; runes</h3>
           <p>Explorez les équipements et les runes de la Faille.</p>
+          <div class="league-section__links"><NuxtLink to="/league/items">Objets →</NuxtLink><NuxtLink to="/league/runes">Runes →</NuxtLink></div>
         </article>
         <article class="league-section">
           <span class="league-section__number" aria-hidden="true">03</span>
@@ -78,6 +79,9 @@
 .league-section__status--available { border-color: #66d5ad50; color: #8bdebd; }
 .league-section h3 { margin: 20px 0 8px; color: #f0f2f2; font: 700 23px/1.15 'Rajdhani', sans-serif; }
 .league-section p { margin: 0; color: #aebbc8; line-height: 1.55; }
+.league-section__links { display: flex; gap: 20px; margin-top: 12px; }
+.league-section__links a { color: #dfc58d; font: 700 14px 'Rajdhani', sans-serif; text-decoration: none; }
+.league-section__links a:hover { text-decoration: underline; }
 @media (max-width: 700px) {
   .league-hero { min-height: 340px; background-position: center, 62% center; }
   .league-hero__content { padding: 30px 24px; }

@@ -6,6 +6,8 @@
       <nav aria-label="Navigation League of Legends" class="encyclopedia-nav">
         <NuxtLink to="/league">League of Legends</NuxtLink>
         <NuxtLink to="/league/champions">Champions</NuxtLink>
+        <NuxtLink to="/league/items">Objets</NuxtLink>
+        <NuxtLink to="/league/runes">Runes</NuxtLink>
         <NuxtLink to="/league#league-of-legends">Suivre ma partie</NuxtLink>
       </nav>
     </header>
