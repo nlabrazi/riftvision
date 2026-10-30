@@ -10,7 +10,7 @@
       <div class="league-hero__content">
         <p class="league-kicker">RIFTVISION · LEAGUE OF LEGENDS</p>
         <h2 id="league-home-title">Bienvenue dans<br /><span>la Faille.</span></h2>
-        <p>Votre espace League of Legends : suivez votre partie dès maintenant et retrouvez bientôt les champions, objets et patchs.</p>
+        <p>Votre espace League of Legends : suivez votre partie et découvrez les champions de la Faille.</p>
         <a class="league-cta" href="#league-of-legends">Suivre ma partie <span aria-hidden="true">↘</span></a>
       </div>
     </section>
@@ -24,12 +24,12 @@
         <p>De nouveaux contenus arrivent progressivement.</p>
       </div>
       <div class="league-sections">
-        <article class="league-section">
+        <NuxtLink to="/league/champions" class="league-section league-section--link">
           <span class="league-section__number" aria-hidden="true">01</span>
-          <span class="league-section__status">À venir</span>
+          <span class="league-section__status league-section__status--available">Disponible</span>
           <h3>Champions</h3>
           <p>Recherchez un champion et découvrez ses compétences.</p>
-        </article>
+        </NuxtLink>
         <article class="league-section">
           <span class="league-section__number" aria-hidden="true">02</span>
           <span class="league-section__status">À venir</span>
@@ -71,8 +71,11 @@
 .league-explore__heading > p, .league-tracking-heading > p:last-child { margin: 10px 0 0; color: #aebbc8; line-height: 1.5; }
 .league-sections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .league-section { position: relative; min-height: 166px; padding: 20px; border: 1px solid #ffffff1a; border-radius: 6px; background: linear-gradient(145deg, #112132, #0a1521); }
+.league-section--link { display: block; color: inherit; text-decoration: none; }
+.league-section--link:hover, .league-section--link:focus-visible { border-color: #c8aa6e; }
 .league-section__number { color: #8f9eaa; font: 700 12px 'Rajdhani', sans-serif; letter-spacing: .12em; }
 .league-section__status { position: absolute; top: 18px; right: 18px; padding: 4px 8px; border: 1px solid #ffffff26; border-radius: 3px; color: #bdc8d0; font: 700 11px 'Rajdhani', sans-serif; }
+.league-section__status--available { border-color: #66d5ad50; color: #8bdebd; }
 .league-section h3 { margin: 20px 0 8px; color: #f0f2f2; font: 700 23px/1.15 'Rajdhani', sans-serif; }
 .league-section p { margin: 0; color: #aebbc8; line-height: 1.55; }
 @media (max-width: 700px) {

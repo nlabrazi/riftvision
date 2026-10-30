@@ -163,7 +163,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
 - [ ] **Encyclopédie League of Legends**
   - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
-  - [ ] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
+  - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
   - [ ] Ajouter les catalogues d'objets et de runes, puis une recherche commune aux contenus disponibles
   - [ ] Proposer les notes de patch et leur historique à partir d'une source autorisée, avec lien vers la publication officielle
   - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
@@ -190,6 +190,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
 ## Données Data Dragon
 
 Le serveur prépare l'encyclopédie League of Legends à partir des fichiers officiels [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Il utilise la dernière version disponible et la langue `fr_FR` :
+
+Depuis l'espace League of Legends, la rubrique **Champions** permet de rechercher un champion par nom ou titre, de filtrer par classe et d'ouvrir sa fiche. Les descriptions et statistiques affichées proviennent de la version Data Dragon indiquée sur la page.
 
 - `GET /api/ddragon/version` : version et langue utilisées.
 - `GET /api/ddragon/champions` : catalogue des champions.
