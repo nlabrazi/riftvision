@@ -45,6 +45,11 @@ function resetFilters() {
   selectedSet.value = 'all'
   selectedCost.value = 'all'
 }
+const { page, pageCount, start, end } = usePagination(
+  computed(() => units.value.length),
+  [search, selectedSet, selectedCost],
+  48,
+)
 </script>
 
 <template>
@@ -64,14 +69,15 @@ function resetFilters() {
         <label class="tft-field tft-field--select"><span>Coût</span><select v-model="selectedCost"><option value="all">Tous les coûts</option><option v-for="cost in costs" :key="cost" :value="String(cost)">{{ cost }} PO</option></select></label>
       </div>
       <p class="tft-count" role="status">{{ units.length }} unité{{ units.length > 1 ? 's' : '' }}</p>
-      <div v-if="units.length" class="tft-grid">
-        <NuxtLink v-for="unit in units" :key="unit.id" :to="`/tft/champions/${unit.id}`" class="tft-card">
+      <div v-if="units.length" id="catalog-results" tabindex="-1" class="tft-grid">
+        <NuxtLink v-for="unit in units.slice(start, end)" :key="unit.id" :to="`/tft/champions/${unit.id}`" class="tft-card">
           <img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`" alt="" loading="lazy" decoding="async" />
           <span><strong>{{ unit.name }}</strong><small>{{ unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}` }} · {{ unit.cost }} PO{{ unit.cost === 0 ? ' (donnée Riot)' : '' }}</small></span>
           <span class="tft-arrow" aria-hidden="true">↗</span>
         </NuxtLink>
       </div>
       <div v-else class="tft-notice"><p>Aucune unité ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="resetFilters">Effacer les filtres</button></div>
+      <ResultsPagination v-model:page="page" :page-count="pageCount" />
     </template>
   </TftLayout>
 </template>

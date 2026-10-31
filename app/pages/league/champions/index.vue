@@ -40,6 +40,11 @@ function resetFilters() {
   search.value = ''
   selectedRole.value = 'all'
 }
+const { page, pageCount, start, end } = usePagination(
+  computed(() => champions.value.length),
+  [search, selectedRole],
+  36,
+)
 </script>
 
 <template>
@@ -73,8 +78,8 @@ function resetFilters() {
         </label>
       </div>
       <p class="champion-count" role="status">{{ champions.length }} champion{{ champions.length > 1 ? 's' : '' }}</p>
-      <div v-if="champions.length" class="champion-grid">
-        <NuxtLink v-for="champion in champions" :key="champion.id" class="champion-card" :to="`/league/champions/${champion.id}`">
+      <div v-if="champions.length" id="catalog-results" tabindex="-1" class="champion-grid">
+        <NuxtLink v-for="champion in champions.slice(start, end)" :key="champion.id" class="champion-card" :to="`/league/champions/${champion.id}`">
           <img :src="`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champion.id}_0.jpg`" alt="" loading="lazy" decoding="async" />
           <span class="champion-card__copy"><strong>{{ champion.name }}</strong><span>{{ champion.title }}</span></span>
         </NuxtLink>
@@ -83,6 +88,7 @@ function resetFilters() {
         <p>Aucun champion ne correspond à votre recherche.</p>
         <button type="button" class="rv-button" @click="resetFilters">Effacer les filtres</button>
       </div>
+      <ResultsPagination v-model:page="page" :page-count="pageCount" />
     </template>
   </EncyclopediaLayout>
 </template>

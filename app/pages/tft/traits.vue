@@ -31,6 +31,11 @@ const traits = computed(() => {
     )
     .sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.id.localeCompare(b.id))
 })
+const { page, pageCount, start, end } = usePagination(
+  computed(() => traits.value.length),
+  [search, () => route.query.id],
+  48,
+)
 </script>
 
 <template>
@@ -46,13 +51,14 @@ const traits = computed(() => {
     <template v-else>
       <div class="traits-filters"><label class="traits-field"><span>Rechercher un trait</span><input v-model="search" type="search" placeholder="Nom ou identifiant" /></label></div>
       <p class="traits-count" role="status">{{ traits.length }} trait{{ traits.length > 1 ? 's' : '' }}</p>
-      <div v-if="traits.length" class="traits-grid">
-        <article v-for="trait in traits" :key="trait.id" class="traits-card">
+      <div v-if="traits.length" id="catalog-results" tabindex="-1" class="traits-grid">
+        <article v-for="trait in traits.slice(start, end)" :key="trait.id" class="traits-card">
           <img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-trait/${encodeURIComponent(trait.icon)}`" alt="" loading="lazy" decoding="async" />
           <div><strong>{{ trait.name }}</strong><small>{{ trait.id }}</small></div>
         </article>
       </div>
       <div v-else class="tft-notice"><p>Aucun trait ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="search = ''">Effacer la recherche</button></div>
+      <ResultsPagination v-model:page="page" :page-count="pageCount" />
     </template>
   </TftLayout>
 </template>

@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 const sourceUrl = 'https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
-const articles = Array.from({ length: 14 }, (_, index) => ({
+const articles = Array.from({ length: 31 }, (_, index) => ({
   title: `Notes de patch 18.${21 - index} de TFT`,
-  publishedAt: `2026-10-${String(20 - index).padStart(2, '0')}T18:00:00.000Z`,
+  publishedAt: new Date(Date.UTC(2026, 9, 31 - index, 18)).toISOString(),
   url: `https://teamfighttactics.leagueoflegends.com/fr-fr/news/game-updates/teamfight-tactics-patch-18-${21 - index}`,
 }))
 const champions = {
@@ -30,19 +30,20 @@ test('consulte les notes TFT, recherche et ouvre les liens officiels', async ({ 
   await openTft(page)
   await expect(page).toHaveURL(/\/tft\/patch-notes$/)
   await expect(page.getByRole('heading', { name: 'Notes de patch.' })).toBeVisible()
-  await expect(page.locator('.patch-card')).toHaveCount(12)
+  await expect(page.locator('.patch-card')).toHaveCount(16)
   await expect(page.getByText('Dernier patch publié')).toHaveCount(1)
   const first = page.getByRole('link', { name: /Lire les notes officielles.*18.21/ })
   await expect(first).toHaveAttribute('href', articles[0].url)
   await expect(first).toHaveAttribute('target', '_blank')
-  await page.getByRole('button', { name: 'Afficher plus de notes' }).click()
-  await expect(page.locator('.patch-card')).toHaveCount(14)
+  await page.getByRole('button', { name: 'Suivant →' }).click()
+  await expect(page.locator('.patch-card')).toHaveCount(15)
+  await expect(page.getByText('Page 2 sur 2')).toBeVisible()
   await page.getByLabel('Rechercher un patch').fill('18.10')
   await expect(page.locator('.patch-card')).toHaveCount(1)
   await page.getByLabel('Rechercher un patch').fill('absent')
   await expect(page.getByText('Aucune note ne correspond à votre recherche.')).toBeVisible()
   await page.getByRole('button', { name: 'Effacer la recherche' }).click()
-  await expect(page.locator('.patch-card')).toHaveCount(12)
+  await expect(page.locator('.patch-card')).toHaveCount(16)
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,

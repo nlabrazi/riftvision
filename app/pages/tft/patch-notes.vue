@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import type { PatchNotesResponse } from '#shared/types/patchNotes'
 
 useHead({ title: 'Notes de patch TFT — RiftVision' })
 const sourceUrl = 'https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
 const { data, status, error, refresh } = await useFetch<PatchNotesResponse>('/api/tft/patch-notes')
 const search = ref('')
-const visibleCount = ref(12)
 const articles = computed(() => {
   const query = search.value.toLocaleLowerCase('fr-FR').trim()
   return (data.value?.articles ?? []).filter((article) =>
     article.title.toLocaleLowerCase('fr-FR').includes(query),
   )
 })
-watch(search, () => {
-  visibleCount.value = 12
-})
+const { page, pageCount, start, end } = usePagination(
+  computed(() => articles.value.length),
+  [search],
+  24,
+)
 function formatDate(date: string) {
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(
     new Date(date),
@@ -39,15 +40,15 @@ function formatDate(date: string) {
     <template v-else>
       <div class="patch-toolbar"><label for="patch-search">Rechercher un patch</label><input id="patch-search" v-model="search" type="search" placeholder="Ex. 18.5" /></div>
       <p class="patch-count" role="status">{{ articles.length }} note{{ articles.length > 1 ? 's' : '' }} de patch</p>
-      <div v-if="articles.length" class="patch-list">
-        <article v-for="article in articles.slice(0, visibleCount)" :key="article.url" class="patch-card">
+      <div v-if="articles.length" id="catalog-results" tabindex="-1" class="patch-list">
+        <article v-for="article in articles.slice(start, end)" :key="article.url" class="patch-card">
           <div class="patch-card__date"><time :datetime="article.publishedAt">{{ formatDate(article.publishedAt) }}</time><span v-if="article.url === data.articles[0]?.url">Dernier patch publié</span></div>
           <h2>{{ article.title }}</h2>
           <a :href="article.url" target="_blank" rel="noopener noreferrer">Lire les notes officielles ↗ <span class="sr-only">pour {{ article.title }} (nouvel onglet)</span></a>
         </article>
       </div>
       <div v-else class="tft-notice"><p>Aucune note ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="search = ''">Effacer la recherche</button></div>
-      <button v-if="articles.length > visibleCount" type="button" class="rv-button patch-more" @click="visibleCount += 12">Afficher plus de notes</button>
+      <ResultsPagination v-model:page="page" :page-count="pageCount" />
     </template>
   </TftLayout>
 </template>
@@ -72,6 +73,5 @@ function formatDate(date: string) {
 .patch-card h2 { margin: 18px 0; color: #f0f2f2; font: 700 21px/1.2 'Rajdhani', sans-serif; }
 .patch-card a { margin-top: auto; color: #dfc58d; font: 700 14px 'Rajdhani', sans-serif; text-decoration: none; }
 .patch-card a:hover { text-decoration: underline; }
-.patch-more { margin-top: 20px; }
 @media (max-width: 600px) { .patch-heading { margin-top: 30px; } .patch-fallback { display: block; margin: 16px 0 0; } }
 </style>

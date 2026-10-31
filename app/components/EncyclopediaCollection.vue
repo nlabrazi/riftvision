@@ -104,6 +104,11 @@ function resetFilters() {
   search.value = ''
   filter.value = 'all'
 }
+const { page, pageCount, start, end } = usePagination(
+  computed(() => filteredItems.value.length),
+  [search, filter],
+  48,
+)
 </script>
 
 <template>
@@ -129,8 +134,8 @@ function resetFilters() {
         </label>
       </div>
       <p class="collection-count" role="status">{{ isItems ? filteredItems.length : filteredRunes.length }} {{ isItems ? 'objet(s)' : 'rune(s)' }}</p>
-      <div v-if="isItems && filteredItems.length" class="collection-grid">
-        <NuxtLink v-for="item in filteredItems" :key="item.id" :to="`${basePath}/${item.id}`" class="collection-card">
+      <div v-if="isItems && filteredItems.length" id="catalog-results" tabindex="-1" class="collection-grid">
+        <NuxtLink v-for="item in filteredItems.slice(start, end)" :key="item.id" :to="`${basePath}/${item.id}`" class="collection-card">
           <img :src="itemImage(item.icon)" alt="" loading="lazy" /><span><strong>{{ item.name }}</strong><small>{{ item.totalGold }} PO</small></span><span class="collection-arrow" aria-hidden="true">↗</span>
         </NuxtLink>
       </div>
@@ -140,6 +145,7 @@ function resetFilters() {
         </NuxtLink>
       </div>
       <div v-else class="encyclopedia-notice"><p>Aucun résultat ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="resetFilters">Effacer les filtres</button></div>
+      <ResultsPagination v-if="isItems" v-model:page="page" :page-count="pageCount" />
     </template>
     <template v-else-if="selectedItem || selectedRune">
       <div v-if="selectedItem" class="collection-detail">

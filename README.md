@@ -167,7 +167,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Ajouter les catalogues d'objets et de runes avec recherche, filtres et fiches
   - [x] Ajouter une recherche commune aux champions, objets et runes disponibles
   - [x] Proposer les notes de patch et leur historique, avec liens vers les publications officielles
-  - [ ] Étudier les builds, classements, taux de victoire et affrontements : sources, collecte, échantillons et conditions d'accès à valider avant implémentation
+  - [x] Étudier les sources et les contraintes des builds, classements, taux de victoire et affrontements : [étude de faisabilité](docs/etude-statistiques-lol.md)
+  - [ ] Définir et valider l'échantillon, les conditions d'accès et la méthode de collecte avant d'implémenter des statistiques
 - [ ] **Encyclopédies des autres jeux**
   - [x] Teamfight Tactics : catalogue des unités, recherche, filtres et fiches à partir des données Data Dragon disponibles
   - [x] Teamfight Tactics : catalogue des traits et recherche à partir des données Data Dragon disponibles

@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 const sourceUrl = 'https://worldofwarcraft.blizzard.com/fr-fr/content-update-notes'
-const articles = Array.from({ length: 14 }, (_, index) => ({
+const articles = Array.from({ length: 31 }, (_, index) => ({
   title: `Notes de mise à jour ${20 - index}`,
-  publishedAt: `2026-10-${String(20 - index).padStart(2, '0')}T13:00:00.000Z`,
+  publishedAt: new Date(Date.UTC(2026, 9, 31 - index, 18)).toISOString(),
   url: `https://worldofwarcraft.blizzard.com/fr-fr/news/${100 + index}/notes`,
 }))
 
@@ -30,19 +30,20 @@ test('consulte les notes WoW, recherche et ouvre les liens officiels', async ({ 
   await expect(
     page.getByText('Certains correctifs concernent aussi WoW Classic.', { exact: false }),
   ).toBeVisible()
-  await expect(page.locator('.patch-card')).toHaveCount(12)
+  await expect(page.locator('.patch-card')).toHaveCount(16)
   await expect(page.getByRole('link', { name: /Lire les notes officielles.*20/ })).toHaveAttribute(
     'href',
     articles[0].url,
   )
-  await page.getByRole('button', { name: 'Afficher plus de notes' }).click()
-  await expect(page.locator('.patch-card')).toHaveCount(14)
+  await page.getByRole('button', { name: 'Suivant →' }).click()
+  await expect(page.locator('.patch-card')).toHaveCount(15)
+  await expect(page.getByText('Page 2 sur 2')).toBeVisible()
   await page.getByLabel('Rechercher un patch').fill('mise à jour 9')
   await expect(page.locator('.patch-card')).toHaveCount(1)
   await page.getByLabel('Rechercher un patch').fill('absent')
   await expect(page.getByText('Aucune note ne correspond à votre recherche.')).toBeVisible()
   await page.getByRole('button', { name: 'Effacer la recherche' }).click()
-  await expect(page.locator('.patch-card')).toHaveCount(12)
+  await expect(page.locator('.patch-card')).toHaveCount(16)
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,

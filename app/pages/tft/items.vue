@@ -30,6 +30,11 @@ const objets = computed(() => {
     )
     .sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.id.localeCompare(b.id))
 })
+const { page, pageCount, start, end } = usePagination(
+  computed(() => objets.value.length),
+  [search, () => route.query.id],
+  48,
+)
 </script>
 
 <template>
@@ -45,13 +50,14 @@ const objets = computed(() => {
     <template v-else>
       <div class="objets-filters"><label class="objets-field"><span>Rechercher un objet</span><input v-model="search" type="search" placeholder="Nom ou identifiant" /></label></div>
       <p class="objets-count" role="status">{{ objets.length }} objet{{ objets.length > 1 ? 's' : '' }}</p>
-      <div v-if="objets.length" class="objets-grid">
-        <article v-for="objet in objets" :key="objet.id" class="objets-card">
+      <div v-if="objets.length" id="catalog-results" tabindex="-1" class="objets-grid">
+        <article v-for="objet in objets.slice(start, end)" :key="objet.id" class="objets-card">
           <img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-item/${encodeURIComponent(objet.icon)}`" alt="" loading="lazy" decoding="async" />
           <div><strong>{{ objet.name }}</strong><small>{{ objet.id }}</small></div>
         </article>
       </div>
       <div v-else class="tft-notice"><p>Aucun objet ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="search = ''">Effacer la recherche</button></div>
+      <ResultsPagination v-model:page="page" :page-count="pageCount" />
     </template>
   </TftLayout>
 </template>
