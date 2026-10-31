@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { WowRacesResponse } from '#shared/types/wow'
+import { wowRaceArt } from '~/utils/wowRaceArt'
 
 useHead({ title: 'Races WoW — RiftVision' })
 const { data, status, error, refresh } = await useFetch<WowRacesResponse>('/api/wow/races')
@@ -52,7 +53,7 @@ function resetFilters() {
       <p class="race-count" role="status">{{ races.length }} race{{ races.length > 1 ? 's' : '' }}</p>
       <div v-if="races.length" class="race-grid">
         <NuxtLink v-for="race in races" :key="race.id" :to="`/wow/races/${race.id}`" class="race-card">
-          <div class="race-art" aria-hidden="true"></div><div class="race-copy"><strong>{{ race.name }}</strong><span>{{ race.faction?.name ?? 'Faction non renseignée' }}<template v-if="race.allied === true"> · Race alliée</template></span></div><span class="race-arrow" aria-hidden="true">↗</span>
+          <div class="race-art" aria-hidden="true"><img v-if="wowRaceArt(race.id)" :src="wowRaceArt(race.id)!" alt="" loading="lazy" decoding="async" /></div><div class="race-copy"><strong>{{ race.name }}</strong><span>{{ race.faction?.name ?? 'Faction non renseignée' }}<template v-if="race.allied === true"> · Race alliée</template></span></div><span class="race-arrow" aria-hidden="true">↗</span>
         </NuxtLink>
       </div>
       <div v-else class="wow-notice"><p>Aucune race ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="resetFilters">Effacer les filtres</button></div>
@@ -77,7 +78,10 @@ function resetFilters() {
 .race-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .race-card { position: relative; overflow: hidden; border: 1px solid #ffffff1a; border-radius: 6px; background: #0c1824; color: #f0f2f2; text-decoration: none; }
 .race-card:hover, .race-card:focus-visible { border-color: #c8aa6e; }
-.race-art { height: 100px; background: linear-gradient(90deg, #07111d99, #07111d44), url('/assets/images/game-wow.webp') center 40% / cover; }
+.race-art { height: 180px; overflow: hidden; background: radial-gradient(circle at 50% 35%, #644c3766, transparent 70%), linear-gradient(145deg, #192b3b, #0a1522); }
+.race-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; transition: transform .25s ease; }
+.race-card:hover .race-art img, .race-card:focus-visible .race-art img { transform: scale(1.04); }
+@media (prefers-reduced-motion: reduce) { .race-art img { transition: none; } .race-card:hover .race-art img, .race-card:focus-visible .race-art img { transform: none; } }
 .race-copy { display: flex; flex-direction: column; gap: 4px; padding: 14px 34px 14px 14px; }
 .race-copy strong { font: 700 20px 'Rajdhani', sans-serif; }
 .race-copy span { color: #b7c2cb; font-size: 13px; }

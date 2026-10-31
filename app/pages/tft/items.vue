@@ -75,8 +75,8 @@ const { page, pageCount, start, end } = usePagination(
 .objets-field input::placeholder { color: #9caab5; }
 .objets-count { margin: 22px 0 12px; }
 .objets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-.objets-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #ffffff1a; border-radius: 6px; background: #0c1824; color: #f0f2f2; }
-.objets-card img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border-radius: 4px; }
+.objets-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #c8aa6e33; border-radius: 6px; background: linear-gradient(125deg, #182b3d, #0a1724); color: #f0f2f2; }
+.objets-card img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border: 1px solid #c8aa6e55; border-radius: 4px; }
 .objets-card div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .objets-card strong { font: 700 17px 'Rajdhani', sans-serif; }
 .objets-card small { color: #b7c2cb; line-height: 1.3; overflow-wrap: anywhere; }

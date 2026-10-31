@@ -34,6 +34,21 @@ async function openHome(page: import('@playwright/test').Page) {
 test('explore les classes Retail et les spécialisations', async ({ page }) => {
   await page.route('**/api/wow/classes', (route) => route.fulfill({ json: catalog }))
   await page.route('**/api/wow/classes/8', (route) => route.fulfill({ json: detail }))
+  await page.route('**/api/wow/specializations/*', (route) =>
+    route.fulfill({
+      json: {
+        locale: 'fr_FR',
+        edition: 'retail',
+        data: {
+          id: Number(new URL(route.request().url()).pathname.split('/').pop()),
+          name: 'Spécialisation',
+          icon: 'https://render.worldofwarcraft.com/spec.png',
+          role: 'Dégâts',
+          descriptionMale: 'Une spécialisation magique.',
+        },
+      },
+    }),
+  )
   await openHome(page)
   await page.locator('.game-card--wow').click()
   await expect(page).toHaveURL(/\/wow$/)
@@ -45,8 +60,15 @@ test('explore les classes Retail et les spécialisations', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Mage' })).toBeVisible()
   await expect(page.getByText('Ressource principale : Mana')).toBeVisible()
   await expect(page.getByRole('listitem').filter({ hasText: 'Arcanes' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Arcanes/ }).locator('img')).toHaveAttribute(
+    'src',
+    'https://render.worldofwarcraft.com/spec.png',
+  )
+  await expect(page.getByRole('link', { name: /Arcanes/ })).toContainText('Dégâts')
   await expect(page.getByRole('listitem').filter({ hasText: 'Feu' })).toBeVisible()
+  await expect(page.locator('.spec-list')).toHaveCSS('grid-template-columns', /\S+ \S+ \S+/)
   await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('.spec-list')).toHaveCSS('grid-template-columns', /^\S+$/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,
   )

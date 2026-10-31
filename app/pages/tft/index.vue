@@ -70,8 +70,8 @@ const { page, pageCount, start, end } = usePagination(
       </div>
       <p class="tft-count" role="status">{{ units.length }} unité{{ units.length > 1 ? 's' : '' }}</p>
       <div v-if="units.length" id="catalog-results" tabindex="-1" class="tft-grid">
-        <NuxtLink v-for="unit in units.slice(start, end)" :key="unit.id" :to="`/tft/champions/${unit.id}`" class="tft-card">
-          <img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`" alt="" loading="lazy" decoding="async" />
+        <NuxtLink v-for="unit in units.slice(start, end)" :key="unit.id" :to="`/tft/champions/${unit.id}`" class="tft-card" :data-cost="unit.cost">
+          <span class="tft-card__art"><img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`" alt="" loading="lazy" decoding="async" /></span>
           <span><strong>{{ unit.name }}</strong><small>{{ unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}` }} · {{ unit.cost }} PO{{ unit.cost === 0 ? ' (donnée Riot)' : '' }}</small></span>
           <span class="tft-arrow" aria-hidden="true">↗</span>
         </NuxtLink>
@@ -95,13 +95,16 @@ const { page, pageCount, start, end } = usePagination(
 .tft-field input, .tft-field select { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid #394957; border-radius: 4px; background: #07111b; color: #edf0f4; font: 14px 'Segoe UI', sans-serif; }
 .tft-field input::placeholder { color: #9caab5; }
 .tft-count { margin: 22px 0 12px; }
-.tft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-.tft-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #ffffff1a; border-radius: 6px; background: #0c1824; color: #f0f2f2; text-decoration: none; }
-.tft-card:hover, .tft-card:focus-visible { border-color: #c8aa6e; background: #122333; }
-.tft-card img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border-radius: 4px; }
-.tft-card > span:not(.tft-arrow) { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
-.tft-card strong { font: 700 17px 'Rajdhani', sans-serif; }
-.tft-card small { color: #b7c2cb; line-height: 1.3; }
-.tft-arrow { color: #d6bb83; }
+.tft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); gap: 12px; }
+.tft-card { --cost-color: #9daeb6; display: flex; align-items: center; gap: 14px; min-width: 0; min-height: 118px; padding: 10px; border: 1px solid #ffffff1c; border-radius: 7px; background: linear-gradient(125deg, #1b2e3f, #0a1724); color: #f0f2f2; text-decoration: none; transition: border-color .2s, transform .2s; }
+.tft-card[data-cost="2"] { --cost-color: #5dc796; } .tft-card[data-cost="3"] { --cost-color: #5ca9e8; } .tft-card[data-cost="4"] { --cost-color: #c483e1; } .tft-card[data-cost="5"] { --cost-color: #e6bd69; }
+.tft-card:hover, .tft-card:focus-visible { border-color: var(--cost-color); transform: translateY(-2px); }
+.tft-card__art { display: grid; place-items: center; overflow: hidden; width: 108px; height: 62px; flex: 0 0 108px; border: 1px solid var(--cost-color); border-radius: 5px; background: #101b28; }
+.tft-card__art img { width: 100%; height: 100%; object-fit: contain; }
+.tft-card > span:not(.tft-card__art):not(.tft-arrow) { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 7px; }
+.tft-card strong { color: #f2f2ef; font: 700 20px/1.1 'Rajdhani', sans-serif; }
+.tft-card small { color: #c0cbd3; line-height: 1.4; }
+.tft-arrow { color: var(--cost-color); }
+@media (prefers-reduced-motion: reduce) { .tft-card { transition: none; } .tft-card:hover, .tft-card:focus-visible { transform: none; } }
 @media (max-width: 600px) { .tft-heading { margin-top: 30px; } .tft-field--select { flex: 1 1 140px; } .tft-grid { grid-template-columns: 1fr; } }
 </style>

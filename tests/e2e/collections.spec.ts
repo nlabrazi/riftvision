@@ -93,8 +93,9 @@ test('recherche des objets, filtre et suit les composants', async ({ page }) => 
   await page.getByLabel('Rechercher un objet').fill('berserker')
   await page.getByRole('link', { name: /Jambières du berserker/ }).click()
   await expect(page.getByRole('heading', { name: 'Jambières du berserker' })).toBeVisible()
-  await expect(page.getByText('1100 PO')).toBeVisible()
-  await expect(page.getByText('Vitesse d’attaque\nVitesse de déplacement')).toBeVisible()
+  await expect(page.getByRole('complementary').getByText('1100 PO')).toBeVisible()
+  await expect(page.locator('.item-stat-list')).toContainText('Vitesse d’attaque')
+  await expect(page.locator('.item-stat-list')).toContainText('Vitesse de déplacement')
   await expect(
     page.getByText(/Certains composants ou améliorations ne sont pas affichés/),
   ).toBeVisible()
@@ -125,4 +126,39 @@ test('filtre les runes par voie et affiche leur description', async ({ page }) =
   ).toBeVisible()
   await page.getByRole('link', { name: '← Retour aux runes' }).click()
   await expect(page.getByRole('heading', { name: 'Les runes.' })).toBeVisible()
+})
+
+test('présente les statistiques et la fabrication avec les visuels officiels', async ({ page }) => {
+  const mejai = {
+    id: '3041',
+    name: 'Voleur d’âmes de Mejai',
+    icon: '3041.png',
+    summary: 'Puissance',
+    description:
+      '<mainText><stats><attention>+20</attention> puissance<br><attention>+100</attention> PV</stats><br><passive>Gloire</passive><br>Participer à une élimination.</mainText>',
+    totalGold: 1500,
+    sellGold: 1050,
+    tags: ['SpellDamage'],
+    from: ['1082'],
+    into: [],
+  }
+  const seal = { ...items[0], id: '1082', name: 'Sceau noir', icon: '1082.png', into: ['3041'] }
+  await page.route('**/api/ddragon/items', (route) =>
+    route.fulfill({ json: { version, locale: 'fr_FR', data: [mejai, seal] } }),
+  )
+  await openLeague(page)
+  await page.getByRole('link', { name: 'Objets →' }).click()
+  await page.getByRole('link', { name: /Voleur d’âmes de Mejai/ }).click()
+  await expect(page.getByText('+20 puissance')).toBeVisible()
+  await expect(page.getByText('+100 PV')).toBeVisible()
+  await expect(page.locator('.item-stat-list img')).toHaveCount(2)
+  await expect(page.getByText('Participer à une élimination.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sceau noir' }).locator('img')).toHaveAttribute(
+    'src',
+    /1082\.png$/,
+  )
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  )
 })

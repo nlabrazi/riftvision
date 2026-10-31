@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-const classes = { locale: 'fr_FR', edition: 'retail', data: [{ id: 8, name: 'Mage', icon: null }] }
+const classes = {
+  locale: 'fr_FR',
+  edition: 'retail',
+  data: [{ id: 8, name: 'Mage', icon: 'https://render.worldofwarcraft.com/mage.png' }],
+}
 const races = {
   locale: 'fr_FR',
   edition: 'retail',
@@ -48,12 +52,24 @@ test('filtre les races par faction puis consulte les classes disponibles', async
   await page.getByRole('link', { name: 'Races WoW', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les races WoW.' })).toBeVisible()
   await expect(page.getByText('3 races', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Humain.*Alliance/ }).locator('img')).toHaveAttribute(
+    'src',
+    /blz-contentstack-images.*Human.png/,
+  )
   await page.getByRole('combobox', { name: 'Faction', exact: true }).selectOption('ALLIANCE')
   await page.getByLabel('Rechercher une race').fill('humain')
   await expect(page.getByText('1 race', { exact: true })).toBeVisible()
   await page.getByRole('link', { name: /Humain.*Alliance/ }).click()
   await expect(page.getByRole('heading', { name: 'Humain' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Mage/ })).toHaveAttribute('href', '/wow/classes/8')
+  await expect(page.getByRole('link', { name: /Mage/ }).locator('img')).toHaveAttribute(
+    'src',
+    'https://render.worldofwarcraft.com/mage.png',
+  )
+  await expect(page.locator('.race-portrait')).toHaveAttribute(
+    'src',
+    /blz-contentstack-images.*Human.png/,
+  )
   await expect(page.getByText('Aventurier')).toBeVisible()
   await expect(page.getByRole('link', { name: /Aventurier/ })).toHaveCount(0)
   await page.setViewportSize({ width: 390, height: 844 })

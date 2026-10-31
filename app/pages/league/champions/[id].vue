@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { DataDragonChampionDetails } from '#shared/types/dataDragon'
+import { lolStatIcon } from '~/utils/lolStats'
 
 const route = useRoute()
 const id = computed(() => String(route.params.id ?? ''))
@@ -53,7 +54,7 @@ const statistics = computed(() => {
     { key: 'attackrange', label: 'Portée d’attaque' },
   ].flatMap(({ key, label }) =>
     typeof stats[key] === 'number' && Number.isFinite(stats[key])
-      ? [{ label, value: stats[key] }]
+      ? [{ label, value: stats[key], icon: lolStatIcon(key) }]
       : [],
   )
 })
@@ -109,7 +110,7 @@ const roles: Record<string, string> = {
         <aside class="stats-panel" aria-labelledby="stats-title">
           <p class="encyclopedia-kicker">NIVEAU 1</p>
           <h2 id="stats-title">Statistiques de base</h2>
-          <dl v-if="statistics.length"><div v-for="stat in statistics" :key="stat.label"><dt>{{ stat.label }}</dt><dd>{{ stat.value }}</dd></div></dl>
+          <dl v-if="statistics.length"><div v-for="stat in statistics" :key="stat.label"><dt><img v-if="stat.icon" :src="stat.icon" alt="" />{{ stat.label }}</dt><dd>{{ stat.value }}</dd></div></dl>
           <p v-else>Statistiques indisponibles pour cette version.</p>
         </aside>
       </div>
@@ -139,6 +140,8 @@ const roles: Record<string, string> = {
 .stats-panel h2 { font-size: 24px; }
 .stats-panel dl { margin: 0; }
 .stats-panel dl div { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-top: 1px solid #ffffff14; color: #becad3; }
+.stats-panel dt { display: flex; align-items: center; gap: 9px; }
+.stats-panel dt img { width: 20px; height: 20px; object-fit: contain; }
 .stats-panel dd { margin: 0; color: #f0e6d2; font-weight: 600; }
 .stats-panel > p:last-child { color: #becad3; }
 @media (max-width: 800px) { .champion-detail-grid { grid-template-columns: 1fr; gap: 0; } .stats-panel { margin-top: 28px; } }
