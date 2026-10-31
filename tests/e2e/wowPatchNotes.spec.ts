@@ -4,6 +4,13 @@ const sourceUrl = 'https://worldofwarcraft.blizzard.com/fr-fr/content-update-not
 const articles = Array.from({ length: 31 }, (_, index) => ({
   title: `Notes de mise à jour ${20 - index}`,
   publishedAt: new Date(Date.UTC(2026, 9, 31 - index, 18)).toISOString(),
+  description: index === 0 ? 'Un nouveau personnage rejoint la partie.' : null,
+  imageUrl:
+    index === 0
+      ? '/assets/images/game-wow.webp'
+      : index === 1
+        ? '/assets/images/visuel-absent.png'
+        : null,
   url: `https://worldofwarcraft.blizzard.com/fr-fr/news/${100 + index}/notes`,
 }))
 
@@ -31,6 +38,14 @@ test('consulte les notes WoW, recherche et ouvre les liens officiels', async ({ 
     page.getByText('Certains correctifs concernent aussi WoW Classic.', { exact: false }),
   ).toBeVisible()
   await expect(page.locator('.patch-card')).toHaveCount(16)
+  await expect(page.locator('.patch-card').first().locator('img')).toHaveAttribute(
+    'src',
+    '/assets/images/game-wow.webp',
+  )
+  await expect(page.locator('.patch-card').first()).toContainText(
+    'Un nouveau personnage rejoint la partie.',
+  )
+  await expect(page.locator('.patch-card').nth(1).getByText('Visuel indisponible')).toBeVisible()
   await expect(page.getByRole('link', { name: /Lire les notes officielles.*20/ })).toHaveAttribute(
     'href',
     articles[0].url,

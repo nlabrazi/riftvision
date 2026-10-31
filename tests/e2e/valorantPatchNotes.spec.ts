@@ -4,6 +4,13 @@ const sourceUrl = 'https://playvalorant.com/fr-fr/news/tags/patch-notes/'
 const articles = Array.from({ length: 31 }, (_, index) => ({
   title: `Notes de patch 13.${21 - index} VALORANT`,
   publishedAt: new Date(Date.UTC(2026, 9, 31 - index, 18)).toISOString(),
+  description: index === 0 ? 'Un nouveau personnage rejoint la partie.' : null,
+  imageUrl:
+    index === 0
+      ? '/assets/images/game-wow.webp'
+      : index === 1
+        ? '/assets/images/visuel-absent.png'
+        : null,
   url: `https://playvalorant.com/fr-fr/news/game-updates/valorant-patch-notes-13-${21 - index}`,
 }))
 const agents = {
@@ -40,6 +47,14 @@ test('consulte les notes Valorant, recherche et ouvre les liens officiels', asyn
   await expect(page).toHaveURL(/\/valorant\/patch-notes$/)
   await expect(page.getByRole('heading', { name: 'Notes de patch.' })).toBeVisible()
   await expect(page.locator('.patch-card')).toHaveCount(16)
+  await expect(page.locator('.patch-card').first().locator('img')).toHaveAttribute(
+    'src',
+    '/assets/images/game-wow.webp',
+  )
+  await expect(page.locator('.patch-card').first()).toContainText(
+    'Un nouveau personnage rejoint la partie.',
+  )
+  await expect(page.locator('.patch-card').nth(1).getByText('Visuel indisponible')).toBeVisible()
   await expect(page.getByText('Dernier patch publié')).toHaveCount(1)
   const first = page.getByRole('link', { name: /Lire les notes officielles.*13.21/ })
   await expect(first).toHaveAttribute('href', articles[0].url)

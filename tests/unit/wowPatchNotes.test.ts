@@ -31,10 +31,35 @@ describe('archive des mises à jour WoW', () => {
     expect(result.articles).toEqual([
       {
         title: 'Correctifs',
+        description: null,
+        imageUrl: null,
         publishedAt: '2026-10-07T00:50:00.000Z',
         url: 'https://worldofwarcraft.blizzard.com/fr-fr/news/24296142/correctifs-6-octobre-2026',
       },
     ])
+  })
+
+  it('conserve la vignette et le résumé Blizzard sans faire confiance à un domaine externe', () => {
+    const result = parseWowPatchNotesPage(
+      page(1, 1, [
+        {
+          ...article('Correctifs', '/news/1/correctifs'),
+          description: 'Ajustements <b>de classes</b>.',
+          image: { url: '//bnetcmsus-a.akamaihd.net/cms/blog_thumbnail/image.png' },
+        },
+        {
+          ...article('Ancien', '/news/2/ancien'),
+          description: '',
+          image: { url: 'https://evil.example/image.png' },
+        },
+      ]),
+      1,
+    )
+    expect(result.articles[0]).toMatchObject({
+      description: 'Ajustements de classes.',
+      imageUrl: 'https://bnetcmsus-a.akamaihd.net/cms/blog_thumbnail/image.png',
+    })
+    expect(result.articles[1]).toMatchObject({ description: null, imageUrl: null })
   })
 
   it('rejette les données absentes, malformées ou une pagination incohérente', () => {

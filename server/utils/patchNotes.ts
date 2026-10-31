@@ -1,4 +1,5 @@
 import type { PatchNoteLink, PatchNotesResponse } from '#shared/types/patchNotes'
+import { patchNoteDescription, patchNoteImage } from './patchNoteMedia'
 
 export const PATCH_NOTES_SOURCE = 'https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
 export const TFT_PATCH_NOTES_SOURCE =
@@ -89,7 +90,21 @@ function parseRiotPatchNotes(html: string, config: typeof LOL_CONFIG): PatchNote
       )
         continue
       seen.add(url.pathname.replace(/\/+$/, ''))
-      articles.push({ title: item.title, publishedAt: item.publishedAt, url: url.href })
+      const media =
+        isRecord(item.imageMedia) && item.imageMedia.type === 'image'
+          ? item.imageMedia
+          : isRecord(item.media) && item.media.type === 'image'
+            ? item.media
+            : null
+      articles.push({
+        title: item.title,
+        publishedAt: item.publishedAt,
+        url: url.href,
+        description: isRecord(item.description)
+          ? patchNoteDescription(item.description.body)
+          : null,
+        imageUrl: patchNoteImage(media?.url, 'cmsassets.rgpub.io'),
+      })
     }
   }
   if (!articles.length)

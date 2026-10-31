@@ -4,6 +4,13 @@ const sourceUrl = 'https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
 const articles = Array.from({ length: 31 }, (_, index) => ({
   title: `Notes de patch 26.${21 - index}`,
   publishedAt: new Date(Date.UTC(2026, 9, 31 - index, 18)).toISOString(),
+  description: index === 0 ? 'Un nouveau personnage rejoint la partie.' : null,
+  imageUrl:
+    index === 0
+      ? '/assets/images/game-wow.webp'
+      : index === 1
+        ? '/assets/images/visuel-absent.png'
+        : null,
   url: `https://www.leagueoflegends.com/fr-fr/news/game-updates/patch-26-${21 - index}-notes`,
 }))
 
@@ -25,10 +32,21 @@ test('consulte les notes officielles et recherche dans l’historique', async ({
   await expect(page).toHaveURL(/\/league\/patch-notes$/)
   await expect(page.getByRole('heading', { name: 'Notes de patch.' })).toBeVisible()
   await expect(page.locator('.patch-card')).toHaveCount(16)
+  await expect(page.locator('.patch-card').first().locator('img')).toHaveAttribute(
+    'src',
+    '/assets/images/game-wow.webp',
+  )
+  await expect(page.locator('.patch-card').first()).toContainText(
+    'Un nouveau personnage rejoint la partie.',
+  )
+  await expect(page.locator('.patch-card').nth(1).getByText('Visuel indisponible')).toBeVisible()
   await expect(page.getByText('Dernier patch publié')).toHaveCount(1)
   const firstLink = page.getByRole('link', { name: /Lire les notes officielles.*26.21/ })
   await expect(firstLink).toHaveAttribute('href', articles[0].url)
   await expect(firstLink).toHaveAttribute('target', '_blank')
+  await page.getByLabel('Rechercher un patch').fill('personnage')
+  await expect(page.locator('.patch-card')).toHaveCount(1)
+  await page.getByLabel('Rechercher un patch').fill('')
   await page.getByRole('button', { name: 'Suivant →' }).click()
   await expect(page.locator('.patch-card')).toHaveCount(15)
   await expect(page.getByText('Page 2 sur 2')).toBeVisible()

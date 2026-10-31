@@ -11,7 +11,7 @@ const search = ref('')
 const articles = computed(() => {
   const query = search.value.toLocaleLowerCase('fr-FR').trim()
   return (data.value?.articles ?? []).filter((article) =>
-    article.title.toLocaleLowerCase('fr-FR').includes(query),
+    `${article.title} ${article.description ?? ''}`.toLocaleLowerCase('fr-FR').includes(query),
   )
 })
 const { page, pageCount, start, end } = usePagination(
@@ -19,11 +19,6 @@ const { page, pageCount, start, end } = usePagination(
   [search],
   24,
 )
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(
-    new Date(date),
-  )
-}
 </script>
 
 <template>
@@ -43,11 +38,7 @@ function formatDate(date: string) {
       <div class="patch-toolbar"><label for="patch-search">Rechercher un patch</label><input id="patch-search" v-model="search" type="search" placeholder="Ex. 13.09" /></div>
       <p class="patch-count" role="status">{{ articles.length }} note{{ articles.length > 1 ? 's' : '' }} de patch</p>
       <div v-if="articles.length" id="catalog-results" tabindex="-1" class="patch-list">
-        <article v-for="article in articles.slice(start, end)" :key="article.url" class="patch-card">
-          <div class="patch-card__date"><time :datetime="article.publishedAt">{{ formatDate(article.publishedAt) }}</time><span v-if="article.url === data.articles[0]?.url">Dernier patch publié</span></div>
-          <h2>{{ article.title }}</h2>
-          <a :href="article.url" target="_blank" rel="noopener noreferrer">Lire les notes officielles ↗ <span class="sr-only">pour {{ article.title }} (nouvel onglet)</span></a>
-        </article>
+        <PatchNoteCard v-for="article in articles.slice(start, end)" :key="article.url" :article="article" variant="valorant" :featured="article.url === data.articles[0]?.url" />
       </div>
       <div v-else class="val-notice"><p>Aucune note ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="search = ''">Effacer la recherche</button></div>
       <ResultsPagination v-model:page="page" :page-count="pageCount" />
@@ -68,12 +59,6 @@ function formatDate(date: string) {
 .patch-toolbar input { width: min(100%, 440px); min-height: 42px; padding: 9px 12px; border: 1px solid #394957; border-radius: 4px; background: #07111b; color: #edf0f4; font: 14px 'Segoe UI', sans-serif; }
 .patch-toolbar input::placeholder { color: #9caab5; }
 .patch-count { margin: 22px 0 12px; color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
-.patch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; }
-.patch-card { display: flex; flex-direction: column; min-height: 165px; padding: 20px; border: 1px solid #ffffff1a; border-radius: 6px; background: linear-gradient(145deg, #112132, #0a1521); }
-.patch-card__date { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: #b1c0cb; font: 600 12px 'Rajdhani', sans-serif; }
-.patch-card__date span { color: #f5a4aa; }
-.patch-card h2 { margin: 18px 0; color: #f0f2f2; font: 700 21px/1.2 'Rajdhani', sans-serif; }
-.patch-card a { margin-top: auto; color: #f2a0a4; font: 700 14px 'Rajdhani', sans-serif; text-decoration: none; }
-.patch-card a:hover { text-decoration: underline; }
+.patch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 18px; align-items: stretch; }
 @media (max-width: 600px) { .patch-heading { margin-top: 30px; } .patch-fallback { display: block; margin: 16px 0 0; } }
 </style>

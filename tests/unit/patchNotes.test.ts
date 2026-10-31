@@ -293,3 +293,48 @@ describe('notes de patch Valorant', () => {
     expect(fetcher).toHaveBeenCalledTimes(3)
   })
 })
+
+describe('illustrations et résumés des archives Riot', () => {
+  it.each([
+    ['LoL', parsePatchNotes, 'league_of_legends', '/fr-fr/news/game-updates/patch-26-21-notes'],
+    ['TFT', parseTftPatchNotes, 'teamfight_tactics', '/fr-fr/news/game-updates/tft-patch-18-5'],
+    [
+      'Valorant',
+      parseValorantPatchNotes,
+      'valorant',
+      '/fr-fr/news/game-updates/valorant-patch-notes-1309',
+    ],
+  ])(
+    'récupère les métadonnées de %s sans accepter une image externe',
+    (_label, parse, product, url) => {
+      const result = parse(
+        page([
+          {
+            ...article('Patch récent', url, '2026-10-20T18:00:00Z'),
+            product: { machineName: product },
+            description: { type: 'html', body: '<b>Une nouvelle carte</b> &amp; des changements.' },
+            imageMedia: {
+              type: 'image',
+              url: 'https://cmsassets.rgpub.io/sanity/images/cover.jpg?accountingTag=LoL',
+            },
+          },
+        ]),
+      )
+      expect(result.articles[0]).toMatchObject({
+        description: 'Une nouvelle carte & des changements.',
+        imageUrl: 'https://cmsassets.rgpub.io/sanity/images/cover.jpg?accountingTag=LoL',
+      })
+      const invalid = parse(
+        page([
+          {
+            ...article('Patch récent', url, '2026-10-20T18:00:00Z'),
+            product: { machineName: product },
+            description: { body: 12 },
+            imageMedia: { type: 'image', url: 'https://cmsassets.rgpub.io.evil.example/cover.jpg' },
+          },
+        ]),
+      )
+      expect(invalid.articles[0]).toMatchObject({ description: null, imageUrl: null })
+    },
+  )
+})

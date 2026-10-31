@@ -1,4 +1,5 @@
 import type { PatchNoteLink, PatchNotesResponse } from '#shared/types/patchNotes'
+import { patchNoteDescription, patchNoteImage } from './patchNoteMedia'
 
 export const WOW_PATCH_NOTES_SOURCE =
   'https://worldofwarcraft.blizzard.com/fr-fr/content-update-notes'
@@ -66,6 +67,11 @@ export function parseWowPatchNotesPage(html: string, expectedPage: number) {
       title: item.title.trim(),
       publishedAt: item.published,
       url: `${ORIGIN}/fr-fr${url.pathname}`,
+      description: patchNoteDescription(item.description),
+      imageUrl: patchNoteImage(
+        isRecord(item.image) ? item.image.url : null,
+        'bnetcmsus-a.akamaihd.net',
+      ),
     })
   }
   if (!articles.length) throw new WowPatchNotesUnavailableError('Aucune note Blizzard disponible.')
