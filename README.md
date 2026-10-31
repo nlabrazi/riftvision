@@ -181,6 +181,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] World of Warcraft Retail : catalogue des classes, recherche et fiches avec spécialisations
   - [x] World of Warcraft Retail : catalogue des races, filtre par faction et fiches avec classes disponibles
   - [x] World of Warcraft Retail : fiches des spécialisations avec descriptions, rôles et caractéristiques disponibles
+  - [x] World of Warcraft : archive officielle des notes de mise à jour et correctifs (certains concernent aussi Classic)
   - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
