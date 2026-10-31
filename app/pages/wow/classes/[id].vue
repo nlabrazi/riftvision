@@ -60,7 +60,7 @@ useHead({ title: computed(() => `${data.value?.data.name ?? 'Classe WoW'} — Ri
 .spec-copy small { color: #d2b680; font: 600 13px 'Rajdhani', sans-serif; }
 .spec-copy .spec-description { display: -webkit-box; overflow: hidden; color: #b9c7d0; font: 13px/1.5 'Segoe UI', sans-serif; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .spec-arrow { color: #d6bb83; }
-.class-source { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
+.class-source { margin-top: 24px; color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
 @media (max-width: 900px) { .spec-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .spec-list { grid-template-columns: 1fr; } .class-hero { gap: 16px; min-height: 150px; padding: 20px; } .class-hero img:not(.class-art), .class-icon-placeholder { width: 64px; height: 64px; flex-basis: 64px; } .class-details { padding: 20px; } }
 </style>
