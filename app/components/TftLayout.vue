@@ -9,6 +9,7 @@
         <NuxtLink to="/tft/traits">Traits</NuxtLink>
         <NuxtLink to="/tft/items">Objets</NuxtLink>
       </nav>
+      <EncyclopediaSearch />
     </header>
     <main id="tft-content" class="tft-main"><slot /></main>
     <AppFooter />

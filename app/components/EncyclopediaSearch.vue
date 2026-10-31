@@ -5,6 +5,7 @@ import type {
   DataDragonItems,
   DataDragonRunes,
 } from '#shared/types/dataDragon'
+import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
 
 type SearchResult = { id: string; name: string; subtitle: string; to: string; image: string }
 type SearchGroup = { label: string; results: SearchResult[] }
@@ -19,6 +20,9 @@ const failures = ref<string[]>([])
 const champions = ref<DataDragonChampions | null>(null)
 const items = ref<DataDragonItems | null>(null)
 const runes = ref<DataDragonRunes | null>(null)
+const tftChampions = ref<TftChampionsResponse | null>(null)
+const tftTraits = ref<TftTraitsResponse | null>(null)
+const tftItems = ref<TftItemsResponse | null>(null)
 let lastLoad = 0
 
 function normalize(value: string) {
@@ -64,10 +68,40 @@ const groups = computed<SearchGroup[]>(() => {
           : '',
       })),
   )
+  const tftChampionResults = (tftChampions.value?.data ?? [])
+    .filter((unit) => match(`${unit.name} ${unit.id}`))
+    .map((unit) => ({
+      id: unit.id,
+      name: unit.name,
+      subtitle: `${unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}`} · ${unit.cost} PO${unit.cost === 0 ? ' (donnée Riot)' : ''}`,
+      to: `/tft/champions/${encodeURIComponent(unit.id)}`,
+      image: `https://ddragon.leagueoflegends.com/cdn/${tftChampions.value?.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`,
+    }))
+  const tftTraitResults = (tftTraits.value?.data ?? [])
+    .filter((trait) => match(`${trait.name} ${trait.id}`))
+    .map((trait) => ({
+      id: trait.id,
+      name: trait.name,
+      subtitle: trait.id,
+      to: `/tft/traits?id=${encodeURIComponent(trait.id)}`,
+      image: `https://ddragon.leagueoflegends.com/cdn/${tftTraits.value?.version}/img/tft-trait/${encodeURIComponent(trait.icon)}`,
+    }))
+  const tftItemResults = (tftItems.value?.data ?? [])
+    .filter((item) => match(`${item.name} ${item.id}`))
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: item.id,
+      to: `/tft/items?id=${encodeURIComponent(item.id)}`,
+      image: `https://ddragon.leagueoflegends.com/cdn/${tftItems.value?.version}/img/tft-item/${encodeURIComponent(item.icon)}`,
+    }))
   return [
-    { label: 'Champions', results: championResults },
-    { label: 'Objets', results: itemResults },
-    { label: 'Runes', results: runeResults },
+    { label: 'Champions · LoL', results: championResults },
+    { label: 'Objets · LoL', results: itemResults },
+    { label: 'Runes · LoL', results: runeResults },
+    { label: 'Unités · TFT', results: tftChampionResults },
+    { label: 'Traits · TFT', results: tftTraitResults },
+    { label: 'Objets · TFT', results: tftItemResults },
   ].map((group) => ({
     ...group,
     results: group.results.sort((a, b) => a.name.localeCompare(b.name, 'fr')),
@@ -84,6 +118,9 @@ async function loadData() {
     champions.value = null
     items.value = null
     runes.value = null
+    tftChampions.value = null
+    tftTraits.value = null
+    tftItems.value = null
   }
   failures.value = []
   const requests: { label: string; run: () => Promise<void> }[] = []
@@ -106,6 +143,27 @@ async function loadData() {
       label: 'runes',
       run: async () => {
         runes.value = await $fetch<DataDragonRunes>('/api/ddragon/runes')
+      },
+    })
+  if (!tftChampions.value)
+    requests.push({
+      label: 'unités TFT',
+      run: async () => {
+        tftChampions.value = await $fetch<TftChampionsResponse>('/api/ddragon/tft/champions')
+      },
+    })
+  if (!tftTraits.value)
+    requests.push({
+      label: 'traits TFT',
+      run: async () => {
+        tftTraits.value = await $fetch<TftTraitsResponse>('/api/ddragon/tft/traits')
+      },
+    })
+  if (!tftItems.value)
+    requests.push({
+      label: 'objets TFT',
+      run: async () => {
+        tftItems.value = await $fetch<TftItemsResponse>('/api/ddragon/tft/items')
       },
     })
   const results = await Promise.allSettled(requests.map((request) => request.run()))
@@ -161,9 +219,9 @@ function handleDialogKey(event: KeyboardEvent) {
   <Teleport to="body">
     <div v-if="isOpen" class="search-backdrop" @click.self="closeSearch()">
       <section ref="dialog" class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title" @keydown="handleDialogKey">
-        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LEAGUE OF LEGENDS</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
-        <label class="search-label" for="encyclopedia-search-input">Champion, objet ou rune</label>
-        <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Électrocution" />
+        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL &amp; TFT</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
+        <label class="search-label" for="encyclopedia-search-input">Rechercher dans les encyclopédies</label>
+        <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Solaire" />
         <div class="search-content">
           <p v-if="isLoading" class="search-message" role="status">Chargement des données…</p>
           <div v-if="failures.length && !isLoading" class="search-error" role="alert"><p>Données indisponibles : {{ failures.join(', ') }}. Les résultats des catégories chargées restent accessibles.</p><button type="button" class="rv-button" @click="loadData">Réessayer</button></div>

@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { TftItemsResponse } from '#shared/types/tft'
 
 useHead({ title: 'Objets TFT — RiftVision' })
 const { data, status, error, refresh } = await useFetch<TftItemsResponse>('/api/ddragon/tft/items')
 const search = ref('')
+const route = useRoute()
+watch(
+  () => route.query.id,
+  (value) => {
+    search.value = typeof value === 'string' ? value : ''
+  },
+  { immediate: true },
+)
 function normalize(value: string) {
   return value
     .normalize('NFD')
@@ -15,7 +23,11 @@ function normalize(value: string) {
 const objets = computed(() => {
   const query = normalize(search.value)
   return (data.value?.data ?? [])
-    .filter((objet) => normalize(`${objet.name} ${objet.id}`).includes(query))
+    .filter((objet) =>
+      typeof route.query.id === 'string' && search.value === route.query.id
+        ? objet.id === route.query.id
+        : normalize(`${objet.name} ${objet.id}`).includes(query),
+    )
     .sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.id.localeCompare(b.id))
 })
 </script>

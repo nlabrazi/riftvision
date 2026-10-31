@@ -181,7 +181,8 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] World of Warcraft Retail : fiches des spécialisations avec descriptions, rôles et caractéristiques disponibles
   - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
-  - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux jeux pris en charge
+  - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
+  - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux autres jeux pris en charge
 
 ---
 
@@ -204,7 +205,7 @@ Depuis l'espace League of Legends, la rubrique **Champions** permet de recherche
 
 Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
 
-Le bouton **Rechercher** permet aussi de trouver ces contenus depuis l'accueil et les pages de l'encyclopédie. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Cette recherche ne couvre pas les comptes de joueurs.
+Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL ainsi que les unités, traits et objets TFT depuis l'accueil et les pages des encyclopédies LoL et TFT. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas encore Valorant, WoW ni les comptes de joueurs.
 
 La rubrique **Notes de patch** liste les titres et dates de l'[archive officielle Riot](https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. Le serveur lit les métadonnées intégrées à cette page et les conserve en mémoire pendant une heure. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
