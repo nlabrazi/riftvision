@@ -156,8 +156,57 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Timers prédictifs de réapparition des objectifs neutres (Dragons, Baron, Héraut) avec alertes d'anticipation (60s/30s)
   - [ ] Graphique temps réel d'évolution de la courbe d'or ($\Delta$ Gold)
   - [ ] Enregistreur de session live et lecteur de replay JSON pour tests hors-partie
+- [ ] **Accueil multijeu & encyclopédies — vision à construire**
+  - [ ] Repenser l'accueil autour d'une galerie de jeux inspirée de MetaBot : cartes illustrées, animations au survol, navigation responsive et accessible
+  - [ ] Présenter League of Legends, Teamfight Tactics, Valorant, Counter-Strike 2, Heroes of the Storm et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
+  - [ ] Préserver l'identité RiftVision et les parcours existants : suivi LoL, démo, historique et compagnon desktop
+  - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
+- [ ] **Encyclopédie League of Legends**
+  - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
+  - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
+  - [x] Ajouter les catalogues d'objets et de runes avec recherche, filtres et fiches
+  - [x] Ajouter une recherche commune aux champions, objets et runes disponibles
+  - [x] Proposer les notes de patch et leur historique, avec liens vers les publications officielles
+  - [x] Étudier les sources et les contraintes des builds, classements, taux de victoire et affrontements : [étude de faisabilité](docs/etude-statistiques-lol.md)
+  - [ ] Définir et valider l'échantillon, les conditions d'accès et la méthode de collecte avant d'implémenter des statistiques
+- [ ] **Encyclopédies des autres jeux**
+  - [x] Teamfight Tactics : catalogue des unités, recherche, filtres et fiches à partir des données Data Dragon disponibles
+  - [x] Teamfight Tactics : catalogue des traits et recherche à partir des données Data Dragon disponibles
+  - [x] Teamfight Tactics : catalogue des objets nommés et recherche à partir des données Data Dragon disponibles
+  - [x] Teamfight Tactics : compétences disponibles sur les fiches d'unités avec les données CommunityDragon
+  - [x] Teamfight Tactics : notes de patch et historique avec liens vers les publications officielles
+  - [x] Valorant : catalogue des agents, recherche par nom et rôle, fiches et compétences
+  - [x] Valorant : catalogue des armes, recherche par nom et catégorie, fiches et caractéristiques disponibles
+  - [x] Valorant : catalogue des cartes, recherche par nom, fiches avec plans et noms de zones disponibles
+  - [x] Valorant : notes de patch et historique avec liens vers les publications officielles
+  - [x] World of Warcraft Retail : catalogue des classes, recherche et fiches avec spécialisations
+  - [x] World of Warcraft Retail : catalogue des races, filtre par faction et fiches avec classes disponibles
+  - [x] World of Warcraft Retail : fiches des spécialisations avec descriptions, rôles et caractéristiques disponibles
+  - [x] World of Warcraft : archive officielle des notes de mise à jour et correctifs (certains concernent aussi Classic)
+  - [x] Heroes of the Storm : catalogue des héros, recherche, fiches, compétences et talents en français
+  - [x] Heroes of the Storm : notes de mise à jour récentes avec liens vers les publications officielles
+  - [x] Heroes of the Storm : catalogue et fiches des champs de bataille avec objectifs disponibles
+  - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
+  - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
+  - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
+  - [x] Étendre la recherche commune aux agents, armes et cartes Valorant
+  - [x] Étendre la recherche commune aux classes, races et spécialisations WoW Retail
+  - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux autres jeux pris en charge
 
 ---
+
+## Encyclopédie Heroes of the Storm
+
+Les catalogues des héros et des champs de bataille utilisent une copie versionnée des données françaises de [HeroesToolChest](https://github.com/HeroesToolChest/heroes-data2), accompagnée de ses [images communautaires](https://github.com/HeroesToolChest/heroes-images). La version importée est affichée dans l’interface : ces données ne sont pas mises à jour automatiquement et peuvent différer du jeu après un nouveau patch. Les cartes comprennent des variantes et des modes anciens ou spéciaux ; elles ne représentent pas la rotation actuelle. Certains objectifs ou noms français ne sont pas disponibles dans la source. Les compétences et talents sont présentés avec leurs valeurs de base ; les effets peuvent évoluer au cours d’une partie. La rubrique des notes de patch présente les notes repérées parmi les 120 dernières actualités du [fil officiel Blizzard](https://news.blizzard.com/fr-fr/feed/heroes-of-the-storm) ; les dates affichées correspondent aux dernières mises à jour des articles.
+
+Pour actualiser cette copie, télécharger une archive `heroes-data-no-maps` publiée dans les [releases HeroesToolChest](https://github.com/HeroesToolChest/heroes-data2/releases), puis lancer :
+
+```bash
+python3 scripts/import-hots-data.py chemin/vers/heroes-data-no-maps.zip
+npx biome format --write server/data/hots-heroes-a.json server/data/hots-heroes-b.json server/data/hots-maps.json
+```
+
+Vérifier ensuite la version, le contenu importé et les tests avant de publier les changements. Les données et visuels de jeu appartiennent à leurs ayants droit ; HeroesToolChest est une source communautaire indépendante.
 
 ## Suivre une partie
 
@@ -169,6 +218,50 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
 **Son et aide :** le bouton audio indique si le son est activé. **Aide et réglages** explique la connexion et la lecture des données. Le volet **Diagnostic technique** regroupe les données brutes, la vérification de connexion, la pause du suivi et les tests détaillés d’alertes en démo. Si le suivi est en pause, le bandeau de partie permet de le reprendre directement.
 
 **Lecture de la carte :** les données exploitées ne fournissent pas les coordonnées des champions. Leurs positions sont des repères indicatifs par rôle ; les alertes d'objectifs et de tourelles s'appuient sur les repères correspondants. La valeur des inventaires sert d'indicateur d'économie et ne représente pas l'or total gagné.
+
+## Données Data Dragon
+
+Le serveur prépare l'encyclopédie League of Legends à partir des fichiers officiels [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Il utilise la dernière version disponible et la langue `fr_FR` :
+
+Depuis l'espace League of Legends, la rubrique **Champions** permet de rechercher un champion par nom ou titre, de filtrer par classe et d'ouvrir sa fiche. Les descriptions et statistiques affichées proviennent de la version Data Dragon indiquée sur la page.
+
+Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
+
+Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL, les unités, traits et objets TFT, les agents, armes et cartes Valorant ainsi que les classes, races et spécialisations WoW Retail, depuis l'accueil et les pages de ces encyclopédies. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas les comptes de joueurs. Si le client Battle.net n'est pas configuré ou que Blizzard est indisponible, les autres catégories restent accessibles.
+
+La rubrique **Notes de patch** liste les titres et dates de l'[archive officielle Riot](https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. Le serveur lit les métadonnées intégrées à cette page et les conserve en mémoire pendant une heure. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
+
+- `GET /api/ddragon/version` : version et langue utilisées.
+- `GET /api/ddragon/champions` : catalogue des champions.
+- `GET /api/ddragon/champions/Ahri` : fiche d'un champion identifié par son identifiant Data Dragon.
+- `GET /api/ddragon/items` : objets achetables dans la Faille de l'invocateur.
+- `GET /api/ddragon/runes` : runes regroupées par voie.
+- `GET /api/ddragon/tft/champions` : unités Teamfight Tactics disponibles dans les données Riot.
+- `GET /api/ddragon/tft/traits` : traits Teamfight Tactics disponibles dans les données Riot.
+- `GET /api/ddragon/tft/items` : objets Teamfight Tactics nommés disponibles dans les données Riot.
+- `GET /api/tft/champions/{id}/ability` : compétence de l'unité lorsque la correspondance est non ambiguë.
+
+La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
+
+Les catalogues TFT peuvent contenir plusieurs sets et modes. Pour les unités, le numéro de set n'est déduit que lorsque la clé fournie par Riot contient un identifiant numérique reconnaissable ; il ne permet pas d'identifier automatiquement le set actuel. Les unités sans numéro identifiable restent visibles séparément. Les fichiers Data Dragon des traits et objets fournissent leur nom et leur icône, mais pas leurs effets, recettes ou liens avec les unités. Les objets sans nom sont exclus du catalogue.
+
+La rubrique **Notes de patch TFT** liste les titres et dates de l'[archive officielle Riot TFT](https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. `GET /api/tft/patch-notes` lit les métadonnées intégrées à la page et les conserve en mémoire une heure par processus. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
+
+Les compétences sont issues de [CommunityDragon](https://www.communitydragon.org/docs/assets), une source communautaire qui rassemble des données du client Riot. Le serveur utilise le même numéro de patch majeur et mineur que Data Dragon, fait correspondre l'identifiant et, s'il est connu, le set de l'unité. En cas de correspondance ambiguë, la compétence n'est pas affichée. Les variables présentes dans les descriptions sont indiquées comme telles, car leur calcul dépend du contexte de jeu. Les données sont conservées en mémoire 24 heures par processus ; une panne de CommunityDragon ne bloque pas l'affichage de la fiche d'unité.
+
+## Données Valorant
+
+La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Le catalogue des cartes présente les plans et les noms de zones lorsqu'ils sont disponibles. Il inclut plusieurs modes et n'indique pas la rotation actuelle ; les noms de zones sont affichés dans la langue fournie par la source. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents`, `GET /api/valorant/weapons` et `GET /api/valorant/maps` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source.
+
+La rubrique **Notes de patch Valorant** liste les titres et dates de l'[archive officielle Riot](https://playvalorant.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. `GET /api/valorant/patch-notes` lit les métadonnées intégrées à la page et les conserve en mémoire une heure par processus. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
+
+## Données World of Warcraft
+
+Le catalogue WoW couvre les classes Retail en Europe et leurs spécialisations, en français, à partir de l'[API Blizzard](https://community.developer.battle.net/documentation/world-of-warcraft/game-data-apis). Pour l'activer, créez un client sur le [portail développeur Battle.net](https://community.developer.battle.net/access/clients), puis définissez `NUXT_BLIZZARD_CLIENT_ID` et `NUXT_BLIZZARD_CLIENT_SECRET` dans l'environnement serveur (voir `.env.example`). Ces identifiants restent côté serveur et ne doivent pas être commités. Sans configuration ou en cas d'erreur de Blizzard, le catalogue est indisponible et propose de réessayer.
+
+Le serveur obtient un jeton OAuth avec les identifiants du client, puis conserve les données de classes en mémoire une heure par processus. Les icônes sont facultatives si leur récupération échoue. Les routes sont `GET /api/wow/classes` et `GET /api/wow/classes/{id}`. L'index de recherche `GET /api/wow/specializations` rassemble les spécialisations des classes avec quatre requêtes simultanées au maximum, en réutilisant le cache des classes. Les fiches de spécialisations sont disponibles via `GET /api/wow/specializations/{id}` et affichent les données fournies par Blizzard ; leur icône reste facultative si son chargement échoue.
+
+Le catalogue `GET /api/wow/races` présente les races Retail et leurs variantes de faction telles que fournies par Blizzard. Le serveur regroupe l'index et les fiches de races, avec six requêtes simultanées au maximum et un cache d'une heure. Les fiches renvoient aux classes présentes dans le catalogue ; les éventuelles classes absentes restent affichées sans lien. Le visuel des cartes est commun à WoW, l'API utilisée ne fournissant pas d'icône de race.
 
 ---
 

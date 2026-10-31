@@ -1,0 +1,140 @@
+import type { TftAbility } from '#shared/types/tft'
+import { DataDragonUnavailableError } from './dataDragon'
+
+const ORIGIN = 'https://raw.communitydragon.org'
+const TTL = 24 * 60 * 60 * 1000
+const MAX_BYTES = 40 * 1024 * 1024
+
+type AbilityEntry = { setNumber: number; ability: TftAbility }
+type AbilityIndex = Map<string, AbilityEntry[]>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function plainDescription(value: string): string {
+  return value
+    .replace(/\r\\n|\r\n|\\n|\r/g, '\n')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(?:39|x27);/gi, "'")
+    .replace(/%i:[^%]*%/gi, '')
+    .replace(/@[^@\n]+@/g, 'valeur variable')
+    .trim()
+}
+
+export function createTftAbilitiesClient(
+  fetcher: typeof fetch = fetch,
+  now: () => number = Date.now,
+) {
+  let cache: { version: string; index: AbilityIndex; expiresAt: number } | null = null
+  const pending = new Map<string, Promise<AbilityIndex>>()
+
+  async function getIndex(version: string): Promise<AbilityIndex> {
+    if (!/^\d+\.\d+\.\d+$/.test(version))
+      throw new DataDragonUnavailableError('Version TFT invalide.')
+    const patch = version.split('.').slice(0, 2).join('.')
+    if (cache?.version === patch && cache.expiresAt > now()) return cache.index
+    const inFlight = pending.get(patch)
+    if (inFlight) return inFlight
+    const request = (async () => {
+      let body: unknown
+      try {
+        const response = await fetcher(`${ORIGIN}/${patch}/cdragon/tft/fr_fr.json`, {
+          signal: AbortSignal.timeout(15000),
+        })
+        if (!response.ok || !response.body) throw new Error('Source indisponible')
+        const reader = response.body.getReader()
+        const chunks: Uint8Array[] = []
+        let size = 0
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          size += value.byteLength
+          if (size > MAX_BYTES) {
+            await reader.cancel()
+            throw new Error('Source trop volumineuse')
+          }
+          chunks.push(value)
+        }
+        const bytes = new Uint8Array(size)
+        let offset = 0
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset)
+          offset += chunk.byteLength
+        }
+        body = JSON.parse(new TextDecoder().decode(bytes))
+      } catch {
+        throw new DataDragonUnavailableError(
+          'Les compétences TFT sont temporairement indisponibles.',
+        )
+      }
+      if (!isRecord(body) || !Array.isArray(body.setData))
+        throw new DataDragonUnavailableError('Les compétences TFT reçues sont invalides.')
+      const index: AbilityIndex = new Map()
+      for (const set of body.setData) {
+        if (!isRecord(set) || !Number.isInteger(set.number) || !Array.isArray(set.champions))
+          continue
+        for (const champion of set.champions) {
+          if (
+            !isRecord(champion) ||
+            typeof champion.apiName !== 'string' ||
+            !/^[A-Za-z0-9_]+$/.test(champion.apiName) ||
+            !isRecord(champion.ability) ||
+            typeof champion.ability.name !== 'string' ||
+            !champion.ability.name.trim() ||
+            typeof champion.ability.desc !== 'string' ||
+            !champion.ability.desc.trim()
+          )
+            continue
+          const description = plainDescription(champion.ability.desc)
+          if (!description) continue
+          const entries = index.get(champion.apiName) ?? []
+          entries.push({
+            setNumber: set.number as number,
+            ability: { name: champion.ability.name.trim(), description },
+          })
+          index.set(champion.apiName, entries)
+        }
+      }
+      if (!index.size)
+        throw new DataDragonUnavailableError('Les compétences TFT reçues sont vides.')
+      cache = { version: patch, index, expiresAt: now() + TTL }
+      return index
+    })()
+    pending.set(patch, request)
+    try {
+      return await request
+    } finally {
+      pending.delete(patch)
+    }
+  }
+
+  async function getAbility(
+    id: string,
+    setNumber: number | null,
+    version: string,
+  ): Promise<TftAbility | null> {
+    const index = await getIndex(version)
+    const entries = (index.get(id) ?? []).filter(
+      (entry) => setNumber === null || entry.setNumber === setNumber,
+    )
+    const ability = entries[0]?.ability
+    if (!ability) return null
+    return entries.every(
+      (entry) =>
+        entry.ability.name === ability.name && entry.ability.description === ability.description,
+    )
+      ? ability
+      : null
+  }
+
+  return { getAbility }
+}
+
+export const tftAbilities = createTftAbilitiesClient()

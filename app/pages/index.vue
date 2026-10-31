@@ -7,6 +7,9 @@ import AppFooter from '../components/AppFooter.vue'
 import DiagnosticPanel from '../components/DiagnosticPanel.vue'
 import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
+import GamePortal from '../components/GamePortal.vue'
+import LeagueStandbyPanel from '../components/LeagueStandbyPanel.vue'
+import LeagueHome from '../components/LeagueHome.vue'
 import MatchHistoryModal from '../components/MatchHistoryModal.vue'
 import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
@@ -110,6 +113,8 @@ function handleSelectHistoricalMatch(m: SavedMatch) {
 }
 
 const currentView = ref<'tactical' | 'radar'>('tactical')
+const route = useRoute()
+const isLeaguePage = computed(() => route.path === '/league')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
 const isRefreshing = ref(false)
@@ -148,6 +153,10 @@ function switchView(view: 'tactical' | 'radar') {
 
 function returnHome() {
   isHelpOpen.value = false
+  if (isLeaguePage.value && !hasGame.value) {
+    navigateTo('/')
+    return
+  }
   switchView('tactical')
 }
 
@@ -254,6 +263,7 @@ onUnmounted(() => {
         </div>
       </a>
       <div class="header-controls">
+        <EncyclopediaSearch v-if="!hasGame && !isLiveActive && !isHelpOpen" />
         <button v-if="hasGame" type="button" data-testid="audio-toggle-btn" class="rv-button"
           :aria-label="isAudioMuted ? 'Activer les alertes sonores' : 'Couper les alertes sonores'"
           :aria-pressed="!isAudioMuted" @click="toggleAudioMute">
@@ -322,6 +332,9 @@ onUnmounted(() => {
         </div>
       </div>
 
+      <GamePortal v-if="!isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
+      <LeagueHome v-if="isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
+
       <div v-if="isHelpOpen" class="diagnostic-workspace">
         <section class="rv-panel help-panel" aria-labelledby="connection-help-title">
           <h3 id="connection-help-title">Connecter votre partie</h3>
@@ -374,76 +387,16 @@ onUnmounted(() => {
         :diff-events="diffEvents" :formatted-game-time="formattedGameTime" :is-mock="status.isMock" :is-polling="isPolling"
         @switch-view="switchView('tactical')" />
 
-      <section v-else class="standby-panel rv-panel" aria-labelledby="standby-title">
-        <div class="standby-copy">
-          <span class="standby-badge">{{ isLiveActive ? 'CONNEXION AUTOMATIQUE' : 'VOTRE COMPAGNON DE PARTIE' }}</span>
-          <h3 id="standby-title">
-            <template v-if="status.isMock">{{ isChangingMode ? 'Chargement de la démo…' : 'La démo n’a pas pu être chargée.' }}</template>
-            <template v-else-if="isLiveActive">En attente de<br /><span>votre partie.</span></template>
-            <template v-else>Votre partie,<br /><span>plus facile à suivre.</span></template>
-          </h3>
-          <p v-if="status.isMock">{{ isChangingMode ? 'Le tableau de bord va s’ouvrir automatiquement.' : 'Quittez la démo puis relancez-la. Si le problème persiste, consultez l’aide et les réglages.' }}</p>
-          <template v-else-if="isLiveActive">
-            <p>Lancez une partie sur l’ordinateur où RiftVision est installé. Dès que vous entrez sur la carte, le tableau de bord s’ouvre automatiquement.</p>
-            <p class="standby-hint">Vous êtes déjà en partie ? Vérifiez les étapes dans « Aide et réglages ».</p>
-          </template>
-          <template v-else>
-            <p>Retrouvez les scores, les événements et les alertes sur votre second écran.</p>
-            <div class="companion-status-pill" :class="{ 'companion-status-pill--live': isOverlayConnected }">
-              <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
-              <span>{{ isOverlayConnected ? 'Compagnon desktop détecté & synchronisé' : 'Compagnon desktop non détecté' }}</span>
-            </div>
-            <ol class="connection-steps standby-steps">
-              <li><strong>Lancez une partie de League of Legends.</strong><span>Sur le même ordinateur que RiftVision.</span></li>
-              <li><strong>Connectez votre partie ci-dessous.</strong><span>Le tableau de bord s’ouvre dès que la partie est détectée.</span></li>
-            </ol>
-          </template>
-          <div v-if="!status.isMock" class="standby-actions">
-            <button
-              type="button"
-              data-testid="live-toggle-button"
-              class="rv-button"
-              :class="{ 'rv-button-primary': !isLiveActive }"
-              :disabled="isChangingMode"
-              @click="changeMode(isLiveActive ? stopLiveMode : startLiveMode)"
-            >
-              <RvIcon :name="isLiveActive ? 'close' : 'signal'" :size="17" />
-              {{ isChangingMode ? 'Connexion…' : isLiveActive ? 'Annuler la recherche' : 'Connecter ma partie' }}
-            </button>
-            <a
-              v-if="!isLiveActive"
-              href="/api/download/overlay"
-              download
-              class="rv-button"
-              title="Télécharger l'installateur Windows officiel (.exe)"
-            >
-              <RvIcon name="download" :size="16" />
-              <span>Télécharger l’application (.exe)</span>
-            </a>
-            <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="changeMode(startMockMode)">
-              Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
-            </button>
-            <button
-              v-if="!isLiveActive && matches.length > 0"
-              type="button"
-              data-testid="landing-history-btn"
-              class="rv-button rv-button-quiet"
-              @click="isHistoryOpen = true"
-            >
-              <RvIcon name="clock" :size="15" />
-              <span>Historique ({{ matches.length }})</span>
-            </button>
-          </div>
-          <p v-if="!isLiveActive && !status.isMock" class="standby-hint">
-            {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : 'Pas encore installé ? Téléchargez l’application Windows ou découvrez la démo en 1 clic.' }}
-          </p>
-        </div>
-        <div class="standby-map" aria-hidden="true">
-          <div class="standby-map-ring"></div><img src="/assets/images/sr-map.png" alt="" />
-          <span class="standby-map-label"><RvIcon name="crosshair" :size="14" />FAILLE DE L’INVOCATEUR</span>
-          <span class="standby-map-point standby-map-point--blue"></span><span class="standby-map-point standby-map-point--red"></span>
-        </div>
-      </section>
+      <LeagueStandbyPanel v-else
+        :is-mock="status.isMock"
+        :is-live-active="isLiveActive"
+        :is-changing-mode="isChangingMode"
+        :is-overlay-connected="isOverlayConnected"
+        :match-count="matches.length"
+        @toggle-live="changeMode(isLiveActive ? stopLiveMode : startLiveMode)"
+        @start-demo="changeMode(startMockMode)"
+        @open-history="isHistoryOpen = true"
+      />
 
       <!-- Grille des piliers du produit (Landing page synthétique) -->
       <section v-if="!hasGame && !status.isMock && !isLiveActive" class="standby-features-grid" aria-label="Fonctionnalités clés de RiftVision">
