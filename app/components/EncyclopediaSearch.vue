@@ -6,6 +6,8 @@ import type {
   DataDragonRunes,
 } from '#shared/types/dataDragon'
 import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
+import type { HotsHeroesResponse } from '#shared/types/hots'
+import { hotsImage } from '~/utils/hotsImages'
 import type {
   ValorantAgentsResponse,
   ValorantMapsResponse,
@@ -37,6 +39,7 @@ const tftItems = ref<TftItemsResponse | null>(null)
 const valorantAgents = ref<ValorantAgentsResponse | null>(null)
 const valorantWeapons = ref<ValorantWeaponsResponse | null>(null)
 const valorantMaps = ref<ValorantMapsResponse | null>(null)
+const hotsHeroes = ref<HotsHeroesResponse | null>(null)
 const wowClasses = ref<WowClassesResponse | null>(null)
 const wowRaces = ref<WowRacesResponse | null>(null)
 const wowSpecializations = ref<WowSpecializationsResponse | null>(null)
@@ -46,6 +49,7 @@ function normalize(value: string) {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[’‘']/g, '')
     .toLocaleLowerCase('fr-FR')
     .trim()
 }
@@ -147,6 +151,15 @@ const groups = computed<SearchGroup[]>(() => {
       to: `/valorant/maps/${encodeURIComponent(map.id)}`,
       image: map.splash ?? map.minimap ?? '',
     }))
+  const hotsResults = (hotsHeroes.value?.data ?? [])
+    .filter((hero) => match(`${hero.name} ${hero.title} ${hero.role}`))
+    .map((hero) => ({
+      id: hero.id,
+      name: hero.name,
+      subtitle: hero.role,
+      to: `/hots/heroes/${encodeURIComponent(hero.id)}`,
+      image: hotsImage('heroportraits', hero.portrait),
+    }))
   const wowClassResults = (wowClasses.value?.data ?? [])
     .filter((entry) => match(entry.name))
     .map((entry) => ({
@@ -184,6 +197,7 @@ const groups = computed<SearchGroup[]>(() => {
     { label: 'Agents · Valorant', results: agentResults },
     { label: 'Armes · Valorant', results: weaponResults },
     { label: 'Cartes · Valorant', results: mapResults },
+    { label: 'Héros · Heroes of the Storm', results: hotsResults },
     { label: 'Classes · WoW', results: wowClassResults },
     { label: 'Races · WoW', results: wowRaceResults },
     { label: 'Spécialisations · WoW', results: wowSpecializationResults },
@@ -209,6 +223,7 @@ async function loadData() {
     valorantAgents.value = null
     valorantWeapons.value = null
     valorantMaps.value = null
+    hotsHeroes.value = null
     wowClasses.value = null
     wowRaces.value = null
     wowSpecializations.value = null
@@ -276,6 +291,13 @@ async function loadData() {
       label: 'cartes Valorant',
       run: async () => {
         valorantMaps.value = await $fetch<ValorantMapsResponse>('/api/valorant/maps')
+      },
+    })
+  if (!hotsHeroes.value)
+    requests.push({
+      label: 'héros Heroes of the Storm',
+      run: async () => {
+        hotsHeroes.value = await $fetch<HotsHeroesResponse>('/api/hots/heroes')
       },
     })
   if (!wowClasses.value)
@@ -354,7 +376,7 @@ function handleDialogKey(event: KeyboardEvent) {
   <Teleport to="body">
     <div v-if="isOpen" class="search-backdrop" @click.self="closeSearch()">
       <section ref="dialog" class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title" @keydown="handleDialogKey">
-        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL, TFT, VALORANT &amp; WOW</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
+        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL, TFT, VALORANT, HOTS &amp; WOW</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
         <label class="search-label" for="encyclopedia-search-input">Rechercher dans les encyclopédies</label>
         <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Jett" />
         <div class="search-content">

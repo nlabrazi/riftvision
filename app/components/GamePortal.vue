@@ -75,15 +75,15 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">En préparation</span>
           </div>
         </article>
-        <article v-if="showGenre('MOBA')" class="game-card game-card--hots">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--hots" to="/hots">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/hots.mp4" /></div>
           <div class="game-card__body">
-            <div class="game-card__meta"><span>MOBA</span><span class="game-card__status">À venir</span></div>
+            <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Heroes of the Storm</h3>
-            <p>Un futur espace pour les héros et champs de bataille du Nexus.</p>
-            <span class="game-card__link">En préparation</span>
+            <p>Découvrez les héros, leurs compétences et leurs talents.</p>
+            <span class="game-card__link">Explorer le Nexus <span aria-hidden="true">↗</span></span>
           </div>
-        </article>
+        </NuxtLink>
         <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/wow.mp4" /></div>
           <div class="game-card__body">
