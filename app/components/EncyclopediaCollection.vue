@@ -123,16 +123,13 @@ const { page, pageCount, start, end } = usePagination(
 <template>
   <EncyclopediaLayout>
     <NuxtLink :to="id ? basePath : '/league'" class="encyclopedia-back">← {{ id ? isItems ? 'Retour aux objets' : 'Retour aux runes' : 'Retour à League of Legends' }}</NuxtLink>
+    <GameCatalogBanner v-if="!id" game="league" eyebrow="Encyclopédie · League of Legends" :title="isItems ? 'Les objets' : 'Les runes'" :description="isItems ? 'Explorez les objets achetables dans la Faille de l’invocateur.' : 'Découvrez les runes et leurs voies.'" :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <div v-if="status === 'pending' || status === 'idle'" class="encyclopedia-notice" role="status">Chargement des {{ isItems ? 'objets' : 'runes' }}…</div>
     <div v-else-if="error || !data" class="encyclopedia-notice" role="alert">
       <p>Les données sont momentanément indisponibles.</p>
       <button type="button" class="rv-button" @click="refresh()">Réessayer</button>
     </div>
     <template v-else-if="!id">
-      <div class="collection-heading">
-        <div><p class="encyclopedia-kicker">ENCYCLOPÉDIE · LEAGUE OF LEGENDS</p><h1>{{ isItems ? 'Les objets' : 'Les runes' }}<span>.</span></h1><p>{{ isItems ? 'Explorez les objets achetables dans la Faille de l’invocateur.' : 'Découvrez les runes et leurs voies.' }}</p></div>
-        <span class="collection-version">Données Data Dragon · {{ data.version }}</span>
-      </div>
       <div class="collection-filters">
         <label class="collection-field"><span>Rechercher {{ isItems ? 'un objet' : 'une rune' }}</span><input v-model="search" type="search" placeholder="Nom" /></label>
         <label class="collection-field collection-field--filter"><span>{{ isItems ? 'Catégorie' : 'Voie' }}</span>
@@ -175,12 +172,9 @@ const { page, pageCount, start, end } = usePagination(
 </template>
 
 <style scoped>
-.collection-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin: 30px 0 20px; padding: 26px 28px; border: 1px solid #c8aa6e38; border-radius: 7px; background: radial-gradient(circle at 85% 15%, #54798b30, transparent 38%), linear-gradient(120deg, #172c3d, #0a1724 75%); }
-.collection-heading h1, .detail-hero h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.collection-heading h1 span { color: #d6bb83; }
-.collection-heading p:not(.encyclopedia-kicker), .detail-hero p:not(.encyclopedia-kicker) { margin: 0; color: #b8c5cf; line-height: 1.5; }
+.detail-hero h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
+.detail-hero p:not(.encyclopedia-kicker) { margin: 0; color: #b8c5cf; line-height: 1.5; }
 .collection-version, .collection-count { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
-.collection-heading .collection-version { padding: 7px 10px; border: 1px solid #c8aa6e55; border-radius: 4px; background: #081420; color: #e3c78d; }
 .collection-filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .collection-field { display: flex; flex: 1 1 250px; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
 .collection-field--filter { flex: 0 1 230px; }
@@ -232,5 +226,5 @@ const { page, pageCount, start, end } = usePagination(
 .item-recipe .related img { width: 32px; height: 32px; border-radius: 3px; }
 @media (max-width: 800px) { .item-detail-grid { grid-template-columns: 1fr; gap: 0; } }
 @media (max-width: 600px) { .item-hero > img { width: 72px; height: 72px; flex-basis: 72px; } }
-@media (max-width: 600px) { .collection-heading { margin-top: 24px; padding: 20px; } .collection-field--filter { flex: 1 1 200px; } .collection-grid { grid-template-columns: 1fr; } .detail-hero { padding: 20px; gap: 16px; } .detail-hero img { width: 64px; height: 64px; flex-basis: 64px; } }
+@media (max-width: 600px) { .collection-field--filter { flex: 1 1 200px; } .collection-grid { grid-template-columns: 1fr; } .detail-hero { padding: 20px; gap: 16px; } .detail-hero img { width: 64px; height: 64px; flex-basis: 64px; } }
 </style>

@@ -38,7 +38,7 @@ function resetFilters() {
 <template>
   <ValorantLayout>
     <NuxtLink to="/" class="val-back">← Retour à tous les jeux</NuxtLink>
-    <header class="agent-heading"><p class="val-kicker">ENCYCLOPÉDIE · VALORANT</p><h1>Les agents Valorant<span>.</span></h1><p>Découvrez les agents, leurs rôles et leurs compétences.</p></header>
+    <GameCatalogBanner game="valorant" eyebrow="Encyclopédie · Valorant" title="Les agents Valorant" description="Découvrez les agents, leurs rôles et leurs compétences." />
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement des agents…</div>
     <div v-else-if="error || !data" class="val-notice" role="alert"><p>Le catalogue des agents est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
@@ -60,10 +60,6 @@ function resetFilters() {
 </template>
 
 <style scoped>
-.agent-heading { margin: 40px 0 24px; }
-.agent-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.agent-heading h1 span { color: #fa8c94; }
-.agent-heading > p:last-child { color: #b8c5cf; line-height: 1.5; }
 .agent-filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .agent-filters label { display: flex; flex: 1 1 250px; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
 .agent-filters .agent-role-filter { flex: 0 1 200px; }
@@ -82,5 +78,5 @@ function resetFilters() {
 .agent-copy span { color: #b7c2cb; font-size: 13px; }
 .agent-arrow { position: absolute; right: 14px; bottom: 14px; color: #fa8c94; }
 @media (prefers-reduced-motion: reduce) { .agent-art img { transition: none; } .agent-card:hover img, .agent-card:focus-visible img { transform: none; } }
-@media (max-width: 600px) { .agent-heading { margin-top: 30px; } .agent-filters .agent-role-filter { flex: 1 1 140px; } .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .agent-filters .agent-role-filter { flex: 1 1 140px; } .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

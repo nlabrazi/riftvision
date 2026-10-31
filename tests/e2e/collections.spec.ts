@@ -78,6 +78,18 @@ async function openLeague(page: import('@playwright/test').Page) {
   await status
 }
 
+test('conserve la bannière des objets si les données sont indisponibles', async ({ page }) => {
+  await page.route('**/api/ddragon/items', (route) =>
+    route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openLeague(page)
+  await page.getByRole('link', { name: 'Objets →' }).click()
+  await expect(
+    page.locator('.catalog-banner--league').getByRole('heading', { name: 'Les objets.' }),
+  ).toBeVisible()
+  await expect(page.locator('.encyclopedia-notice[role="alert"]')).toBeVisible()
+})
+
 test('recherche des objets, filtre et suit les composants', async ({ page }) => {
   await page.route('**/api/ddragon/items', (route) =>
     route.fulfill({ json: { version, locale: 'fr_FR', data: items } }),

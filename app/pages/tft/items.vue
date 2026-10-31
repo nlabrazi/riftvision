@@ -40,10 +40,7 @@ const { page, pageCount, start, end } = usePagination(
 <template>
   <TftLayout>
     <NuxtLink to="/tft" class="tft-back">← Retour aux unités TFT</NuxtLink>
-    <header class="objets-heading">
-      <div><p class="tft-kicker">ENCYCLOPÉDIE · TEAMFIGHT TACTICS</p><h1>Les objets TFT<span>.</span></h1><p>Explorez les objets répertoriés dans les données officielles.</p></div>
-      <span v-if="data" class="objets-version">Données Data Dragon · {{ data.version }}</span>
-    </header>
+    <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les objets TFT" description="Explorez les objets répertoriés dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <p class="objets-source-note">Ce catalogue peut contenir plusieurs sets et modes. Les entrées sans nom ne sont pas affichées. Les données disponibles ne précisent pas les effets ni les recettes des objets.</p>
     <div v-if="status === 'pending'" class="tft-notice" role="status">Chargement des objets…</div>
     <div v-else-if="error || !data" class="tft-notice" role="alert"><p>Le catalogue des objets TFT est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
@@ -63,11 +60,7 @@ const { page, pageCount, start, end } = usePagination(
 </template>
 
 <style scoped>
-.objets-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin: 40px 0 24px; }
-.objets-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.objets-heading h1 span { color: #d6bb83; }
-.objets-heading p:not(.tft-kicker) { margin: 0; color: #b8c5cf; line-height: 1.5; }
-.objets-version, .objets-count { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
+.objets-count { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
 .objets-source-note { margin: 0 0 24px; padding: 12px 15px; border-left: 2px solid #c8aa6e; background: #12202c; color: #c4cfd7; line-height: 1.5; }
 .objets-filters { padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .objets-field { display: flex; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
@@ -80,5 +73,5 @@ const { page, pageCount, start, end } = usePagination(
 .objets-card div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .objets-card strong { font: 700 17px 'Rajdhani', sans-serif; }
 .objets-card small { color: #b7c2cb; line-height: 1.3; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .objets-heading { margin-top: 30px; } .objets-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .objets-grid { grid-template-columns: 1fr; } }
 </style>

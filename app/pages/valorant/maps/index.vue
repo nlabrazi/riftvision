@@ -33,7 +33,7 @@ const maps = computed(() => {
 <template>
   <ValorantLayout>
     <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
-    <header class="maps-heading"><p class="val-kicker">ENCYCLOPÉDIE · VALORANT</p><h1>Les cartes Valorant<span>.</span></h1><p>Découvrez les cartes et leurs plans disponibles.</p></header>
+    <GameCatalogBanner game="valorant" eyebrow="Encyclopédie · Valorant" title="Les cartes Valorant" description="Découvrez les cartes et leurs plans disponibles." />
     <p class="maps-note">Ce catalogue contient des cartes de plusieurs modes, y compris l’entraînement. Il n’indique pas la rotation actuelle.</p>
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement des cartes…</div>
     <div v-else-if="error || !data" class="val-notice" role="alert"><p>Le catalogue des cartes est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
@@ -53,10 +53,6 @@ const maps = computed(() => {
 </template>
 
 <style scoped>
-.maps-heading { margin: 40px 0 24px; }
-.maps-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.maps-heading h1 span { color: #fa8c94; }
-.maps-heading > p:last-child { color: #b8c5cf; line-height: 1.5; }
 .maps-note { margin: 0 0 24px; padding: 12px 15px; border-left: 2px solid #fa8c94; background: #12202c; color: #c4cfd7; line-height: 1.5; }
 .maps-filters { padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .maps-filters label { display: flex; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
@@ -75,5 +71,5 @@ const maps = computed(() => {
 .map-copy span { color: #b7c2cb; font-size: 13px; overflow-wrap: anywhere; }
 .map-arrow { position: absolute; right: 14px; bottom: 14px; color: #fa8c94; }
 @media (prefers-reduced-motion: reduce) { .map-art img { transition: none; } .map-card:hover img, .map-card:focus-visible img { transform: none; } }
-@media (max-width: 600px) { .maps-heading { margin-top: 30px; } .maps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .maps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

@@ -24,10 +24,9 @@ const { page, pageCount, start, end } = usePagination(
 <template>
   <ValorantLayout>
     <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
-    <header class="patch-heading">
-      <div><p class="val-kicker">VALORANT · MISES À JOUR</p><h1>Notes de patch<span>.</span></h1><p>Retrouvez les mises à jour publiées par Riot Games et consultez leurs notes complètes.</p></div>
+    <GameCatalogBanner game="valorant" eyebrow="Valorant · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Riot Games et consultez leurs notes complètes.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Riot ↗ <span class="sr-only">(nouvel onglet)</span></a>
-    </header>
+    </GameCatalogBanner>
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement des notes de patch…</div>
     <div v-else-if="error || !data" class="val-notice" role="alert">
       <p>Les notes de patch sont momentanément indisponibles. Vous pouvez consulter l’archive officielle de Riot.</p>
@@ -47,10 +46,6 @@ const { page, pageCount, start, end } = usePagination(
 </template>
 
 <style scoped>
-.patch-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin: 40px 0 30px; }
-.patch-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.patch-heading h1 span { color: #fa8c94; }
-.patch-heading p:not(.val-kicker) { max-width: 620px; margin: 0; color: #b8c5cf; line-height: 1.5; }
 .patch-source, .patch-fallback { color: #f2a0a4; font: 700 14px 'Rajdhani', sans-serif; text-decoration: none; }
 .patch-source:hover, .patch-fallback:hover { text-decoration: underline; }
 .patch-fallback { display: inline-block; margin-left: 16px; }
@@ -60,5 +55,5 @@ const { page, pageCount, start, end } = usePagination(
 .patch-toolbar input::placeholder { color: #9caab5; }
 .patch-count { margin: 22px 0 12px; color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
 .patch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 18px; align-items: stretch; }
-@media (max-width: 600px) { .patch-heading { margin-top: 30px; } .patch-fallback { display: block; margin: 16px 0 0; } }
+@media (max-width: 600px) { .patch-fallback { display: block; margin: 16px 0 0; } }
 </style>

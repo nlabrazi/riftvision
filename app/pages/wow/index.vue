@@ -23,7 +23,7 @@ const classes = computed(() => {
 <template>
   <WowLayout>
     <NuxtLink to="/" class="wow-back">← Retour à tous les jeux</NuxtLink>
-    <header class="class-heading"><p class="wow-kicker">ENCYCLOPÉDIE · WORLD OF WARCRAFT RETAIL</p><h1>Les classes WoW<span>.</span></h1><p>Découvrez les classes et leurs spécialisations dans World of Warcraft Retail.</p></header>
+    <GameCatalogBanner game="wow" eyebrow="Encyclopédie · World of Warcraft Retail" title="Les classes WoW" description="Découvrez les classes et leurs spécialisations dans World of Warcraft Retail." />
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement des classes…</div>
     <div v-else-if="error || !data" class="wow-notice" role="alert"><p>Le catalogue des classes est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
@@ -42,10 +42,6 @@ const classes = computed(() => {
 </template>
 
 <style scoped>
-.class-heading { margin: 40px 0 24px; }
-.class-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.class-heading h1 span { color: #d6bb83; }
-.class-heading > p:last-child { color: #b8c5cf; line-height: 1.5; }
 .class-filters { padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .class-filters label { display: flex; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
 .class-filters input { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid #394957; border-radius: 4px; background: #07111b; color: #edf0f4; font: 14px 'Segoe UI', sans-serif; }
@@ -59,5 +55,5 @@ const classes = computed(() => {
 .class-icon-placeholder { display: grid; place-items: center; color: #d6bb83; background: #28313b; font-size: 26px; }
 .class-card strong { flex: 1; font: 700 20px 'Rajdhani', sans-serif; }
 .class-arrow { color: #d6bb83; }
-@media (max-width: 600px) { .class-heading { margin-top: 30px; } .class-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .class-grid { grid-template-columns: 1fr; } }
 </style>

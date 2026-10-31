@@ -53,10 +53,7 @@ function hideBrokenImage(event: Event) {
 <template>
   <HotsLayout>
     <NuxtLink to="/" class="hots-back">← Retour à tous les jeux</NuxtLink>
-    <header class="hots-heading">
-      <div><p class="hots-kicker">ENCYCLOPÉDIE · HEROES OF THE STORM</p><h1>Les héros du Nexus<span>.</span></h1><p>Retrouvez les héros de vos univers Blizzard, leurs compétences et leurs talents.</p></div>
-      <span v-if="data" class="hots-version">Données communautaires · {{ data.version }}</span>
-    </header>
+    <GameCatalogBanner game="hots" eyebrow="Encyclopédie · Heroes of the Storm" title="Les héros du Nexus" description="Retrouvez les héros de vos univers Blizzard, leurs compétences et leurs talents." :badge="data ? `Données communautaires · ${data.version}` : undefined" />
     <div v-if="status === 'pending'" class="hots-notice" role="status">Chargement des héros…</div>
     <div v-else-if="error || !data" class="hots-notice" role="alert"><p>Le catalogue des héros est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
@@ -80,11 +77,6 @@ function hideBrokenImage(event: Event) {
 </template>
 
 <style scoped>
-.hots-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin: 30px 0 24px; padding: 32px; border: 1px solid #9075db55; border-radius: 8px; background: linear-gradient(90deg, #101629f2, #101629ac), url('/assets/images/game-hots.webp') center 43% / cover; }
-.hots-heading h1 { margin: 9px 0; color: #f3f1ff; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.hots-heading h1 span { color: #b6a0ff; }
-.hots-heading p:not(.hots-kicker) { margin: 0; color: #c4cbdc; line-height: 1.5; }
-.hots-version { padding: 7px 10px; border: 1px solid #8e80c766; border-radius: 4px; background: #111324dd; color: #d2c6ff; font: 600 13px 'Rajdhani', sans-serif; }
 .hots-filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #10192b; }
 .hots-filters label { display: flex; flex: 1 1 190px; flex-direction: column; gap: 8px; color: #c5c9d8; font: 600 13px 'Rajdhani', sans-serif; }
 .hots-filters input, .hots-filters select { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid #4a4967; border-radius: 4px; background: #0a1220; color: #edf0f4; font: 14px 'Segoe UI', sans-serif; }
@@ -103,5 +95,5 @@ function hideBrokenImage(event: Event) {
 .hero-copy p { margin: 0; color: #c6b2ff; font: 700 13px 'Rajdhani', sans-serif; }
 .hero-arrow { position: absolute; right: 18px; top: 18px; color: #c6b2ff; }
 @media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } .hero-card:hover, .hero-card:focus-visible { transform: none; } }
-@media (max-width: 600px) { .hots-heading { padding: 22px; } .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .hero-art { height: 105px; } .hero-copy { padding: 12px; } .hero-copy strong { font-size: 19px; } }
+@media (max-width: 600px) { .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .hero-art { height: 105px; } .hero-copy { padding: 12px; } .hero-copy strong { font-size: 19px; } }
 </style>

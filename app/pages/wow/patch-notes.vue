@@ -22,10 +22,9 @@ const { page, pageCount, start, end } = usePagination(
 <template>
   <WowLayout>
     <NuxtLink to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
-    <header class="patch-heading">
-      <div><p class="wow-kicker">WORLD OF WARCRAFT · MISES À JOUR</p><h1>Notes de patch<span>.</span></h1><p>Retrouvez les mises à jour publiées par Blizzard et consultez leurs notes complètes. Certains correctifs concernent aussi WoW Classic.</p></div>
+    <GameCatalogBanner game="wow" eyebrow="World of Warcraft · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Blizzard et consultez leurs notes complètes. Certains correctifs concernent aussi WoW Classic.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Blizzard ↗ <span class="sr-only">(nouvel onglet)</span></a>
-    </header>
+    </GameCatalogBanner>
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement des notes de patch…</div>
     <div v-else-if="error || !data" class="wow-notice" role="alert">
       <p>Les notes de patch sont momentanément indisponibles. Vous pouvez consulter l’archive officielle de Blizzard.</p>
@@ -45,10 +44,6 @@ const { page, pageCount, start, end } = usePagination(
 </template>
 
 <style scoped>
-.patch-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin: 40px 0 30px; }
-.patch-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.patch-heading h1 span { color: #d8ba7d; }
-.patch-heading p:not(.wow-kicker) { max-width: 620px; margin: 0; color: #b8c5cf; line-height: 1.5; }
 .patch-source, .patch-fallback { color: #dfc58d; font: 700 14px 'Rajdhani', sans-serif; text-decoration: none; }
 .patch-source:hover, .patch-fallback:hover { text-decoration: underline; }
 .patch-fallback { display: inline-block; margin-left: 16px; }
@@ -58,5 +53,5 @@ const { page, pageCount, start, end } = usePagination(
 .patch-toolbar input::placeholder { color: #9caab5; }
 .patch-count { margin: 22px 0 12px; color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
 .patch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 18px; align-items: stretch; }
-@media (max-width: 600px) { .patch-heading { margin-top: 30px; } .patch-fallback { display: block; margin: 16px 0 0; } }
+@media (max-width: 600px) { .patch-fallback { display: block; margin: 16px 0 0; } }
 </style>

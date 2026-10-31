@@ -44,7 +44,7 @@ function resetFilters() {
 <template>
   <WowLayout>
     <NuxtLink to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
-    <header class="race-heading"><p class="wow-kicker">ENCYCLOPÉDIE · WORLD OF WARCRAFT RETAIL</p><h1>Les races WoW<span>.</span></h1><p>Explorez les races et leurs classes disponibles.</p></header>
+    <GameCatalogBanner game="wow" eyebrow="Encyclopédie · World of Warcraft Retail" title="Les races WoW" description="Explorez les races et leurs classes disponibles." />
     <p class="race-note">Certaines races apparaissent plusieurs fois : Blizzard distingue leurs variantes par faction.</p>
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement des races…</div>
     <div v-else-if="error || !data" class="wow-notice" role="alert"><p>Le catalogue des races est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
@@ -63,10 +63,6 @@ function resetFilters() {
 </template>
 
 <style scoped>
-.race-heading { margin: 40px 0 24px; }
-.race-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.race-heading h1 span { color: #d6bb83; }
-.race-heading > p:last-child { color: #b8c5cf; line-height: 1.5; }
 .race-note { margin: 0 0 24px; padding: 12px 15px; border-left: 2px solid #c8aa6e; background: #12202c; color: #c4cfd7; line-height: 1.5; }
 .race-filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .race-filters label { display: flex; flex: 1 1 250px; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
@@ -86,5 +82,5 @@ function resetFilters() {
 .race-copy strong { font: 700 20px 'Rajdhani', sans-serif; }
 .race-copy span { color: #b7c2cb; font-size: 13px; }
 .race-arrow { position: absolute; right: 14px; bottom: 14px; color: #d6bb83; }
-@media (max-width: 600px) { .race-heading { margin-top: 30px; } .race-filters .faction-filter { flex: 1 1 140px; } .race-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .race-filters .faction-filter { flex: 1 1 140px; } .race-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

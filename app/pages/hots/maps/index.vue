@@ -31,10 +31,7 @@ function hideBrokenImage(event: Event) {
 <template>
   <HotsLayout>
     <NuxtLink to="/hots" class="hots-back">← Retour aux héros du Nexus</NuxtLink>
-    <header class="maps-heading">
-      <div><p class="hots-kicker">ENCYCLOPÉDIE · HEROES OF THE STORM</p><h1>Champs de bataille<span>.</span></h1><p>Découvrez les lieux du Nexus et les objectifs qui façonnent chaque partie.</p></div>
-      <span v-if="data" class="maps-version">Données communautaires · {{ data.version }}</span>
-    </header>
+    <GameCatalogBanner game="hots" eyebrow="Encyclopédie · Heroes of the Storm" title="Champs de bataille" description="Découvrez les lieux du Nexus et les objectifs qui façonnent chaque partie." :badge="data ? `Données communautaires · ${data.version}` : undefined" />
     <div v-if="status === 'pending'" class="hots-notice" role="status">Chargement des champs de bataille…</div>
     <div v-else-if="error || !data" class="hots-notice" role="alert"><p>Le catalogue est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
@@ -55,11 +52,6 @@ function hideBrokenImage(event: Event) {
 </template>
 
 <style scoped>
-.maps-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin: 30px 0 18px; padding: 32px; border: 1px solid #9075db55; border-radius: 8px; background: linear-gradient(90deg, #101629f2, #101629ac), url('/assets/images/game-hots.webp') center 43% / cover; }
-.maps-heading h1 { margin: 9px 0; color: #f3f1ff; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.maps-heading h1 span { color: #b6a0ff; }
-.maps-heading p:not(.hots-kicker) { margin: 0; color: #c4cbdc; line-height: 1.5; }
-.maps-version { padding: 7px 10px; border: 1px solid #8e80c766; border-radius: 4px; background: #111324dd; color: #d2c6ff; font: 600 13px 'Rajdhani', sans-serif; }
 .maps-disclaimer { margin: 0 0 18px; color: #bbc4d4; font-size: 13px; line-height: 1.5; }
 .maps-search { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #10192b; }
 .maps-search label { color: #c5c9d8; font: 600 13px 'Rajdhani', sans-serif; }
@@ -76,5 +68,5 @@ function hideBrokenImage(event: Event) {
 .map-copy strong { color: #f4f2ff; font: 700 21px/1.15 'Rajdhani', sans-serif; }
 .map-copy > span { color: #c6b2ff; }
 @media (prefers-reduced-motion: reduce) { .map-card { transition: none; } .map-card:hover, .map-card:focus-visible { transform: none; } }
-@media (max-width: 600px) { .maps-heading { padding: 22px; } .maps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .map-copy { padding: 12px; } .map-copy strong { font-size: 18px; } .map-image span { font-size: 9px; } }
+@media (max-width: 600px) { .maps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .map-copy { padding: 12px; } .map-copy strong { font-size: 18px; } .map-image span { font-size: 9px; } }
 </style>

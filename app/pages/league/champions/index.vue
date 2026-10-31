@@ -50,14 +50,7 @@ const { page, pageCount, start, end } = usePagination(
 <template>
   <EncyclopediaLayout>
     <NuxtLink to="/league" class="encyclopedia-back">← Retour à League of Legends</NuxtLink>
-    <div class="champion-heading">
-      <div>
-        <p class="encyclopedia-kicker">ENCYCLOPÉDIE · LEAGUE OF LEGENDS</p>
-        <h1>Les champions<span>.</span></h1>
-        <p>Découvrez les champions de la Faille, leurs histoires et leurs compétences.</p>
-      </div>
-      <span v-if="data" class="champion-version">Données Data Dragon · {{ data.version }}</span>
-    </div>
+    <GameCatalogBanner game="league" eyebrow="Encyclopédie · League of Legends" title="Les champions" description="Découvrez les champions de la Faille, leurs histoires et leurs compétences." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
 
     <div v-if="status === 'pending'" class="encyclopedia-notice" role="status">Chargement des champions…</div>
     <div v-else-if="error || !data" class="encyclopedia-notice" role="alert">
@@ -94,11 +87,7 @@ const { page, pageCount, start, end } = usePagination(
 </template>
 
 <style scoped>
-.champion-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin: 40px 0 30px; }
-.champion-heading h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
-.champion-heading h1 span { color: #d6bb83; }
-.champion-heading p:not(.encyclopedia-kicker) { margin: 0; color: #b8c5cf; line-height: 1.5; }
-.champion-version, .champion-count { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
+.champion-count { color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
 .champion-filters { display: flex; flex-wrap: wrap; gap: 14px; padding: 18px; border: 1px solid #ffffff19; border-radius: 6px; background: #0c1824; }
 .champion-field { display: flex; flex: 1 1 250px; flex-direction: column; gap: 8px; color: #c5d0d8; font: 600 13px 'Rajdhani', sans-serif; }
 .champion-field--role { flex: 0 1 230px; }
@@ -115,5 +104,5 @@ const { page, pageCount, start, end } = usePagination(
 .champion-card:hover, .champion-card:focus-visible { border-color: #c8aa6e; }
 @media (prefers-reduced-motion: no-preference) { .champion-card:hover img, .champion-card:focus-visible img { transform: scale(1.05); } }
 @media (prefers-reduced-motion: reduce) { .champion-card img { transition: none; } }
-@media (max-width: 600px) { .champion-heading { margin-top: 30px; } .champion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .champion-field--role { flex: 1 1 200px; } }
+@media (max-width: 600px) { .champion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .champion-field--role { flex: 1 1 200px; } }
 </style>
