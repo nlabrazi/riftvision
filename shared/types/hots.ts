@@ -44,3 +44,17 @@ export interface HotsHeroResponse {
   locale: 'fr_FR'
   data: HotsHero
 }
+
+export interface HotsPatchNote {
+  title: string
+  updatedAt: string
+  url: string
+  description: string | null
+  imageUrl: string | null
+}
+
+export interface HotsPatchNotesResponse {
+  sourceUrl: string
+  articles: HotsPatchNote[]
+  truncated: boolean
+}

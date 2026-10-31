@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { PatchNoteLink } from '#shared/types/patchNotes'
+import type { HotsPatchNote } from '#shared/types/hots'
 
 const props = defineProps<{
-  article: PatchNoteLink
+  article: PatchNoteLink | HotsPatchNote
   featured?: boolean
-  variant?: 'league' | 'tft' | 'valorant' | 'wow'
+  variant?: 'league' | 'tft' | 'valorant' | 'wow' | 'hots'
 }>()
 const imageFailed = ref(false)
 watch(
@@ -14,9 +15,12 @@ watch(
     imageFailed.value = false
   },
 )
+const date = computed(() =>
+  'updatedAt' in props.article ? props.article.updatedAt : props.article.publishedAt,
+)
 const formattedDate = computed(() =>
   new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(
-    new Date(props.article.publishedAt),
+    new Date(date.value),
   ),
 )
 </script>
@@ -29,7 +33,7 @@ const formattedDate = computed(() =>
       <span v-if="featured" class="patch-card__badge">Dernier patch publié</span>
     </div>
     <div class="patch-card__content">
-      <time class="patch-card__date" :datetime="article.publishedAt">{{ formattedDate }}</time>
+      <time class="patch-card__date" :datetime="date">{{ 'updatedAt' in article ? 'Mis à jour le ' : '' }}{{ formattedDate }}</time>
       <h2>{{ article.title }}</h2>
       <p v-if="article.description" class="patch-card__description">{{ article.description }}</p>
       <a :href="article.url" target="_blank" rel="noopener noreferrer">Lire les notes officielles <span aria-hidden="true">↗</span><span class="sr-only"> pour {{ article.title }} (nouvel onglet)</span></a>
@@ -40,6 +44,7 @@ const formattedDate = computed(() =>
 <style scoped>
 .patch-card { --patch-accent: #dfc58d; display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid #ffffff20; border-radius: 8px; background: linear-gradient(150deg, #142637, #0a1521); box-shadow: 0 12px 30px #00000020; transition: transform .2s, border-color .2s; }
 .patch-card--valorant { --patch-accent: #f3a0a5; }
+.patch-card--hots { --patch-accent: #c5b2ff; }
 .patch-card:hover, .patch-card:focus-within { border-color: var(--patch-accent); transform: translateY(-3px); }
 .patch-card__media { position: relative; overflow: hidden; aspect-ratio: 16 / 9; background: radial-gradient(circle at 70% 35%, #637b8055, transparent 55%), linear-gradient(135deg, #26394a, #0c1927); }
 .patch-card__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }

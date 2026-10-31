@@ -3,7 +3,7 @@
     <a class="skip-link" href="#hots-content">Aller au contenu</a>
     <header class="hots-header">
       <NuxtLink to="/" class="hots-brand">RiftVision</NuxtLink>
-      <nav aria-label="Navigation Heroes of the Storm" class="hots-nav"><NuxtLink to="/">Tous les jeux</NuxtLink><NuxtLink to="/hots">Héros du Nexus</NuxtLink></nav>
+      <nav aria-label="Navigation Heroes of the Storm" class="hots-nav"><NuxtLink to="/">Tous les jeux</NuxtLink><NuxtLink to="/hots">Héros du Nexus</NuxtLink><NuxtLink to="/hots/patch-notes">Notes de patch</NuxtLink></nav>
       <EncyclopediaSearch />
     </header>
     <main id="hots-content" class="hots-main"><slot /></main>
