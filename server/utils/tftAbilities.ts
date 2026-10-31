@@ -12,6 +12,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+function abilityIcon(value: unknown, patch: string): string | null {
+  if (typeof value !== 'string') return null
+  const path = value.toLowerCase()
+  if (!/^assets\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.tex$/.test(path)) return null
+  return `${ORIGIN}/${patch}/game/${path.slice(0, -4)}.png`
+}
+
 function plainDescription(value: string): string {
   return value
     .replace(/\r\\n|\r\n|\\n|\r/g, '\n')
@@ -97,7 +104,11 @@ export function createTftAbilitiesClient(
           const entries = index.get(champion.apiName) ?? []
           entries.push({
             setNumber: set.number as number,
-            ability: { name: champion.ability.name.trim(), description },
+            ability: {
+              name: champion.ability.name.trim(),
+              description,
+              icon: abilityIcon(champion.ability.icon, patch),
+            },
           })
           index.set(champion.apiName, entries)
         }
@@ -126,12 +137,15 @@ export function createTftAbilitiesClient(
     )
     const ability = entries[0]?.ability
     if (!ability) return null
-    return entries.every(
+    const sameAbility = entries.every(
       (entry) =>
         entry.ability.name === ability.name && entry.ability.description === ability.description,
     )
-      ? ability
-      : null
+    if (!sameAbility) return null
+    const icons = new Set(
+      entries.map((entry) => entry.ability.icon).filter((icon) => icon !== null),
+    )
+    return { ...ability, icon: icons.size === 1 ? ([...icons][0] ?? null) : null }
   }
 
   return { getAbility }

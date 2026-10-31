@@ -30,7 +30,11 @@ test('explore les unités TFT par set et coût puis ouvre une fiche', async ({ p
   await page.route('**/api/tft/champions/*/ability', (route) =>
     route.fulfill({
       json: {
-        ability: { name: 'Éclair', description: 'Inflige valeur variable points de dégâts.' },
+        ability: {
+          name: 'Éclair',
+          description: 'Inflige valeur variable points de dégâts.',
+          icon: 'https://raw.communitydragon.org/16.21/game/assets/ahri_q.png',
+        },
         sourceVersion: '16.21',
       },
     }),
@@ -52,6 +56,7 @@ test('explore les unités TFT par set et coût puis ouvre une fiche', async ({ p
   await expect(page.locator('.tft-unit img')).toHaveCSS('object-fit', 'contain')
   await expect(page.getByText('3 PO', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Éclair' })).toBeVisible()
+  await expect(page.locator('.tft-ability-heading img')).toHaveAttribute('src', /ahri_q\.png$/)
   await expect(page.getByText(/Inflige valeur variable/)).toBeVisible()
   await expect(page.getByText(/Données CommunityDragon/)).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
@@ -101,6 +106,14 @@ test('consulte et recherche les traits TFT depuis la navigation', async ({ page 
   await page.getByRole('link', { name: 'Traits', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les traits TFT.' })).toBeVisible()
   await expect(page.getByText('3 traits', { exact: true })).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('18')
+  await expect(page.getByText('1 trait', { exact: true })).toBeVisible()
+  await expect(page.getByText('DA_18_Solar')).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('other')
+  await expect(page.getByText('Maître des lames')).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('all')
+  await page.getByRole('combobox', { name: 'Tri', exact: true }).selectOption('desc')
+  await expect(page.locator('.traits-card').first()).toContainText('Solaire')
   await page.getByLabel('Rechercher un trait').fill('maitre')
   await expect(page.getByText('Maître des lames')).toBeVisible()
   await expect(page.getByText('1 trait', { exact: true })).toBeVisible()
@@ -108,7 +121,7 @@ test('consulte et recherche les traits TFT depuis la navigation', async ({ page 
   await expect(page.getByText('DA_18_Solar')).toBeVisible()
   await page.getByLabel('Rechercher un trait').fill('introuvable')
   await expect(page.getByText('Aucun trait ne correspond à votre recherche.')).toBeVisible()
-  await page.getByRole('button', { name: 'Effacer la recherche' }).click()
+  await page.getByRole('button', { name: 'Effacer les filtres' }).click()
   await expect(page.getByText('3 traits', { exact: true })).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
@@ -147,7 +160,7 @@ test('consulte et recherche les objets TFT depuis la navigation', async ({ page 
   const items = [
     { id: 'TFT_Item_BFSword', name: 'BF Glaive', icon: 'sword.png' },
     { id: 'TFTTutorial_Item_BFSword', name: 'BF Glaive', icon: 'sword.png' },
-    { id: 'TFT_Item_GuinsoosRageblade', name: 'Lame enragée de Guinsoo', icon: 'blade.png' },
+    { id: 'TFT17_Item_GuinsoosRageblade', name: 'Lame enragée de Guinsoo', icon: 'blade.png' },
   ]
   await page.route('**/api/ddragon/tft/champions', (route) =>
     route.fulfill({ json: { version, locale: 'fr_FR', data } }),
@@ -161,6 +174,14 @@ test('consulte et recherche les objets TFT depuis la navigation', async ({ page 
   await expect(page.getByRole('heading', { name: 'Les objets TFT.' })).toBeVisible()
   await expect(page.getByText('3 objets', { exact: true })).toBeVisible()
   await expect(page.getByText(/Les entrées sans nom ne sont pas affichées/)).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('17')
+  await expect(page.getByText('1 objet', { exact: true })).toBeVisible()
+  await expect(page.getByText('Lame enragée de Guinsoo')).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('other')
+  await expect(page.getByText('2 objets', { exact: true })).toBeVisible()
+  await page.getByLabel('Set identifié').selectOption('all')
+  await page.getByRole('combobox', { name: 'Tri', exact: true }).selectOption('desc')
+  await expect(page.locator('.objets-card').first()).toContainText('Lame enragée de Guinsoo')
   await page.getByLabel('Rechercher un objet').fill('enragee')
   await expect(page.getByText('Lame enragée de Guinsoo')).toBeVisible()
   await expect(page.getByText('1 objet', { exact: true })).toBeVisible()
@@ -168,7 +189,7 @@ test('consulte et recherche les objets TFT depuis la navigation', async ({ page 
   await expect(page.getByText('TFTTutorial_Item_BFSword')).toBeVisible()
   await page.getByLabel('Rechercher un objet').fill('introuvable')
   await expect(page.getByText('Aucun objet ne correspond à votre recherche.')).toBeVisible()
-  await page.getByRole('button', { name: 'Effacer la recherche' }).click()
+  await page.getByRole('button', { name: 'Effacer les filtres' }).click()
   await expect(page.getByText('3 objets', { exact: true })).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(

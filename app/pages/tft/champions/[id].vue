@@ -38,7 +38,7 @@ useHead({ title: computed(() => `${unit.value?.name ?? 'Unité TFT'} — RiftVis
         <p v-if="abilityStatus === 'pending' || abilityStatus === 'idle'" role="status">Chargement de la compétence…</p>
         <div v-else-if="abilityError" role="alert"><p>La compétence est momentanément indisponible.</p><button type="button" class="rv-button" @click="refreshAbility()">Réessayer</button></div>
         <template v-else-if="abilityData?.ability">
-          <h3>{{ abilityData.ability.name }}</h3>
+          <div class="tft-ability-heading"><img v-if="abilityData.ability.icon" :src="abilityData.ability.icon" alt="" loading="lazy" @error="($event.target as HTMLImageElement).hidden = true" /><h3>{{ abilityData.ability.name }}</h3></div>
           <p class="tft-ability-description">{{ abilityData.ability.description }}</p>
           <p class="tft-ability-source">Données CommunityDragon · patch {{ abilityData.sourceVersion }}. Certaines valeurs dépendent du contexte de jeu et sont indiquées comme variables.</p>
         </template>
@@ -63,6 +63,8 @@ useHead({ title: computed(() => `${unit.value?.name ?? 'Unité TFT'} — RiftVis
 .tft-details dd { margin: 5px 0 0; color: #e3c78d; font-weight: 700; }
 .tft-details p { margin: 24px 0 0; color: #c6d0d9; line-height: 1.6; }
 .tft-ability h3 { margin: 0; color: #e3c78d; font: 700 20px 'Rajdhani', sans-serif; }
+.tft-ability-heading { display: flex; align-items: center; gap: 14px; }
+.tft-ability-heading img { flex: 0 0 54px; width: 54px; height: 54px; border: 1px solid #c8aa6e88; border-radius: 6px; object-fit: cover; }
 .tft-ability p { margin-top: 12px; }
 .tft-ability-description { white-space: pre-line; }
 .tft-ability .tft-ability-source { color: #aebbc8; font-size: 13px; }

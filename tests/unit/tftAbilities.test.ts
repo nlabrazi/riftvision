@@ -5,6 +5,7 @@ import { DataDragonUnavailableError } from '../../server/utils/dataDragon'
 const ability = {
   name: 'Éclair',
   desc: '<spellActive>Actif :</spellActive> inflige @ModifiedDamage@&nbsp;pts de dégâts.\r\\n\r\\nBonus %i:scaleAP%.',
+  icon: 'ASSETS/Characters/Ahri/HUD/Icons2D/Ahri_Q.tex',
 }
 const source = {
   setData: [
@@ -25,6 +26,7 @@ describe('compétences TFT CommunityDragon', () => {
     expect(await client.getAbility('DA_Ahri', 18, '16.21.1')).toEqual({
       name: 'Éclair',
       description: 'Actif : inflige valeur variable pts de dégâts.\n\nBonus .',
+      icon: 'https://raw.communitydragon.org/16.21/game/assets/characters/ahri/hud/icons2d/ahri_q.png',
     })
     expect(String(fetcher.mock.calls[0]?.[0])).toBe(
       'https://raw.communitydragon.org/16.21/cdragon/tft/fr_fr.json',
@@ -48,6 +50,29 @@ describe('compétences TFT CommunityDragon', () => {
     }
     const client = createTftAbilitiesClient(async () => new Response(JSON.stringify(ambiguous)))
     expect(await client.getAbility('DA_Ahri', 18, '16.21.1')).toBeNull()
+  })
+
+  it('ignore les icônes invalides ou ambiguës sans masquer la compétence', async () => {
+    const sourceWithIcons = {
+      setData: [
+        {
+          number: 18,
+          champions: [
+            { apiName: 'Bad', ability: { ...ability, icon: 'assets/../../malicious.tex' } },
+            { apiName: 'Ambiguous', ability },
+            {
+              apiName: 'Ambiguous',
+              ability: { ...ability, icon: 'assets/characters/ahri/other.tex' },
+            },
+          ],
+        },
+      ],
+    }
+    const client = createTftAbilitiesClient(
+      async () => new Response(JSON.stringify(sourceWithIcons)),
+    )
+    expect((await client.getAbility('Bad', 18, '16.21.1'))?.icon).toBeNull()
+    expect((await client.getAbility('Ambiguous', 18, '16.21.1'))?.icon).toBeNull()
   })
 
   it('partage les requêtes et recharge après expiration ou changement de patch', async () => {
