@@ -3,6 +3,7 @@ import type { PatchNoteLink, PatchNotesResponse } from '#shared/types/patchNotes
 export const PATCH_NOTES_SOURCE = 'https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
 export const TFT_PATCH_NOTES_SOURCE =
   'https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/'
+export const VALORANT_PATCH_NOTES_SOURCE = 'https://playvalorant.com/fr-fr/news/tags/patch-notes/'
 const LOL_CONFIG = {
   source: PATCH_NOTES_SOURCE,
   origin: 'https://www.leagueoflegends.com',
@@ -14,6 +15,12 @@ const TFT_CONFIG = {
   origin: 'https://teamfighttactics.leagueoflegends.com',
   product: 'teamfight_tactics',
   requireNotes: false,
+}
+const VALORANT_CONFIG = {
+  source: VALORANT_PATCH_NOTES_SOURCE,
+  origin: 'https://playvalorant.com',
+  product: 'valorant',
+  requireNotes: true,
 }
 const TTL = 60 * 60 * 1000
 
@@ -70,7 +77,10 @@ function parseRiotPatchNotes(html: string, config: typeof LOL_CONFIG): PatchNote
         url.origin !== config.origin ||
         url.username ||
         url.password ||
-        !/^\/fr-fr\/news\/game-updates\/[a-z0-9-]+\/?$/.test(url.pathname) ||
+        (!/^\/fr-fr\/news\/game-updates\/[a-z0-9-]+\/?$/.test(url.pathname) &&
+          !(
+            config.product === 'valorant' && /^\/fr-fr\/news\/[a-z0-9-]+\/?$/.test(url.pathname)
+          )) ||
         !url.pathname.includes('patch') ||
         (config.requireNotes && !url.pathname.includes('notes')) ||
         url.search ||
@@ -96,6 +106,10 @@ export function parseTftPatchNotes(html: string): PatchNotesResponse {
   return parseRiotPatchNotes(html, TFT_CONFIG)
 }
 
+export function parseValorantPatchNotes(html: string): PatchNotesResponse {
+  return parseRiotPatchNotes(html, VALORANT_CONFIG)
+}
+
 export function createPatchNotesClient(
   fetcher: typeof fetch = fetch,
   now: () => number = Date.now,
@@ -108,6 +122,13 @@ export function createTftPatchNotesClient(
   now: () => number = Date.now,
 ) {
   return createRiotPatchNotesClient(TFT_CONFIG, fetcher, now)
+}
+
+export function createValorantPatchNotesClient(
+  fetcher: typeof fetch = fetch,
+  now: () => number = Date.now,
+) {
+  return createRiotPatchNotesClient(VALORANT_CONFIG, fetcher, now)
 }
 
 function createRiotPatchNotesClient(
@@ -146,3 +167,4 @@ function createRiotPatchNotesClient(
 
 export const patchNotes = createPatchNotesClient()
 export const tftPatchNotes = createTftPatchNotesClient()
+export const valorantPatchNotes = createValorantPatchNotesClient()

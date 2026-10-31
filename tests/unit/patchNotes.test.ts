@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   createPatchNotesClient,
   createTftPatchNotesClient,
+  createValorantPatchNotesClient,
   parsePatchNotes,
   parseTftPatchNotes,
+  parseValorantPatchNotes,
   PatchNotesUnavailableError,
 } from '../../server/utils/patchNotes'
 
@@ -184,6 +186,107 @@ describe('notes de patch TFT', () => {
     expect(fetcher).toHaveBeenCalledTimes(2)
     expect(String(fetcher.mock.calls[1]?.[0])).toBe(
       'https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/',
+    )
+    clock += 60 * 60 * 1000 + 1
+    await client.getPatchNotes()
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+})
+
+describe('notes de patch Valorant', () => {
+  const item = (title: string, url: string, date: string, product = 'valorant') => ({
+    title,
+    publishedAt: date,
+    product: { machineName: product },
+    action: { payload: { url } },
+  })
+  it('conserve les articles officiels Valorant, classe par date et rejette les autres liens', () => {
+    const result = parseValorantPatchNotes(
+      page([
+        item(
+          'Patch 1.0',
+          '/fr-fr/news/game-updates/notes-de-patch-1-0-de-valorant/',
+          '2020-06-02T18:00:00Z',
+        ),
+        item(
+          'Patch 13.09',
+          '/fr-fr/news/game-updates/valorant-patch-notes-1309',
+          '2026-10-27T13:00:00Z',
+        ),
+        item('Patch 10.07', '/fr-fr/news/valorant-patch-notes-10-07', '2025-04-15T13:00:00Z'),
+        item(
+          'Doublon',
+          '/fr-fr/news/game-updates/valorant-patch-notes-1309/',
+          '2026-10-27T13:00:00Z',
+        ),
+        item(
+          'Autre jeu',
+          '/fr-fr/news/game-updates/patch-18-6-notes',
+          '2026-10-28T18:00:00Z',
+          'teamfight_tactics',
+        ),
+        item(
+          'Domaine externe',
+          'https://evil.example/fr-fr/news/game-updates/valorant-patch-notes-1310',
+          '2026-10-28T18:00:00Z',
+        ),
+        item(
+          'Identifiants dans URL',
+          'https://user@playvalorant.com/fr-fr/news/game-updates/valorant-patch-notes-1310',
+          '2026-10-28T18:00:00Z',
+        ),
+        item(
+          'Requête',
+          '/fr-fr/news/game-updates/valorant-patch-notes-1310?x=1',
+          '2026-10-28T18:00:00Z',
+        ),
+        item(
+          'Mauvais chemin',
+          '/fr-fr/news/esports/valorant-patch-notes-1310',
+          '2026-10-28T18:00:00Z',
+        ),
+        item(
+          'Sans notes',
+          '/fr-fr/news/game-updates/valorant-patch-update',
+          '2026-10-28T18:00:00Z',
+        ),
+        item('Date invalide', '/fr-fr/news/game-updates/valorant-patch-notes-1310', 'invalid'),
+      ]),
+    )
+    expect(result.sourceUrl).toBe('https://playvalorant.com/fr-fr/news/tags/patch-notes/')
+    expect(result.articles.map((entry) => entry.title)).toEqual([
+      'Patch 13.09',
+      'Patch 10.07',
+      'Patch 1.0',
+    ])
+    expect(result.articles[0]?.url).toBe(
+      'https://playvalorant.com/fr-fr/news/game-updates/valorant-patch-notes-1309',
+    )
+  })
+  it('partage les requêtes, renouvelle le cache et ne conserve pas les erreurs', async () => {
+    let clock = 0
+    let available = false
+    const fetcher = vi.fn<typeof fetch>(async () =>
+      available
+        ? new Response(
+            page([
+              item(
+                'Patch 13.09',
+                '/fr-fr/news/game-updates/valorant-patch-notes-1309',
+                '2026-10-27T13:00:00Z',
+              ),
+            ]),
+          )
+        : new Response('', { status: 503 }),
+    )
+    const client = createValorantPatchNotesClient(fetcher, () => clock)
+    await expect(client.getPatchNotes()).rejects.toBeInstanceOf(PatchNotesUnavailableError)
+    available = true
+    await Promise.all([client.getPatchNotes(), client.getPatchNotes()])
+    await client.getPatchNotes()
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(String(fetcher.mock.calls[1]?.[0])).toBe(
+      'https://playvalorant.com/fr-fr/news/tags/patch-notes/',
     )
     clock += 60 * 60 * 1000 + 1
     await client.getPatchNotes()
