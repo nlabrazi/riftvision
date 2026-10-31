@@ -8,6 +8,21 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   await page.goto('/')
   await initialStatus
 
+  const hero = page.locator('.portal-hero')
+  const { available } = await (await request.get('/api/download/availability')).json()
+  if (available) {
+    await expect(hero.getByRole('link', { name: /Télécharger le compagnon LoL/ })).toHaveAttribute(
+      'href',
+      '/api/download/overlay',
+    )
+  } else {
+    await expect(hero.getByRole('link', { name: /Découvrir le compagnon LoL/ })).toHaveAttribute(
+      'href',
+      '/league#league-of-legends',
+    )
+    await expect(hero.getByText(/téléchargement indisponible/)).toBeVisible()
+  }
+  await expect(hero.getByText(/Overlay Windows pour League of Legends/)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Tous les jeux.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Teamfight Tactics' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Valorant' })).toBeVisible()
@@ -39,6 +54,27 @@ test('ouvre directement l’espace League of Legends et revient au portail', asy
   await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('heading', { name: 'Tous les jeux.' })).toBeVisible()
+})
+
+test('explique lorsque le compagnon Windows ne peut pas être téléchargé', async ({ page }) => {
+  await page.route('**/api/download/availability', (route) =>
+    route.fulfill({ json: { available: false } }),
+  )
+  await page.goto('/hots')
+  await page.waitForLoadState('networkidle')
+  await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
+  const hero = page.locator('.portal-hero')
+  await expect(hero.getByText(/téléchargement indisponible/)).toBeVisible()
+  await expect(hero.getByRole('link', { name: /Découvrir le compagnon LoL/ })).toHaveAttribute(
+    'href',
+    '/league#league-of-legends',
+  )
+  await expect(hero.getByRole('link', { name: /Télécharger le compagnon/ })).toHaveCount(0)
+  await hero.getByRole('link', { name: /Découvrir le compagnon LoL/ }).click()
+  await expect(
+    page.getByText(/Le téléchargement du compagnon Windows est indisponible/),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: /Télécharger l’application/ })).toHaveCount(0)
 })
 
 test('affiche la galerie sur mobile sans débordement horizontal', async ({ page, request }) => {
@@ -79,6 +115,57 @@ test('anime la carte disponible au clavier et respecte la réduction des mouveme
     .toBe('none')
   await expect.poll(() => tftCard.evaluate((card) => getComputedStyle(card).transform)).toBe('none')
   await expect(leagueCard).toBeFocused()
+})
+
+test('lit la bannière vidéo en boucle et permet de la mettre en pause', async ({ page }) => {
+  await page.goto('/')
+  const video = page.locator('.portal-hero video')
+  await expect(video.locator('source')).toHaveCount(2)
+  await expect(video.locator('source').first()).toHaveAttribute(
+    'src',
+    '/assets/videos/portal-hero.webm',
+  )
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => !element.paused)).toBe(true)
+  expect(await video.evaluate((element: HTMLVideoElement) => element.muted && element.loop)).toBe(
+    true,
+  )
+  await page.getByRole('button', { name: 'Mettre la vidéo en pause' }).click()
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(true)
+  await page.getByRole('button', { name: 'Lire la vidéo' }).click()
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => !element.paused)).toBe(true)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(video).toHaveCount(0)
+  await page.getByRole('button', { name: 'Lire la vidéo' }).click()
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => !element.paused)).toBe(true)
+  await page.getByRole('button', { name: 'Mettre la vidéo en pause' }).click()
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(true)
+})
+
+test('utilise le MP4 quand la source WebM est indisponible', async ({ page }) => {
+  await page.route('**/assets/videos/portal-hero.webm', (route) => route.abort())
+  await page.goto('/')
+  const video = page.locator('.portal-hero video')
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentSrc))
+    .toContain('portal-hero.mp4')
+  await expect.poll(() => video.evaluate((element: HTMLVideoElement) => !element.paused)).toBe(true)
+})
+
+test('signale une vidéo indisponible si les deux formats échouent', async ({ page }) => {
+  await page.route('**/assets/videos/portal-hero.*', (route) => route.abort())
+  await page.goto('/')
+  await expect(page.getByText('Vidéo indisponible')).toBeVisible()
+  await expect(page.locator('.portal-hero video')).toHaveCount(0)
+})
+
+test('charge Rajdhani corrigée depuis les fichiers locaux', async ({ page }) => {
+  const fontRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.url().includes('/assets/fonts/Rajdhani-')) fontRequests.push(request.url())
+  })
+  await page.goto('/')
+  await page.evaluate(() => document.fonts.load('700 16px Rajdhani'))
+  expect(fontRequests.some((url) => url.endsWith('/Rajdhani-bold.woff2'))).toBe(true)
 })
 
 test('charge les illustrations des jeux', async ({ page }) => {

@@ -10,6 +10,10 @@ export default defineNuxtConfig({
 
   modules: ['@nuxt/hints', '@nuxt/image', '@nuxt/ui'],
 
+  fonts: {
+    families: [{ name: 'Rajdhani', provider: 'local' }],
+  },
+
   css: ['~/assets/css/main.css'],
 
   app: {
@@ -31,7 +35,7 @@ export default defineNuxtConfig({
         },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap',
         },
       ],
     },

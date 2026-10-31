@@ -1,9 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const genres = ['Tous', 'MOBA', 'Stratégie', 'FPS', 'MMO'] as const
 type Genre = (typeof genres)[number]
 const selectedGenre = ref<Genre>('Tous')
+const { data: installer } = await useFetch<{ available: boolean }>('/api/download/availability')
+const heroVideo = ref<HTMLVideoElement | null>(null)
+const videoEnabled = ref(false)
+const videoFailed = ref(false)
+const videoPlaying = ref(false)
+let motionPreference: MediaQueryList | undefined
+
+function syncMotionPreference() {
+  videoEnabled.value = !motionPreference?.matches
+  if (!videoEnabled.value) videoPlaying.value = false
+}
+
+onMounted(() => {
+  motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+  syncMotionPreference()
+  motionPreference.addEventListener('change', syncMotionPreference)
+})
+
+onBeforeUnmount(() => motionPreference?.removeEventListener('change', syncMotionPreference))
+
+async function toggleHeroVideo() {
+  const wasEnabled = videoEnabled.value
+  if (!videoEnabled.value) {
+    videoEnabled.value = true
+    await nextTick()
+  }
+  const video = heroVideo.value
+  if (!video) return
+  if (wasEnabled && !video.paused) {
+    video.pause()
+    return
+  }
+  try {
+    await video.play()
+  } catch {
+    videoPlaying.value = false
+  }
+}
 
 function showGenre(genre: Genre) {
   return selectedGenre.value === 'Tous' || selectedGenre.value === genre
@@ -16,13 +54,17 @@ function showGenre(genre: Genre) {
       <div class="portal-hero__content">
         <p class="portal-eyebrow">RIFTVISION · VOTRE COMPAGNON DE JEU</p>
         <h2 id="portal-title">Chaque partie<br /><span>mérite un autre regard.</span></h2>
-        <p class="portal-hero__description">Retrouvez vos univers de jeu, explorez leurs contenus et gardez un œil sur votre partie.</p>
+        <p class="portal-hero__description">Explorez vos jeux, retrouvez leurs encyclopédies et découvrez les dernières mises à jour.</p>
         <div class="portal-hero__actions">
           <a class="portal-primary" href="#jeux">Découvrir les jeux <span aria-hidden="true">↘</span></a>
-          <a class="portal-secondary" href="#league-of-legends">Suivre ma partie LoL <span aria-hidden="true">→</span></a>
+          <a v-if="installer?.available" class="portal-secondary" href="/api/download/overlay" download>Télécharger le compagnon LoL <span aria-hidden="true">↓</span></a>
+          <NuxtLink v-else class="portal-secondary" to="/league#league-of-legends">Découvrir le compagnon LoL <span aria-hidden="true">→</span></NuxtLink>
         </div>
-        <p class="portal-hero__note"><span aria-hidden="true"></span> Suivi League of Legends disponible</p>
+        <p class="portal-hero__note"><span aria-hidden="true" :class="{ 'portal-hero__dot--unavailable': !installer?.available }"></span><span>Overlay Windows pour League of Legends · nécessite RiftVision en local<template v-if="!installer?.available"> · téléchargement indisponible</template></span></p>
       </div>
+      <div class="portal-hero__art" aria-hidden="true"><video v-if="videoEnabled && !videoFailed" ref="heroVideo" autoplay muted loop playsinline preload="metadata" @play="videoPlaying = true" @pause="videoPlaying = false" @error="videoFailed = true"><source src="/assets/videos/portal-hero.webm" type="video/webm; codecs=vp9" /><source src="/assets/videos/portal-hero.mp4" type="video/mp4" @error="videoFailed = true" /></video></div>
+      <button v-if="!videoFailed" type="button" class="portal-hero__video-control" :aria-label="videoPlaying ? 'Mettre la vidéo en pause' : 'Lire la vidéo'" @click="toggleHeroVideo">{{ videoPlaying ? '❚❚' : '▶' }}</button>
+      <span v-else class="portal-hero__video-error" role="status">Vidéo indisponible</span>
     </section>
 
     <section id="jeux" class="portal-section" aria-labelledby="games-title">
@@ -114,8 +156,14 @@ function showGenre(genre: Genre) {
 
 <style scoped>
 .game-portal { margin-bottom: 24px; }
-.portal-hero { position: relative; display: flex; align-items: center; min-height: 450px; overflow: hidden; border: 1px solid #9e865134; border-radius: 8px; background: linear-gradient(90deg, #07111df5 4%, #07111de8 36%, #07111d66 75%, #07111d3d), url('/screenshot.png') center 45% / cover; }
-.portal-hero__content { position: relative; max-width: 690px; padding: clamp(28px, 5vw, 74px); }
+.portal-hero { position: relative; display: flex; align-items: center; min-height: 450px; overflow: hidden; isolation: isolate; border: 1px solid #9e865134; border-radius: 8px; background: radial-gradient(ellipse at 78% 40%, #273451, transparent 55%), #07111d; }
+.portal-hero__content { position: relative; z-index: 1; max-width: 690px; padding: clamp(28px, 5vw, 74px); }
+.portal-hero__art { position: absolute; inset: 0; overflow: hidden; background: url('/assets/images/league-ahri-splash.jpg') center / cover; }
+.portal-hero__art video { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.portal-hero__art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #07111df7 0%, #07111dd9 32%, #07111d55 68%, #07111d33), linear-gradient(0deg, #07111d99, transparent 55%); }
+.portal-hero__video-control { position: absolute; z-index: 2; right: 18px; bottom: 18px; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #ffffff70; border-radius: 50%; background: #07111dbb; color: #fff; font-size: 12px; cursor: pointer; }
+.portal-hero__video-control:hover, .portal-hero__video-control:focus-visible { border-color: #e6ca91; background: #101d2c; }
+.portal-hero__video-error { position: absolute; z-index: 2; right: 18px; bottom: 18px; padding: 6px 10px; border-radius: 4px; background: #07111dcc; color: #e4e8ed; font-size: 12px; }
 .portal-eyebrow { margin: 0 0 15px; color: #c8aa6e; font: 700 11px/1.4 'Rajdhani', sans-serif; letter-spacing: .18em; }
 .portal-hero h2, .portal-section h2, .portal-next-heading h2 { margin: 0; color: #f1f1ee; font: 700 clamp(36px, 4vw, 62px)/1.04 'Rajdhani', sans-serif; letter-spacing: -.025em; }
 .portal-hero h2 span, .portal-section h2 span, .portal-next-heading h2 span { color: #d6bb83; }
@@ -127,7 +175,8 @@ function showGenre(genre: Genre) {
 .portal-primary:hover { background: #dfc38a; }
 .portal-secondary:hover { border-color: #c8aa6e; }
 .portal-hero__note { display: flex; align-items: center; gap: 8px; margin: 20px 0 0; color: #a7b3bb; font-size: 12px; }
-.portal-hero__note span { width: 6px; height: 6px; background: #66d5ad; border-radius: 50%; }
+.portal-hero__note > span:first-child { flex: 0 0 6px; width: 6px; height: 6px; background: #66d5ad; border-radius: 50%; }
+.portal-hero__note > .portal-hero__dot--unavailable { background: #b6a178; }
 .portal-section { padding-top: 65px; scroll-margin-top: 20px; }
 .portal-section__heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 24px; }
 .portal-section h2, .portal-next-heading h2 { font-size: clamp(28px, 3vw, 38px); }
@@ -170,8 +219,9 @@ a.game-card:hover, a.game-card:focus-visible { border-color: #c8aa6e; }
 .portal-next-heading { padding-top: 65px; }
 .portal-next-heading .portal-eyebrow { margin-bottom: 12px; }
 @media (max-width: 600px) {
-  .portal-hero { min-height: 420px; background-position: center, 62% center; }
-  .portal-hero__content { padding: 30px 24px; }
+  .portal-hero { min-height: 490px; }
+  .portal-hero__content { padding: 30px 24px 68px; }
+  .portal-hero__art::after { background: linear-gradient(90deg, #07111dd9, #07111d99), linear-gradient(0deg, #07111d99, transparent); }
   .portal-section, .portal-next-heading { padding-top: 46px; }
   .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .game-card__body { padding: 14px 12px 16px; }
