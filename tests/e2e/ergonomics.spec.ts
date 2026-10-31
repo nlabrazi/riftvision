@@ -4,7 +4,7 @@ async function startDemo(page: Page) {
   const initialStatus = page.waitForResponse((response) =>
     response.url().includes('/api/riot/status'),
   )
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/league', { waitUntil: 'domcontentloaded' })
   await initialStatus
   await page.getByTestId('mock-toggle-button').click()
   await expect(page.getByTestId('status-banner')).toContainText('Démo · exemple de partie à 16:45')

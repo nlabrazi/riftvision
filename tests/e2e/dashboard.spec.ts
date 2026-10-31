@@ -12,7 +12,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     const initialStatusPromise = page.waitForResponse((res) =>
       res.url().includes('/api/riot/status'),
     )
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatusPromise
 
     // Toggle mock mode to activate game data
@@ -55,7 +55,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     const initialStatusPromise = page.waitForResponse((res) =>
       res.url().includes('/api/riot/status'),
     )
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatusPromise
 
     // Toggle mock mode
@@ -82,7 +82,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
 
   test('keeps the map visible and opens the immersive view', async ({ page }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await expect(page.getByTestId('view-map-btn')).toHaveCount(0)
     await page.getByTestId('mock-toggle-button').click()
@@ -104,7 +104,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
     page,
   }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await page.getByTestId('mock-toggle-button').click()
     const journal = page.getByTestId('live-diff-feed')
@@ -125,7 +125,7 @@ test.describe('Tactical Dashboard & Team Economy View', () => {
 
   test('opens champion details with the keyboard and clears them with Escape', async ({ page }) => {
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
     await page.getByTestId('mock-toggle-button').click()
     const champion = page.getByTestId('champion-map-pin').first()

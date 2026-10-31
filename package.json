@@ -1,7 +1,7 @@
 {
   "name": "riftvision",
   "version": "1.3.0",
-  "description": "Copilote tactique et overlay in-game pour League of Legends",
+  "description": "Portail multijeu, encyclopédies et compagnon de partie",
   "author": "Nabil Labrazi",
   "type": "module",
   "private": true,

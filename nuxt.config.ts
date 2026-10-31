@@ -18,7 +18,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'RiftVision — Copilote Tactique LoL Second-Screen',
+      title: 'RiftVision — Vos jeux, vos parties',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

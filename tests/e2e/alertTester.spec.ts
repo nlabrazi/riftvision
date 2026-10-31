@@ -4,7 +4,7 @@ test.describe('AlertTester sound and alert triggers', () => {
   test.beforeEach(async ({ page, request }) => {
     await request.post('/api/riot/mock', { data: { enabled: false } })
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
 
     // Start demo to activate game state

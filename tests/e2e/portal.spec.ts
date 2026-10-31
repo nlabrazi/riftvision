@@ -11,25 +11,33 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   const hero = page.locator('.portal-hero')
   const { available } = await (await request.get('/api/download/availability')).json()
   if (available) {
-    await expect(hero.getByRole('link', { name: /Télécharger le compagnon LoL/ })).toHaveAttribute(
+    await expect(hero.getByRole('link', { name: /Télécharger le compagnon/ })).toHaveAttribute(
       'href',
       '/api/download/overlay',
     )
   } else {
-    await expect(hero.getByRole('link', { name: /Découvrir le compagnon LoL/ })).toHaveAttribute(
+    await expect(hero.getByRole('link', { name: /Découvrir le compagnon/ })).toHaveAttribute(
       'href',
-      '/league#league-of-legends',
+      '#compagnon',
     )
     await expect(hero.getByText(/téléchargement indisponible/)).toBeVisible()
   }
-  await expect(hero.getByText(/Overlay Windows pour League of Legends/)).toBeVisible()
+  await expect(
+    hero.getByText(/Overlay Windows · actuellement pour League of Legends/),
+  ).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Tous les jeux.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Teamfight Tactics' })).toBeVisible()
+  const catalog = page.locator('.game-grid')
+  await expect(catalog.getByRole('heading', { name: 'Teamfight Tactics' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Valorant' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'World of Warcraft' })).toBeVisible()
+  await expect(catalog.getByRole('heading', { name: 'World of Warcraft' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Counter-Strike 2' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Heroes of the Storm' })).toBeVisible()
   await expect(page.locator('article.game-card').filter({ hasText: 'À venir' })).toHaveCount(2)
+  const companion = page.getByRole('region', { name: 'Vos parties, au même endroit.' })
+  await expect(companion).toContainText('Disponible')
+  await expect(companion.getByText('À l’étude', { exact: true })).toHaveCount(2)
+  await expect(page.getByTestId('mock-toggle-button')).toHaveCount(0)
+  await expect(page.getByTestId('live-toggle-button')).toHaveCount(0)
 
   await page.getByRole('link', { name: /Accéder à League of Legends/ }).click()
   await expect(page).toHaveURL(/\/league$/)
@@ -65,16 +73,17 @@ test('explique lorsque le compagnon Windows ne peut pas être téléchargé', as
   await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
   const hero = page.locator('.portal-hero')
   await expect(hero.getByText(/téléchargement indisponible/)).toBeVisible()
-  await expect(hero.getByRole('link', { name: /Découvrir le compagnon LoL/ })).toHaveAttribute(
+  await expect(hero.getByRole('link', { name: /Découvrir le compagnon/ })).toHaveAttribute(
     'href',
-    '/league#league-of-legends',
+    '#compagnon',
   )
   await expect(hero.getByRole('link', { name: /Télécharger le compagnon/ })).toHaveCount(0)
-  await hero.getByRole('link', { name: /Découvrir le compagnon LoL/ }).click()
+  await hero.getByRole('link', { name: /Découvrir le compagnon/ }).click()
+  await page.getByRole('link', { name: /Découvrir le suivi LoL/ }).click()
   await expect(
     page.getByText(/Le téléchargement du compagnon Windows est indisponible/),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: /Télécharger l’application/ })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /Télécharger le compagnon/ })).toHaveCount(0)
 })
 
 test('affiche la galerie sur mobile sans débordement horizontal', async ({ page, request }) => {
@@ -82,7 +91,9 @@ test('affiche la galerie sur mobile sans débordement horizontal', async ({ page
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: 'World of Warcraft' })).toBeVisible()
+  await expect(
+    page.locator('.game-grid').getByRole('heading', { name: 'World of Warcraft' }),
+  ).toBeVisible()
   const hasOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,
   )
@@ -228,13 +239,19 @@ test('filtre la galerie par genre et revient à tous les jeux', async ({ page })
   await expect(page.getByRole('heading', { name: 'Counter-Strike 2' })).toBeVisible()
   await filters.getByRole('button', { name: 'MOBA' }).click()
   await expect(page.getByRole('heading', { name: 'Heroes of the Storm' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'League of Legends' })).toBeVisible()
+  await expect(
+    page.locator('.game-grid').getByRole('heading', { name: 'League of Legends' }),
+  ).toBeVisible()
   await filters.getByRole('button', { name: 'MMO' }).click()
   await expect(page.locator('.game-card')).toHaveCount(1)
-  await expect(page.getByRole('heading', { name: 'World of Warcraft' })).toBeVisible()
+  await expect(
+    page.locator('.game-grid').getByRole('heading', { name: 'World of Warcraft' }),
+  ).toBeVisible()
   await filters.getByRole('button', { name: 'Stratégie' }).click()
   await expect(page.locator('.game-card')).toHaveCount(1)
-  await expect(page.getByRole('heading', { name: 'Teamfight Tactics' })).toBeVisible()
+  await expect(
+    page.locator('.game-grid').getByRole('heading', { name: 'Teamfight Tactics' }),
+  ).toBeVisible()
   await filters.getByRole('button', { name: 'Tous' }).click()
   await expect(page.locator('.game-card')).toHaveCount(7)
 })

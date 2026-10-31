@@ -19,7 +19,9 @@
 
 ### ℹ️ Description
 
-**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game**, affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
+**RiftVision** est un portail multijeu pour explorer des encyclopédies, consulter des notes de patch et retrouver des outils dédiés à ses jeux. Il propose actuellement des contenus pour **League of Legends**, **Teamfight Tactics**, **Valorant**, **World of Warcraft Retail** et **Heroes of the Storm**.
+
+Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tableau de bord sur second écran, suivi de partie, bilans et overlay Windows. L’extension des bilans à TFT et l’étude du suivi des arènes 3c3 de WoW font partie des pistes envisagées, sous réserve des données disponibles.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
 - 🎮 **3 Modes de fonctionnement** :
@@ -36,9 +38,9 @@
 
 ---
 
-## ⚖️ Conformité Riot Games & Fair Play
+## ⚖️ Suivi League of Legends et Riot Games
 
-RiftVision est conçu dans le respect strict des **Riot Games Developer Policies** :
+Le suivi League of Legends s’appuie sur les **Riot Games Developer Policies** :
 1. **Aucune injection mémoire ni altération de client** : L'application n'injecte aucun code et ne lit pas la mémoire du jeu. Elle consulte uniquement l'API locale HTTP mise à disposition par Riot Games pendant les parties.
 2. **Pas d'avantage déloyal (*Unfair Advantage*)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
 3. **Mention légale obligatoire** :
@@ -161,6 +163,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Présenter League of Legends, Teamfight Tactics, Valorant, Counter-Strike 2, Heroes of the Storm et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
   - [ ] Préserver l'identité RiftVision et les parcours existants : suivi LoL, démo, historique et compagnon desktop
   - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
+  - [ ] Étudier les bilans de partie Teamfight Tactics et le suivi des arènes 3c3 World of Warcraft selon les données et autorisations disponibles
 - [ ] **Encyclopédie League of Legends**
   - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
   - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
@@ -208,9 +211,9 @@ npx biome format --write server/data/hots-heroes-a.json server/data/hots-heroes-
 
 Vérifier ensuite la version, le contenu importé et les tests avant de publier les changements. Les données et visuels de jeu appartiennent à leurs ayants droit ; HeroesToolChest est une source communautaire indépendante.
 
-## Suivre une partie
+## Suivre une partie League of Legends
 
-1. **Connecter ma partie** : lancez une partie de League of Legends sur l’ordinateur où RiftVision est installé, puis connectez-la depuis l’accueil. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
+1. **Connecter ma partie** : ouvrez l’espace League of Legends, lancez une partie sur l’ordinateur où RiftVision est installé, puis connectez-la depuis cette page. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
 2. **Explorer la démo** : sans partie en cours, découvrez un exemple figé à 16:45. Le bandeau permet de tester une alerte, de connecter votre propre partie ou de quitter la démo.
 3. **Suivre le tableau de bord** : consultez la carte, les événements, les scores et les inventaires. Sélectionnez un champion ou un événement pour afficher son détail.
 4. **Agrandir la carte** : depuis la carte, passez à un affichage plus large, masquez le journal ou activez le plein écran. Revenez au tableau de bord avec le bouton de retour. La recherche, le filtre et l’événement sélectionné sont conservés entre ces affichages et lors d’un passage dans l’aide.

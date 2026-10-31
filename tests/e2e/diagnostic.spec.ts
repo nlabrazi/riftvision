@@ -7,7 +7,7 @@ test.describe('Connection controls and diagnostics', () => {
     const initialStatus = page.waitForResponse((response) =>
       response.url().includes('/api/riot/status'),
     )
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
   })
 
@@ -111,7 +111,7 @@ test('connects a match, makes a paused session recoverable and disconnects', asy
     return route.fulfill({ json: { success: true, data: mockGameData } })
   })
   const initial = page.waitForResponse((response) => response.url().includes('/api/riot/status'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/league', { waitUntil: 'domcontentloaded' })
   await initial
   gameAvailable = true
   await page.getByRole('button', { name: 'Connecter ma partie', exact: true }).click()

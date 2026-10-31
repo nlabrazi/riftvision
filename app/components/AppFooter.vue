@@ -6,7 +6,7 @@
         <div class="footer-identity">
           <div class="footer-brand">
             <span class="brand-title">RIFTVISION</span>
-            <span class="brand-sub">SECOND SCREEN COMPANION</span>
+            <span class="brand-sub">VOS JEUX · VOS PARTIES</span>
           </div>
           <span class="footer-dot" aria-hidden="true">·</span>
           <div class="footer-creator">
@@ -51,8 +51,8 @@
         </div>
       </div>
 
-      <!-- Riot Games Disclaimer -->
       <div class="footer-legal">
+        <p class="disclaimer-text">RiftVision est un projet communautaire indépendant, non affilié aux éditeurs des jeux présentés. Les noms et visuels appartiennent à leurs propriétaires respectifs, notamment Riot Games, Blizzard Entertainment et Valve.</p>
         <p class="disclaimer-text">
           RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone
           officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties

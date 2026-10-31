@@ -259,7 +259,7 @@ onUnmounted(() => {
         <div class="brand-symbol" aria-hidden="true"><span>R</span><i></i></div>
         <div>
           <div class="brand-title"><h1>RiftVision</h1><span class="version-tag">1.3</span></div>
-          <p>VOTRE REGARD SUR LA FAILLE</p>
+          <p>VOS JEUX, VOS PARTIES</p>
         </div>
       </a>
       <div class="header-controls">
@@ -283,7 +283,7 @@ onUnmounted(() => {
         </button>
         <button type="button" data-testid="open-overlay-btn" class="rv-button"
           :class="{ 'rv-button-primary': isOverlayConnected }"
-          :title="isOverlayConnected ? 'Overlay in-game connecté · Cliquez pour tester' : 'Configurer l’overlay in-game'"
+          :title="isOverlayConnected ? 'Overlay connecté · Cliquez pour tester' : 'Configurer l’overlay, actuellement disponible pour League of Legends'"
           @click="triggerOverlayHudAction">
           <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
           <span>{{ isOverlayConnected ? 'Overlay HUD actif' : 'Overlay HUD' }}</span>
@@ -303,7 +303,7 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <div class="session-bar" :class="{ 'session-bar--demo': status.isMock }">
+      <div v-if="isLeaguePage || hasGame || isLiveActive || status.isMock || isHelpOpen" class="session-bar" :class="{ 'session-bar--demo': status.isMock }">
         <div class="session-copy">
           <div data-testid="status-banner" class="session-status" role="status">
             <span class="status-dot" :class="{ 'status-dot--live': hasGame && !status.isMock && isPolling && !lastError, 'status-dot--demo': status.isMock, 'status-dot--waiting': isLiveActive && !hasGame }"></span>
@@ -338,9 +338,10 @@ onUnmounted(() => {
       <div v-if="isHelpOpen" class="diagnostic-workspace">
         <section class="rv-panel help-panel" aria-labelledby="connection-help-title">
           <h3 id="connection-help-title">Connecter votre partie</h3>
+          <p>Le suivi en direct est actuellement disponible pour League of Legends.</p>
           <ol class="connection-steps">
             <li><strong>Lancez une partie de League of Legends.</strong><span>Le client ouvert ou la sélection des champions ne suffisent pas : entrez sur la carte.</span></li>
-            <li><strong>Connectez RiftVision depuis l’accueil.</strong><span>RiftVision doit être lancé sur le même ordinateur que le jeu. Vous pouvez ouvrir cette page sur votre second écran ou votre tablette.</span></li>
+            <li><strong>Connectez votre partie depuis l’espace League of Legends.</strong><span>RiftVision doit être lancé sur le même ordinateur que le jeu. Vous pouvez ouvrir cette page sur votre second écran ou votre tablette.</span></li>
             <li><strong>Gardez le tableau de bord ouvert.</strong><span>Les scores, le journal et les alertes se mettent à jour automatiquement pendant la partie.</span></li>
           </ol>
         </section>
@@ -387,7 +388,7 @@ onUnmounted(() => {
         :diff-events="diffEvents" :formatted-game-time="formattedGameTime" :is-mock="status.isMock" :is-polling="isPolling"
         @switch-view="switchView('tactical')" />
 
-      <LeagueStandbyPanel v-else
+      <LeagueStandbyPanel v-else-if="isLeaguePage || isLiveActive || status.isMock"
         :is-mock="status.isMock"
         :is-live-active="isLiveActive"
         :is-changing-mode="isChangingMode"
@@ -399,11 +400,11 @@ onUnmounted(() => {
       />
 
       <!-- Grille des piliers du produit (Landing page synthétique) -->
-      <section v-if="!hasGame && !status.isMock && !isLiveActive" class="standby-features-grid" aria-label="Fonctionnalités clés de RiftVision">
+      <section v-if="isLeaguePage && !hasGame && !isHelpOpen && !status.isMock && !isLiveActive" class="standby-features-grid" aria-label="Fonctionnalités du suivi League of Legends">
         <div class="feature-card">
           <div class="feature-card-icon"><RvIcon name="shield" :size="20" /></div>
-          <h4>Compagnon Sécurisé</h4>
-          <p>Connecté localement à la Live Client Data API de Riot. Aucune injection de code, 100% fair-play.</p>
+          <h4>Connexion locale</h4>
+          <p>Le suivi LoL utilise la Live Client Data API de Riot, sur l’ordinateur où le jeu est lancé.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon"><RvIcon name="dashboard" :size="20" /></div>
@@ -463,7 +464,7 @@ onUnmounted(() => {
               <span class="status-dot" :class="{ 'status-dot--live': isOverlayConnected }" />
               <strong>{{ isOverlayConnected ? 'Compagnon détecté et connecté !' : 'Compagnon non détecté' }}</strong>
             </div>
-            <p>L'overlay s'affiche en <strong>surimpression transparente</strong> en plein milieu de votre écran de jeu sans jamais bloquer vos clics de souris.</p>
+            <p>L'overlay est actuellement disponible pour <strong>League of Legends</strong>. Il s'affiche en surimpression transparente sans bloquer vos clics de souris.</p>
             <div class="overlay-modal-steps">
               <div class="step-item">
                 <span class="step-num">1</span>

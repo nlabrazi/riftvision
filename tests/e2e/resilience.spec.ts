@@ -12,7 +12,7 @@ test.describe('Network resilience and error handling', () => {
       })
     })
 
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
 
     // Page must render its main structure cleanly
     await expect(page.getByRole('heading', { level: 1 })).toContainText('RiftVision')
@@ -30,7 +30,7 @@ test.describe('Network resilience and error handling', () => {
     // Start with a clean state and enable mock mode
     await request.post('/api/riot/mock', { data: { enabled: false } })
     const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
     await initialStatus
 
     // Start demo
@@ -119,7 +119,7 @@ test.describe('Network resilience and error handling', () => {
       })
     })
 
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.goto('/league', { waitUntil: 'domcontentloaded' })
 
     // Click connect to live match
     await page.getByRole('button', { name: 'Connecter ma partie' }).click()

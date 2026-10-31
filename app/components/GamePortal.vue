@@ -57,10 +57,10 @@ function showGenre(genre: Genre) {
         <p class="portal-hero__description">Explorez vos jeux, retrouvez leurs encyclopédies et découvrez les dernières mises à jour.</p>
         <div class="portal-hero__actions">
           <a class="portal-primary" href="#jeux">Découvrir les jeux <span aria-hidden="true">↘</span></a>
-          <a v-if="installer?.available" class="portal-secondary" href="/api/download/overlay" download>Télécharger le compagnon LoL <span aria-hidden="true">↓</span></a>
-          <NuxtLink v-else class="portal-secondary" to="/league#league-of-legends">Découvrir le compagnon LoL <span aria-hidden="true">→</span></NuxtLink>
+          <a v-if="installer?.available" class="portal-secondary" href="/api/download/overlay" download>Télécharger le compagnon <span aria-hidden="true">↓</span></a>
+          <a v-else class="portal-secondary" href="#compagnon">Découvrir le compagnon <span aria-hidden="true">↘</span></a>
         </div>
-        <p class="portal-hero__note"><span aria-hidden="true" :class="{ 'portal-hero__dot--unavailable': !installer?.available }"></span><span>Overlay Windows pour League of Legends · nécessite RiftVision en local<template v-if="!installer?.available"> · téléchargement indisponible</template></span></p>
+        <p class="portal-hero__note"><span aria-hidden="true" :class="{ 'portal-hero__dot--unavailable': !installer?.available }"></span><span>Overlay Windows · actuellement pour League of Legends · nécessite RiftVision en local<template v-if="!installer?.available"> · téléchargement indisponible</template></span></p>
       </div>
       <div class="portal-hero__art" aria-hidden="true"><video v-if="videoEnabled && !videoFailed" ref="heroVideo" autoplay muted loop playsinline preload="metadata" @play="videoPlaying = true" @pause="videoPlaying = false" @error="videoFailed = true"><source src="/assets/videos/portal-hero.webm" type="video/webm; codecs=vp9" /><source src="/assets/videos/portal-hero.mp4" type="video/mp4" @error="videoFailed = true" /></video></div>
       <button v-if="!videoFailed" type="button" class="portal-hero__video-control" :aria-label="videoPlaying ? 'Mettre la vidéo en pause' : 'Lire la vidéo'" @click="toggleHeroVideo">{{ videoPlaying ? '❚❚' : '▶' }}</button>
@@ -146,11 +146,18 @@ function showGenre(genre: Genre) {
         </article>
       </div>
     </section>
-    <div class="portal-next-heading">
-      <p class="portal-eyebrow">PRÊT À JOUER ?</p>
-      <h2>Votre partie commence ici<span>.</span></h2>
-      <p>Connectez League of Legends ou découvrez le tableau de bord en démo.</p>
-    </div>
+    <section id="compagnon" class="companion-section" aria-labelledby="companion-title">
+      <div class="companion-intro">
+        <div><p class="portal-eyebrow">VOTRE COMPAGNON DE PARTIE</p><h2 id="companion-title">Vos parties, <span>au même endroit.</span></h2><p>Suivez vos parties et retrouvez leurs moments clés. Le compagnon commence avec League of Legends et pourra évoluer vers d’autres jeux.</p><NuxtLink to="/league#league-of-legends" class="portal-primary">Découvrir le suivi LoL <span aria-hidden="true">↗</span></NuxtLink></div>
+        <div class="companion-visual" aria-hidden="true"><span>R</span><i></i></div>
+      </div>
+      <div class="companion-games" aria-label="Jeux et fonctionnalités du compagnon">
+        <article class="companion-game companion-game--available"><span class="companion-game__status">Disponible</span><h3>League of Legends</h3><p>Suivi en direct, alertes et bilans de partie.</p></article>
+        <article class="companion-game"><span class="companion-game__status">À l’étude</span><h3>Teamfight Tactics</h3><p>Bilans de partie envisagés.</p></article>
+        <article class="companion-game"><span class="companion-game__status">À l’étude</span><h3>World of Warcraft</h3><p>Suivi des arènes 3c3 envisagé.</p></article>
+      </div>
+      <p class="companion-note">Les fonctionnalités à l’étude restent à confirmer selon les données disponibles.</p>
+    </section>
   </div>
 </template>
 
@@ -165,8 +172,8 @@ function showGenre(genre: Genre) {
 .portal-hero__video-control:hover, .portal-hero__video-control:focus-visible { border-color: #e6ca91; background: #101d2c; }
 .portal-hero__video-error { position: absolute; z-index: 2; right: 18px; bottom: 18px; padding: 6px 10px; border-radius: 4px; background: #07111dcc; color: #e4e8ed; font-size: 12px; }
 .portal-eyebrow { margin: 0 0 15px; color: #c8aa6e; font: 700 11px/1.4 'Rajdhani', sans-serif; letter-spacing: .18em; }
-.portal-hero h2, .portal-section h2, .portal-next-heading h2 { margin: 0; color: #f1f1ee; font: 700 clamp(36px, 4vw, 62px)/1.04 'Rajdhani', sans-serif; letter-spacing: -.025em; }
-.portal-hero h2 span, .portal-section h2 span, .portal-next-heading h2 span { color: #d6bb83; }
+.portal-hero h2, .portal-section h2, .companion-section h2 { margin: 0; color: #f1f1ee; font: 700 clamp(36px, 4vw, 62px)/1.04 'Rajdhani', sans-serif; letter-spacing: -.025em; }
+.portal-hero h2 span, .portal-section h2 span, .companion-section h2 span { color: #d6bb83; }
 .portal-hero__description { max-width: 430px; margin: 20px 0 26px; color: #c1cad4; font-size: 15px; line-height: 1.7; }
 .portal-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .portal-primary, .portal-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 44px; padding: 11px 16px; border: 1px solid #c8aa6e; border-radius: 4px; font-weight: 700; text-decoration: none; }
@@ -179,8 +186,8 @@ function showGenre(genre: Genre) {
 .portal-hero__note > .portal-hero__dot--unavailable { background: #b6a178; }
 .portal-section { padding-top: 65px; scroll-margin-top: 20px; }
 .portal-section__heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 24px; }
-.portal-section h2, .portal-next-heading h2 { font-size: clamp(28px, 3vw, 38px); }
-.portal-section__heading p:not(.portal-eyebrow), .portal-next-heading > p:last-child { margin: 10px 0 0; color: #aebbc8; line-height: 1.5; }
+.portal-section h2, .companion-section h2 { font-size: clamp(28px, 3vw, 38px); }
+.portal-section__heading p:not(.portal-eyebrow) { margin: 10px 0 0; color: #aebbc8; line-height: 1.5; }
 .game-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
 .game-filter { padding: 8px 16px; border: 1px solid #ffffff2a; border-radius: 999px; background: #ffffff08; color: #bfc9d0; font: 700 14px 'Rajdhani', sans-serif; }
 .game-filter:hover { color: #f0e6d2; border-color: #c8aa6e88; }
@@ -216,13 +223,28 @@ a.game-card:hover, a.game-card:focus-visible { border-color: #c8aa6e; }
   .game-card:hover .game-card__body, .game-card:focus-visible .game-card__body { border-color: var(--card-accent); background-color: color-mix(in srgb, var(--card-accent) 7%, #0c1824); }
   .game-card--league:hover .game-card__link span, .game-card--league:focus-visible .game-card__link span { transform: translate(3px, -3px); }
 }
-.portal-next-heading { padding-top: 65px; }
-.portal-next-heading .portal-eyebrow { margin-bottom: 12px; }
+.companion-section { padding-top: 65px; scroll-margin-top: 20px; }
+.companion-intro { display: flex; justify-content: space-between; align-items: center; gap: 30px; overflow: hidden; padding: clamp(24px, 4vw, 42px); border: 1px solid #9e865145; border-radius: 8px; background: radial-gradient(ellipse at 82% 40%, #60513055, transparent 48%), linear-gradient(120deg, #111f30, #0c1723); }
+.companion-intro > div:first-child { max-width: 680px; }
+.companion-intro p:not(.portal-eyebrow) { margin: 14px 0 22px; color: #c2cbd4; line-height: 1.6; }
+.companion-visual { position: relative; display: grid; place-items: center; flex: 0 0 170px; height: 170px; border: 1px solid #c8aa6e4d; border-radius: 50%; background: radial-gradient(circle, #c8aa6e1c, transparent 67%); box-shadow: 0 0 45px #c8aa6e12; }
+.companion-visual::before, .companion-visual i { content: ''; position: absolute; inset: 18px; border: 1px solid #c8aa6e66; transform: rotate(45deg); }
+.companion-visual i { inset: 28px; border-color: #c8aa6e35; transform: rotate(0); }
+.companion-visual span { color: #e3c78d; font: 700 58px 'Cinzel', Georgia, serif; }
+.companion-games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.companion-game { padding: 20px; border: 1px solid #ffffff1c; border-radius: 6px; background: #0c1824; }
+.companion-game__status { color: #c4b38c; font: 700 11px 'Rajdhani', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.companion-game--available .companion-game__status { color: #8bdebd; }
+.companion-game h3 { margin: 9px 0 6px; color: #eef0ef; font: 700 22px 'Rajdhani', sans-serif; }
+.companion-game p, .companion-note { margin: 0; color: #aebbc8; line-height: 1.5; }
+.companion-note { margin-top: 12px; font-size: 12px; }
+@media (max-width: 800px) { .companion-games { grid-template-columns: 1fr; } .companion-visual { flex-basis: 130px; height: 130px; } }
 @media (max-width: 600px) {
   .portal-hero { min-height: 490px; }
   .portal-hero__content { padding: 30px 24px 68px; }
   .portal-hero__art::after { background: linear-gradient(90deg, #07111dd9, #07111d99), linear-gradient(0deg, #07111d99, transparent); }
-  .portal-section, .portal-next-heading { padding-top: 46px; }
+  .portal-section, .companion-section { padding-top: 46px; }
+  .companion-visual { display: none; }
   .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .game-card__body { padding: 14px 12px 16px; }
   .game-card__meta { flex-wrap: wrap; }

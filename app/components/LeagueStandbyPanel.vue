@@ -63,7 +63,7 @@ const emit = defineEmits<{
           title="Télécharger l'installateur Windows officiel (.exe)"
         >
           <RvIcon name="download" :size="16" />
-          <span>Télécharger l’application (.exe)</span>
+          <span>Télécharger le compagnon (.exe)</span>
         </a>
         <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="emit('start-demo')">
           Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
