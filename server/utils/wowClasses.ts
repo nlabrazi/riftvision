@@ -7,6 +7,8 @@ import type {
   WowSpecialization,
   WowSpecializationDetails,
   WowSpecializationResponse,
+  WowSpecializationSummary,
+  WowSpecializationsResponse,
 } from '#shared/types/wow'
 
 const API_ORIGIN = 'https://eu.api.blizzard.com'
@@ -350,7 +352,43 @@ export function createWowClassesClient(
     })
   }
 
-  return { getClasses, getClass, getRaces, getSpecialization }
+  async function getSpecializations(): Promise<WowSpecializationsResponse> {
+    return cached('specializations', async () => {
+      const catalog = await getClasses()
+      const classDetails: WowClassDetails[] = new Array(catalog.data.length)
+      let next = 0
+      const worker = async () => {
+        while (next < catalog.data.length) {
+          const position = next++
+          const entry = catalog.data[position]
+          if (!entry) throw new WowUnavailableError('Classe invalide.')
+          try {
+            classDetails[position] = (await getClass(entry.id)).data
+          } catch {
+            throw new WowUnavailableError('Catalogue des spécialisations indisponible.')
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(catalog.data.length, 4) }, () => worker()))
+      const ids = new Set<number>()
+      const data: WowSpecializationSummary[] = classDetails.flatMap((entry) =>
+        entry.specializations.map((spec) => {
+          if (ids.has(spec.id))
+            throw new WowUnavailableError('Catalogue des spécialisations invalide.')
+          ids.add(spec.id)
+          return {
+            id: spec.id,
+            name: spec.name,
+            class: { id: entry.id, name: entry.name },
+            icon: entry.icon,
+          }
+        }),
+      )
+      return { locale: 'fr_FR', edition: 'retail', data }
+    })
+  }
+
+  return { getClasses, getClass, getRaces, getSpecialization, getSpecializations }
 }
 
 let shared: {

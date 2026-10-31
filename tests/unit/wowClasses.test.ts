@@ -355,3 +355,80 @@ describe('spécialisations WoW Retail', () => {
     await expect(client.getSpecialization(999)).rejects.toThrow('Spécialisation introuvable.')
   })
 })
+
+describe('index des spécialisations WoW', () => {
+  function indexFetcher() {
+    const base = makeFetcher()
+    return vi.fn<typeof fetch>(async (url, init) => {
+      const path = String(url)
+      if (path.includes('/data/wow/playable-class/11?'))
+        return response({
+          id: 11,
+          name: 'Druide',
+          specializations: [{ id: 102, name: 'Équilibre' }],
+        })
+      return base(url, init)
+    })
+  }
+  it('construit les résultats à partir des classes avec leur icône et leur nom', async () => {
+    const fetcher = indexFetcher()
+    const client = createWowClassesClient(credentials, fetcher)
+    expect(await client.getSpecializations()).toEqual({
+      locale: 'fr_FR',
+      edition: 'retail',
+      data: [
+        {
+          id: 62,
+          name: 'Arcanes',
+          class: { id: 8, name: 'Mage' },
+          icon: 'https://render-eu.worldofwarcraft.com/icons/56/classicon_mage.jpg',
+        },
+        {
+          id: 63,
+          name: 'Feu',
+          class: { id: 8, name: 'Mage' },
+          icon: 'https://render-eu.worldofwarcraft.com/icons/56/classicon_mage.jpg',
+        },
+        { id: 102, name: 'Équilibre', class: { id: 11, name: 'Druide' }, icon: null },
+      ],
+    })
+  })
+  it('partage les requêtes et réutilise les détails de classes pendant une heure', async () => {
+    let clock = 0
+    const fetcher = indexFetcher()
+    const client = createWowClassesClient(credentials, fetcher, () => clock)
+    await Promise.all([client.getSpecializations(), client.getSpecializations()])
+    await client.getClass(8)
+    expect(
+      fetcher.mock.calls.filter(([url]) => String(url).includes('/data/wow/playable-class/8?')),
+    ).toHaveLength(1)
+    clock += 60 * 60 * 1000 + 1
+    await client.getSpecializations()
+    expect(
+      fetcher.mock.calls.filter(([url]) => String(url).includes('/data/wow/playable-class/8?')),
+    ).toHaveLength(2)
+  })
+  it('refuse un résultat partiel puis permet de réessayer', async () => {
+    let available = false
+    const base = indexFetcher()
+    const fetcher = vi.fn<typeof fetch>(async (url, init) =>
+      String(url).includes('/data/wow/playable-class/11?') && !available
+        ? response({}, 503)
+        : base(url, init),
+    )
+    const client = createWowClassesClient(credentials, fetcher)
+    await expect(client.getSpecializations()).rejects.toBeInstanceOf(WowUnavailableError)
+    available = true
+    expect((await client.getSpecializations()).data).toHaveLength(3)
+  })
+  it('refuse des identifiants de spécialisation répétés entre classes', async () => {
+    const base = makeFetcher()
+    const fetcher = vi.fn<typeof fetch>(async (url, init) =>
+      String(url).includes('/data/wow/playable-class/11?')
+        ? response({ id: 11, name: 'Druide', specializations: [{ id: 62, name: 'Autre' }] })
+        : base(url, init),
+    )
+    const client = createWowClassesClient(credentials, fetcher)
+    await expect(client.getSpecializations()).rejects.toBeInstanceOf(WowUnavailableError)
+  })
+})

@@ -183,6 +183,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
   - [x] Étendre la recherche commune aux agents, armes et cartes Valorant
+  - [x] Étendre la recherche commune aux classes, races et spécialisations WoW Retail
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux autres jeux pris en charge
 
 ---
@@ -206,7 +207,7 @@ Depuis l'espace League of Legends, la rubrique **Champions** permet de recherche
 
 Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
 
-Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL, les unités, traits et objets TFT ainsi que les agents, armes et cartes Valorant, depuis l'accueil et les pages de ces encyclopédies. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas encore WoW ni les comptes de joueurs.
+Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL, les unités, traits et objets TFT, les agents, armes et cartes Valorant ainsi que les classes, races et spécialisations WoW Retail, depuis l'accueil et les pages de ces encyclopédies. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas les comptes de joueurs. Si le client Battle.net n'est pas configuré ou que Blizzard est indisponible, les autres catégories restent accessibles.
 
 La rubrique **Notes de patch** liste les titres et dates de l'[archive officielle Riot](https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. Le serveur lit les métadonnées intégrées à cette page et les conserve en mémoire pendant une heure. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
@@ -234,7 +235,7 @@ La rubrique Valorant présente les agents jouables, leur rôle et leurs compéte
 
 Le catalogue WoW couvre les classes Retail en Europe et leurs spécialisations, en français, à partir de l'[API Blizzard](https://community.developer.battle.net/documentation/world-of-warcraft/game-data-apis). Pour l'activer, créez un client sur le [portail développeur Battle.net](https://community.developer.battle.net/access/clients), puis définissez `NUXT_BLIZZARD_CLIENT_ID` et `NUXT_BLIZZARD_CLIENT_SECRET` dans l'environnement serveur (voir `.env.example`). Ces identifiants restent côté serveur et ne doivent pas être commités. Sans configuration ou en cas d'erreur de Blizzard, le catalogue est indisponible et propose de réessayer.
 
-Le serveur obtient un jeton OAuth avec les identifiants du client, puis conserve les données de classes en mémoire une heure par processus. Les icônes sont facultatives si leur récupération échoue. Les routes sont `GET /api/wow/classes` et `GET /api/wow/classes/{id}`. La recherche commune ne couvre pas encore WoW. Les fiches de spécialisations sont disponibles via `GET /api/wow/specializations/{id}` et affichent les données fournies par Blizzard ; leur icône reste facultative si son chargement échoue.
+Le serveur obtient un jeton OAuth avec les identifiants du client, puis conserve les données de classes en mémoire une heure par processus. Les icônes sont facultatives si leur récupération échoue. Les routes sont `GET /api/wow/classes` et `GET /api/wow/classes/{id}`. L'index de recherche `GET /api/wow/specializations` rassemble les spécialisations des classes avec quatre requêtes simultanées au maximum, en réutilisant le cache des classes. Les fiches de spécialisations sont disponibles via `GET /api/wow/specializations/{id}` et affichent les données fournies par Blizzard ; leur icône reste facultative si son chargement échoue.
 
 Le catalogue `GET /api/wow/races` présente les races Retail et leurs variantes de faction telles que fournies par Blizzard. Le serveur regroupe l'index et les fiches de races, avec six requêtes simultanées au maximum et un cache d'une heure. Les fiches renvoient aux classes présentes dans le catalogue ; les éventuelles classes absentes restent affichées sans lien. Le visuel des cartes est commun à WoW, l'API utilisée ne fournissant pas d'icône de race.
 

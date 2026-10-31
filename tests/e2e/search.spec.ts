@@ -147,6 +147,51 @@ async function mockValorant(page: import('@playwright/test').Page) {
   await page.route('**/api/valorant/maps', (route) => route.fulfill({ json: valorantMaps }))
 }
 
+const wowClasses = {
+  locale: 'fr_FR',
+  edition: 'retail',
+  data: [
+    { id: 8, name: 'Mage', icon: null },
+    { id: 11, name: 'Druide', icon: null },
+  ],
+}
+const wowRaces = {
+  locale: 'fr_FR',
+  edition: 'retail',
+  data: [
+    {
+      id: 25,
+      name: 'Pandaren',
+      faction: { type: 'ALLIANCE', name: 'Alliance' },
+      allied: false,
+      classes: [{ id: 8, name: 'Mage' }],
+    },
+    {
+      id: 26,
+      name: 'Pandaren',
+      faction: { type: 'HORDE', name: 'Horde' },
+      allied: false,
+      classes: [{ id: 8, name: 'Mage' }],
+    },
+  ],
+}
+const wowSpecializations = {
+  locale: 'fr_FR',
+  edition: 'retail',
+  data: [
+    { id: 62, name: 'Arcanes', class: { id: 8, name: 'Mage' }, icon: null },
+    { id: 102, name: 'Équilibre', class: { id: 11, name: 'Druide' }, icon: null },
+  ],
+}
+
+async function mockWow(page: import('@playwright/test').Page) {
+  await page.route('**/api/wow/classes', (route) => route.fulfill({ json: wowClasses }))
+  await page.route('**/api/wow/races', (route) => route.fulfill({ json: wowRaces }))
+  await page.route('**/api/wow/specializations', (route) =>
+    route.fulfill({ json: wowSpecializations }),
+  )
+}
+
 async function openHome(page: import('@playwright/test').Page) {
   await page.route('**/api/riot/status?*', (route) =>
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
@@ -162,6 +207,7 @@ test('recherche les contenus et ouvre leur fiche au clavier', async ({ page }) =
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
   await mockValorant(page)
+  await mockWow(page)
   await openHome(page)
 
   const open = page.getByRole('button', { name: 'Rechercher', exact: true })
@@ -214,6 +260,7 @@ test('conserve les résultats disponibles et permet de réessayer une source en 
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
   await mockValorant(page)
+  await mockWow(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -241,6 +288,7 @@ test('recherche des contenus TFT et ouvre le catalogue filtré sur le bon identi
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
   await mockValorant(page)
+  await mockWow(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -290,6 +338,7 @@ test('préserve les résultats LoL et TFT lorsque le catalogue de traits TFT éc
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
   )
   await mockValorant(page)
+  await mockWow(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -316,6 +365,7 @@ test('recherche agents, armes et cartes Valorant puis ouvre les bonnes fiches', 
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
   await mockValorant(page)
+  await mockWow(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -362,6 +412,7 @@ test('garde les autres résultats accessibles si les cartes Valorant échouent',
       ? route.fulfill({ json: valorantMaps })
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
   )
+  await mockWow(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -377,4 +428,119 @@ test('garde les autres résultats accessibles si les cartes Valorant échouent',
     dialog.getByRole('region', { name: 'Cartes · Valorant' }).getByRole('link'),
   ).toHaveCount(2)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
+})
+
+test('recherche les classes, races et spécialisations WoW depuis les encyclopédies', async ({
+  page,
+}) => {
+  await page.route('**/api/ddragon/champions', (route) => route.fulfill({ json: champions }))
+  await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
+  await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
+  await mockTft(page)
+  await mockValorant(page)
+  await mockWow(page)
+  await page.route('**/api/wow/classes/8', (route) =>
+    route.fulfill({
+      json: {
+        locale: 'fr_FR',
+        edition: 'retail',
+        data: {
+          id: 8,
+          name: 'Mage',
+          icon: null,
+          powerType: 'Mana',
+          specializations: [{ id: 62, name: 'Arcanes' }],
+        },
+      },
+    }),
+  )
+  await page.route('**/api/wow/specializations/62', (route) =>
+    route.fulfill({
+      json: {
+        locale: 'fr_FR',
+        edition: 'retail',
+        data: {
+          id: 62,
+          name: 'Arcanes',
+          class: { id: 8, name: 'Mage' },
+          role: 'Dégâts',
+          powerType: 'Mana',
+          primaryStat: 'Intelligence',
+          descriptionMale: 'Magie.',
+          descriptionFemale: 'Magie.',
+          icon: null,
+        },
+      },
+    }),
+  )
+  await openHome(page)
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Rechercher' })
+  await dialog.getByRole('searchbox').fill('mage')
+  await expect(
+    dialog
+      .getByRole('region', { name: 'Spécialisations · WoW' })
+      .getByRole('link', { name: /Arcanes.*Mage/ }),
+  ).toBeVisible()
+  await dialog
+    .getByRole('region', { name: 'Classes · WoW' })
+    .getByRole('link', { name: /Mage/ })
+    .click()
+  await expect(page).toHaveURL(/\/wow\/classes\/8$/)
+  await expect(page.getByRole('heading', { name: 'Mage' })).toBeVisible()
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  await dialog.getByRole('searchbox').fill('pandaren')
+  await expect(dialog.getByRole('region', { name: 'Races · WoW' }).getByRole('link')).toHaveCount(2)
+  await dialog.getByRole('link', { name: /Pandaren.*Horde/ }).click()
+  await expect(page).toHaveURL(/\/wow\/races\/26$/)
+  await expect(page.getByRole('heading', { name: 'Pandaren' })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  await dialog.getByRole('searchbox').fill('arcanes')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  )
+  await dialog.getByRole('link', { name: /Arcanes.*Mage/ }).click()
+  await expect(page).toHaveURL(/\/wow\/specializations\/62$/)
+  await expect(page.getByRole('heading', { name: 'Arcanes' })).toBeVisible()
+})
+
+test('les autres contenus restent accessibles si l’index des spécialisations WoW échoue', async ({
+  page,
+}) => {
+  let available = false
+  let classesRequests = 0
+  await page.route('**/api/ddragon/champions', (route) => route.fulfill({ json: champions }))
+  await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
+  await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
+  await mockTft(page)
+  await mockValorant(page)
+  await mockWow(page)
+  await page.route('**/api/wow/classes', (route) => {
+    classesRequests++
+    return route.fulfill({ json: wowClasses })
+  })
+  await page.route('**/api/wow/specializations', (route) =>
+    available
+      ? route.fulfill({ json: wowSpecializations })
+      : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openHome(page)
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Rechercher' })
+  await dialog.getByRole('searchbox').fill('mage')
+  await expect(dialog.getByRole('alert')).toContainText('spécialisations WoW')
+  await expect(
+    dialog.getByRole('region', { name: 'Classes · WoW' }).getByRole('link', { name: /Mage/ }),
+  ).toBeVisible()
+  await dialog.getByRole('searchbox').fill('ahri')
+  await expect(
+    dialog.getByRole('region', { name: 'Champions · LoL' }).getByRole('link', { name: /Ahri/ }),
+  ).toBeVisible()
+  available = true
+  await dialog.getByRole('button', { name: 'Réessayer' }).click()
+  await dialog.getByRole('searchbox').fill('arcanes')
+  await expect(dialog.getByRole('link', { name: /Arcanes.*Mage/ })).toBeVisible()
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+  expect(classesRequests).toBe(1)
 })

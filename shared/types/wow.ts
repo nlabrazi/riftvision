@@ -44,6 +44,17 @@ export interface WowSpecializationResponse {
   data: WowSpecializationDetails
 }
 
+export interface WowSpecializationSummary extends WowSpecialization {
+  class: { id: number; name: string }
+  icon: string | null
+}
+
+export interface WowSpecializationsResponse {
+  locale: 'fr_FR'
+  edition: 'retail'
+  data: WowSpecializationSummary[]
+}
+
 export interface WowRace {
   id: number
   name: string

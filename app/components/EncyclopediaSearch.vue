@@ -11,6 +11,11 @@ import type {
   ValorantMapsResponse,
   ValorantWeaponsResponse,
 } from '#shared/types/valorant'
+import type {
+  WowClassesResponse,
+  WowRacesResponse,
+  WowSpecializationsResponse,
+} from '#shared/types/wow'
 import { valorantNumber, valorantWeaponCategory } from '~/utils/valorantWeapons'
 
 type SearchResult = { id: string; name: string; subtitle: string; to: string; image: string }
@@ -32,6 +37,9 @@ const tftItems = ref<TftItemsResponse | null>(null)
 const valorantAgents = ref<ValorantAgentsResponse | null>(null)
 const valorantWeapons = ref<ValorantWeaponsResponse | null>(null)
 const valorantMaps = ref<ValorantMapsResponse | null>(null)
+const wowClasses = ref<WowClassesResponse | null>(null)
+const wowRaces = ref<WowRacesResponse | null>(null)
+const wowSpecializations = ref<WowSpecializationsResponse | null>(null)
 let lastLoad = 0
 
 function normalize(value: string) {
@@ -139,6 +147,33 @@ const groups = computed<SearchGroup[]>(() => {
       to: `/valorant/maps/${encodeURIComponent(map.id)}`,
       image: map.splash ?? map.minimap ?? '',
     }))
+  const wowClassResults = (wowClasses.value?.data ?? [])
+    .filter((entry) => match(entry.name))
+    .map((entry) => ({
+      id: String(entry.id),
+      name: entry.name,
+      subtitle: 'Classe · Retail',
+      to: `/wow/classes/${entry.id}`,
+      image: entry.icon ?? '',
+    }))
+  const wowRaceResults = (wowRaces.value?.data ?? [])
+    .filter((race) => match(`${race.name} ${race.faction?.name ?? ''}`))
+    .map((race) => ({
+      id: String(race.id),
+      name: race.name,
+      subtitle: `${race.faction?.name ?? 'Faction non renseignée'}${race.allied === true ? ' · Race alliée' : ''}`,
+      to: `/wow/races/${race.id}`,
+      image: '',
+    }))
+  const wowSpecializationResults = (wowSpecializations.value?.data ?? [])
+    .filter((spec) => match(`${spec.name} ${spec.class.name}`))
+    .map((spec) => ({
+      id: String(spec.id),
+      name: spec.name,
+      subtitle: spec.class.name,
+      to: `/wow/specializations/${spec.id}`,
+      image: spec.icon ?? '',
+    }))
   return [
     { label: 'Champions · LoL', results: championResults },
     { label: 'Objets · LoL', results: itemResults },
@@ -149,6 +184,9 @@ const groups = computed<SearchGroup[]>(() => {
     { label: 'Agents · Valorant', results: agentResults },
     { label: 'Armes · Valorant', results: weaponResults },
     { label: 'Cartes · Valorant', results: mapResults },
+    { label: 'Classes · WoW', results: wowClassResults },
+    { label: 'Races · WoW', results: wowRaceResults },
+    { label: 'Spécialisations · WoW', results: wowSpecializationResults },
   ].map((group) => ({
     ...group,
     results: group.results.sort((a, b) => a.name.localeCompare(b.name, 'fr')),
@@ -171,6 +209,9 @@ async function loadData() {
     valorantAgents.value = null
     valorantWeapons.value = null
     valorantMaps.value = null
+    wowClasses.value = null
+    wowRaces.value = null
+    wowSpecializations.value = null
   }
   failures.value = []
   const requests: { label: string; run: () => Promise<void> }[] = []
@@ -237,6 +278,29 @@ async function loadData() {
         valorantMaps.value = await $fetch<ValorantMapsResponse>('/api/valorant/maps')
       },
     })
+  if (!wowClasses.value)
+    requests.push({
+      label: 'classes WoW',
+      run: async () => {
+        wowClasses.value = await $fetch<WowClassesResponse>('/api/wow/classes')
+      },
+    })
+  if (!wowRaces.value)
+    requests.push({
+      label: 'races WoW',
+      run: async () => {
+        wowRaces.value = await $fetch<WowRacesResponse>('/api/wow/races')
+      },
+    })
+  if (!wowSpecializations.value)
+    requests.push({
+      label: 'spécialisations WoW',
+      run: async () => {
+        wowSpecializations.value = await $fetch<WowSpecializationsResponse>(
+          '/api/wow/specializations',
+        )
+      },
+    })
   const results = await Promise.allSettled(requests.map((request) => request.run()))
   failures.value = requests
     .filter((_, index) => results[index]?.status === 'rejected')
@@ -290,7 +354,7 @@ function handleDialogKey(event: KeyboardEvent) {
   <Teleport to="body">
     <div v-if="isOpen" class="search-backdrop" @click.self="closeSearch()">
       <section ref="dialog" class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title" @keydown="handleDialogKey">
-        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL, TFT &amp; VALORANT</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
+        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL, TFT, VALORANT &amp; WOW</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
         <label class="search-label" for="encyclopedia-search-input">Rechercher dans les encyclopédies</label>
         <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Jett" />
         <div class="search-content">
