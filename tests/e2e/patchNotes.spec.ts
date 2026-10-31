@@ -8,6 +8,9 @@ const articles = Array.from({ length: 14 }, (_, index) => ({
 }))
 
 async function openLeague(page: import('@playwright/test').Page) {
+  await page.route('**/api/riot/status?*', (route) =>
+    route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
+  )
   const status = page.waitForResponse((response) => response.url().includes('/api/riot/status'))
   await page.goto('/league')
   await status

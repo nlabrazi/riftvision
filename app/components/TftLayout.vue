@@ -8,6 +8,7 @@
         <NuxtLink to="/tft">Unités</NuxtLink>
         <NuxtLink to="/tft/traits">Traits</NuxtLink>
         <NuxtLink to="/tft/items">Objets</NuxtLink>
+        <NuxtLink to="/tft/patch-notes">Notes de patch</NuxtLink>
       </nav>
       <EncyclopediaSearch />
     </header>

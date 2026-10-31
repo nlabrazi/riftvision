@@ -173,6 +173,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Teamfight Tactics : catalogue des traits et recherche à partir des données Data Dragon disponibles
   - [x] Teamfight Tactics : catalogue des objets nommés et recherche à partir des données Data Dragon disponibles
   - [x] Teamfight Tactics : compétences disponibles sur les fiches d'unités avec les données CommunityDragon
+  - [x] Teamfight Tactics : notes de patch et historique avec liens vers les publications officielles
   - [x] Valorant : catalogue des agents, recherche par nom et rôle, fiches et compétences
   - [x] Valorant : catalogue des armes, recherche par nom et catégorie, fiches et caractéristiques disponibles
   - [x] Valorant : catalogue des cartes, recherche par nom, fiches avec plans et noms de zones disponibles
@@ -224,6 +225,8 @@ La rubrique **Notes de patch** liste les titres et dates de l'[archive officiell
 La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
 
 Les catalogues TFT peuvent contenir plusieurs sets et modes. Pour les unités, le numéro de set n'est déduit que lorsque la clé fournie par Riot contient un identifiant numérique reconnaissable ; il ne permet pas d'identifier automatiquement le set actuel. Les unités sans numéro identifiable restent visibles séparément. Les fichiers Data Dragon des traits et objets fournissent leur nom et leur icône, mais pas leurs effets, recettes ou liens avec les unités. Les objets sans nom sont exclus du catalogue.
+
+La rubrique **Notes de patch TFT** liste les titres et dates de l'[archive officielle Riot TFT](https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. `GET /api/tft/patch-notes` lit les métadonnées intégrées à la page et les conserve en mémoire une heure par processus. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
 Les compétences sont issues de [CommunityDragon](https://www.communitydragon.org/docs/assets), une source communautaire qui rassemble des données du client Riot. Le serveur utilise le même numéro de patch majeur et mineur que Data Dragon, fait correspondre l'identifiant et, s'il est connu, le set de l'unité. En cas de correspondance ambiguë, la compétence n'est pas affichée. Les variables présentes dans les descriptions sont indiquées comme telles, car leur calcul dépend du contexte de jeu. Les données sont conservées en mémoire 24 heures par processus ; une panne de CommunityDragon ne bloque pas l'affichage de la fiche d'unité.
 
