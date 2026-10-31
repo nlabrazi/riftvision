@@ -86,6 +86,67 @@ async function mockTft(page: import('@playwright/test').Page) {
   await page.route('**/api/ddragon/tft/items', (route) => route.fulfill({ json: tftItems }))
 }
 
+const valorantAgents = {
+  locale: 'fr-FR',
+  data: [
+    {
+      id: 'e370fa57-4757-3604-3648-499e1f642d3f',
+      name: 'Gekko',
+      role: 'Initiateur',
+      description: 'Un agent.',
+      icon: 'https://media.valorant-api.com/gekko.png',
+      portrait: null,
+      abilities: [],
+    },
+  ],
+}
+const valorantWeapons = {
+  locale: 'fr-FR',
+  data: [
+    {
+      id: '9c82e19d-4575-0200-1a81-3eacf00cf872',
+      name: 'Vandal',
+      category: 'Rifle',
+      icon: 'https://media.valorant-api.com/vandal.png',
+      cost: 2900,
+      magazine: 25,
+      fireRate: 9.75,
+      reloadSeconds: 2.5,
+      pelletCount: 1,
+      damageRanges: [],
+    },
+  ],
+}
+const valorantMaps = {
+  locale: 'fr-FR',
+  data: [
+    {
+      id: 'ee613ee9-28b7-4beb-9666-08db13bb2244',
+      name: 'Entraînement',
+      splash: null,
+      minimap: null,
+      tacticalDescription: null,
+      narrativeDescription: null,
+      callouts: [],
+    },
+    {
+      id: 'ee613ee9-28b7-4beb-9666-08db13bb2245',
+      name: 'Entraînement',
+      splash: null,
+      minimap: null,
+      tacticalDescription: null,
+      narrativeDescription: null,
+      callouts: [],
+    },
+  ],
+}
+
+async function mockValorant(page: import('@playwright/test').Page) {
+  await page.route('**/api/valorant/agents', (route) => route.fulfill({ json: valorantAgents }))
+  await page.route('**/api/valorant/weapons', (route) => route.fulfill({ json: valorantWeapons }))
+  await page.route('**/api/valorant/maps', (route) => route.fulfill({ json: valorantMaps }))
+}
+
 async function openHome(page: import('@playwright/test').Page) {
   await page.route('**/api/riot/status?*', (route) =>
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
@@ -100,6 +161,7 @@ test('recherche les contenus et ouvre leur fiche au clavier', async ({ page }) =
   await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
+  await mockValorant(page)
   await openHome(page)
 
   const open = page.getByRole('button', { name: 'Rechercher', exact: true })
@@ -151,6 +213,7 @@ test('conserve les résultats disponibles et permet de réessayer une source en 
   )
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
+  await mockValorant(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -177,6 +240,7 @@ test('recherche des contenus TFT et ouvre le catalogue filtré sur le bon identi
   await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
   await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
   await mockTft(page)
+  await mockValorant(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -225,6 +289,7 @@ test('préserve les résultats LoL et TFT lorsque le catalogue de traits TFT éc
       ? route.fulfill({ json: tftTraits })
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
   )
+  await mockValorant(page)
   await openHome(page)
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Rechercher' })
@@ -240,5 +305,76 @@ test('préserve les résultats LoL et TFT lorsque le catalogue de traits TFT éc
   await dialog.getByRole('button', { name: 'Réessayer' }).click()
   await dialog.getByRole('searchbox').fill('solaire')
   await expect(dialog.getByRole('link', { name: 'Solaire DA_18_Solar', exact: true })).toBeVisible()
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+})
+
+test('recherche agents, armes et cartes Valorant puis ouvre les bonnes fiches', async ({
+  page,
+}) => {
+  await page.route('**/api/ddragon/champions', (route) => route.fulfill({ json: champions }))
+  await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
+  await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
+  await mockTft(page)
+  await mockValorant(page)
+  await openHome(page)
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Rechercher' })
+  await dialog.getByRole('searchbox').fill('gekko')
+  await dialog
+    .getByRole('region', { name: 'Agents · Valorant' })
+    .getByRole('link', { name: /Gekko.*Initiateur/ })
+    .click()
+  await expect(page).toHaveURL(/\/valorant\/agents\/e370fa57-4757-3604-3648-499e1f642d3f$/)
+  await expect(page.getByRole('heading', { name: 'Gekko' })).toBeVisible()
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  await dialog.getByRole('searchbox').fill('vandal')
+  await dialog
+    .getByRole('region', { name: 'Armes · Valorant' })
+    .getByRole('link', { name: /Vandal.*Fusils/ })
+    .click()
+  await expect(page).toHaveURL(/\/valorant\/weapons\/9c82e19d-4575-0200-1a81-3eacf00cf872$/)
+  await expect(page.getByRole('heading', { name: 'Vandal' })).toBeVisible()
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  await dialog.getByRole('searchbox').fill('entrainement')
+  await expect(
+    dialog.getByRole('region', { name: 'Cartes · Valorant' }).getByRole('link'),
+  ).toHaveCount(2)
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  )
+  await dialog
+    .getByRole('link', { name: /Entraînement.*ee613ee9-28b7-4beb-9666-08db13bb2244/ })
+    .click()
+  await expect(page).toHaveURL(/\/valorant\/maps\/ee613ee9-28b7-4beb-9666-08db13bb2244$/)
+  await expect(page.getByRole('heading', { name: 'Entraînement' })).toBeVisible()
+})
+
+test('garde les autres résultats accessibles si les cartes Valorant échouent', async ({ page }) => {
+  let available = false
+  await page.route('**/api/ddragon/champions', (route) => route.fulfill({ json: champions }))
+  await page.route('**/api/ddragon/items', (route) => route.fulfill({ json: items }))
+  await page.route('**/api/ddragon/runes', (route) => route.fulfill({ json: runes }))
+  await mockTft(page)
+  await mockValorant(page)
+  await page.route('**/api/valorant/maps', (route) =>
+    available
+      ? route.fulfill({ json: valorantMaps })
+      : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openHome(page)
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Rechercher' })
+  await dialog.getByRole('searchbox').fill('gekko')
+  await expect(dialog.getByRole('alert')).toContainText('cartes Valorant')
+  await expect(
+    dialog.getByRole('region', { name: 'Agents · Valorant' }).getByRole('link', { name: /Gekko/ }),
+  ).toBeVisible()
+  available = true
+  await dialog.getByRole('button', { name: 'Réessayer' }).click()
+  await dialog.getByRole('searchbox').fill('entrainement')
+  await expect(
+    dialog.getByRole('region', { name: 'Cartes · Valorant' }).getByRole('link'),
+  ).toHaveCount(2)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
 })

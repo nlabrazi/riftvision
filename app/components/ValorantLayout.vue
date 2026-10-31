@@ -4,6 +4,7 @@
     <header class="val-header">
       <NuxtLink to="/" class="val-brand">RiftVision</NuxtLink>
       <nav aria-label="Navigation Valorant" class="val-nav"><NuxtLink to="/">Tous les jeux</NuxtLink><NuxtLink to="/valorant">Agents Valorant</NuxtLink><NuxtLink to="/valorant/weapons">Armes Valorant</NuxtLink><NuxtLink to="/valorant/maps">Cartes Valorant</NuxtLink></nav>
+      <EncyclopediaSearch />
     </header>
     <main id="val-content" class="val-main"><slot /></main>
     <AppFooter />

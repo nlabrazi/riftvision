@@ -182,6 +182,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
+  - [x] Étendre la recherche commune aux agents, armes et cartes Valorant
   - [ ] Étendre progressivement la recherche commune, les guides et les statistiques aux autres jeux pris en charge
 
 ---
@@ -205,7 +206,7 @@ Depuis l'espace League of Legends, la rubrique **Champions** permet de recherche
 
 Les rubriques **Objets** et **Runes** proposent également des recherches et des filtres. Le catalogue d'objets présente les objets achetables dans la Faille de l'invocateur ; les runes sont regroupées par voie.
 
-Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL ainsi que les unités, traits et objets TFT depuis l'accueil et les pages des encyclopédies LoL et TFT. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas encore Valorant, WoW ni les comptes de joueurs.
+Le bouton **Rechercher** permet de trouver les champions, objets et runes LoL, les unités, traits et objets TFT ainsi que les agents, armes et cartes Valorant, depuis l'accueil et les pages de ces encyclopédies. Les résultats sont limités à huit par catégorie ; une recherche plus précise permet d'affiner la liste. Les traits et objets TFT ouvrent leur catalogue filtré. Cette recherche ne couvre pas encore WoW ni les comptes de joueurs.
 
 La rubrique **Notes de patch** liste les titres et dates de l'[archive officielle Riot](https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. Le serveur lit les métadonnées intégrées à cette page et les conserve en mémoire pendant une heure. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
@@ -227,7 +228,7 @@ Les compétences sont issues de [CommunityDragon](https://www.communitydragon.or
 
 ## Données Valorant
 
-La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Le catalogue des cartes présente les plans et les noms de zones lorsqu'ils sont disponibles. Il inclut plusieurs modes et n'indique pas la rotation actuelle ; les noms de zones sont affichés dans la langue fournie par la source. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents`, `GET /api/valorant/weapons` et `GET /api/valorant/maps` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source. La recherche commune ne couvre pas encore Valorant.
+La rubrique Valorant présente les agents jouables, leur rôle et leurs compétences, ainsi que les armes et leurs caractéristiques disponibles. Le catalogue des cartes présente les plans et les noms de zones lorsqu'ils sont disponibles. Il inclut plusieurs modes et n'indique pas la rotation actuelle ; les noms de zones sont affichés dans la langue fournie par la source. Les données françaises et visuels proviennent de [Valorant-API](https://valorant-api.com/), une source communautaire non officielle. Le serveur les conserve en mémoire pendant une heure par processus et expose `GET /api/valorant/agents`, `GET /api/valorant/weapons` et `GET /api/valorant/maps` ; en cas d'indisponibilité, les pages proposent une nouvelle tentative. Certaines armes, notamment la mêlée, n'ont pas de statistiques dans la source.
 
 ## Données World of Warcraft
 

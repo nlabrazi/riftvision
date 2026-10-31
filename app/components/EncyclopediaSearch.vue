@@ -6,6 +6,12 @@ import type {
   DataDragonRunes,
 } from '#shared/types/dataDragon'
 import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
+import type {
+  ValorantAgentsResponse,
+  ValorantMapsResponse,
+  ValorantWeaponsResponse,
+} from '#shared/types/valorant'
+import { valorantNumber, valorantWeaponCategory } from '~/utils/valorantWeapons'
 
 type SearchResult = { id: string; name: string; subtitle: string; to: string; image: string }
 type SearchGroup = { label: string; results: SearchResult[] }
@@ -23,6 +29,9 @@ const runes = ref<DataDragonRunes | null>(null)
 const tftChampions = ref<TftChampionsResponse | null>(null)
 const tftTraits = ref<TftTraitsResponse | null>(null)
 const tftItems = ref<TftItemsResponse | null>(null)
+const valorantAgents = ref<ValorantAgentsResponse | null>(null)
+const valorantWeapons = ref<ValorantWeaponsResponse | null>(null)
+const valorantMaps = ref<ValorantMapsResponse | null>(null)
 let lastLoad = 0
 
 function normalize(value: string) {
@@ -95,6 +104,41 @@ const groups = computed<SearchGroup[]>(() => {
       to: `/tft/items?id=${encodeURIComponent(item.id)}`,
       image: `https://ddragon.leagueoflegends.com/cdn/${tftItems.value?.version}/img/tft-item/${encodeURIComponent(item.icon)}`,
     }))
+  const agentResults = (valorantAgents.value?.data ?? [])
+    .filter((agent) => match(`${agent.name} ${agent.role ?? ''}`))
+    .map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      subtitle: agent.role ?? 'Rôle non renseigné',
+      to: `/valorant/agents/${encodeURIComponent(agent.id)}`,
+      image: agent.icon,
+    }))
+  const weaponResults = (valorantWeapons.value?.data ?? [])
+    .filter((weapon) => match(`${weapon.name} ${valorantWeaponCategory(weapon.category)}`))
+    .map((weapon) => ({
+      id: weapon.id,
+      name: weapon.name,
+      subtitle: `${valorantWeaponCategory(weapon.category)}${weapon.cost === null ? '' : ` · ${valorantNumber(weapon.cost)} crédits`}`,
+      to: `/valorant/weapons/${encodeURIComponent(weapon.id)}`,
+      image: weapon.icon,
+    }))
+  const mapNameCounts = new Map<string, number>()
+  for (const map of valorantMaps.value?.data ?? []) {
+    const name = normalize(map.name)
+    mapNameCounts.set(name, (mapNameCounts.get(name) ?? 0) + 1)
+  }
+  const mapResults = (valorantMaps.value?.data ?? [])
+    .filter((map) => match(map.name))
+    .map((map) => ({
+      id: map.id,
+      name: map.name,
+      subtitle:
+        (mapNameCounts.get(normalize(map.name)) ?? 0) > 1
+          ? `Identifiant : ${map.id}`
+          : (map.tacticalDescription ?? 'Carte Valorant'),
+      to: `/valorant/maps/${encodeURIComponent(map.id)}`,
+      image: map.splash ?? map.minimap ?? '',
+    }))
   return [
     { label: 'Champions · LoL', results: championResults },
     { label: 'Objets · LoL', results: itemResults },
@@ -102,6 +146,9 @@ const groups = computed<SearchGroup[]>(() => {
     { label: 'Unités · TFT', results: tftChampionResults },
     { label: 'Traits · TFT', results: tftTraitResults },
     { label: 'Objets · TFT', results: tftItemResults },
+    { label: 'Agents · Valorant', results: agentResults },
+    { label: 'Armes · Valorant', results: weaponResults },
+    { label: 'Cartes · Valorant', results: mapResults },
   ].map((group) => ({
     ...group,
     results: group.results.sort((a, b) => a.name.localeCompare(b.name, 'fr')),
@@ -121,6 +168,9 @@ async function loadData() {
     tftChampions.value = null
     tftTraits.value = null
     tftItems.value = null
+    valorantAgents.value = null
+    valorantWeapons.value = null
+    valorantMaps.value = null
   }
   failures.value = []
   const requests: { label: string; run: () => Promise<void> }[] = []
@@ -164,6 +214,27 @@ async function loadData() {
       label: 'objets TFT',
       run: async () => {
         tftItems.value = await $fetch<TftItemsResponse>('/api/ddragon/tft/items')
+      },
+    })
+  if (!valorantAgents.value)
+    requests.push({
+      label: 'agents Valorant',
+      run: async () => {
+        valorantAgents.value = await $fetch<ValorantAgentsResponse>('/api/valorant/agents')
+      },
+    })
+  if (!valorantWeapons.value)
+    requests.push({
+      label: 'armes Valorant',
+      run: async () => {
+        valorantWeapons.value = await $fetch<ValorantWeaponsResponse>('/api/valorant/weapons')
+      },
+    })
+  if (!valorantMaps.value)
+    requests.push({
+      label: 'cartes Valorant',
+      run: async () => {
+        valorantMaps.value = await $fetch<ValorantMapsResponse>('/api/valorant/maps')
       },
     })
   const results = await Promise.allSettled(requests.map((request) => request.run()))
@@ -219,9 +290,9 @@ function handleDialogKey(event: KeyboardEvent) {
   <Teleport to="body">
     <div v-if="isOpen" class="search-backdrop" @click.self="closeSearch()">
       <section ref="dialog" class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title" @keydown="handleDialogKey">
-        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL &amp; TFT</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
+        <div class="search-dialog__heading"><div><p>ENCYCLOPÉDIE · LOL, TFT &amp; VALORANT</p><h2 id="search-title">Rechercher</h2></div><button type="button" class="search-close" aria-label="Fermer la recherche" @click="closeSearch()">×</button></div>
         <label class="search-label" for="encyclopedia-search-input">Rechercher dans les encyclopédies</label>
-        <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Solaire" />
+        <input id="encyclopedia-search-input" ref="input" v-model="query" type="search" autocomplete="off" placeholder="Ex. Ahri, Bottes, Jett" />
         <div class="search-content">
           <p v-if="isLoading" class="search-message" role="status">Chargement des données…</p>
           <div v-if="failures.length && !isLoading" class="search-error" role="alert"><p>Données indisponibles : {{ failures.join(', ') }}. Les résultats des catégories chargées restent accessibles.</p><button type="button" class="rv-button" @click="loadData">Réessayer</button></div>
@@ -266,6 +337,6 @@ function handleDialogKey(event: KeyboardEvent) {
 .search-result img { width: 40px; height: 40px; flex: 0 0 40px; object-fit: contain; border-radius: 4px; }
 .search-result > span:not(:last-child) { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
 .search-result strong { font: 700 16px 'Rajdhani', sans-serif; }
-.search-result small { color: #b2c0ca; }
+.search-result small { color: #b2c0ca; overflow-wrap: anywhere; }
 @media (max-width: 600px) { .search-backdrop { padding-top: 20px; } .search-dialog { max-height: calc(100vh - 40px); padding: 18px; } }
 </style>
