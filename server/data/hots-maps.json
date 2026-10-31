@@ -1,0 +1,721 @@
+{
+  "version": "2.57.0.98348",
+  "locale": "fr_FR",
+  "data": [
+    {
+      "id": "alterac_pass",
+      "name": "La passe d’Alterac",
+      "art": "storm_ui_homescreenbackground_wcav.png",
+      "preview": "replayspreviewimage_alteracpass.png",
+      "objectives": [
+        {
+          "title": "Camps d’emprisonnement",
+          "description": "Capturez le camp d’emprisonnement ennemi pour invoquer votre cavalerie. Les camps peuvent être repris par les héros et les serviteurs donc gardez-les bien !",
+          "icons": [
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon1_horde.png",
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon1_alliance.png"
+          ]
+        },
+        {
+          "title": "Cavalerie",
+          "description": "La cavalerie charge le long de chaque voie quand elle est invoquée et améliore les dégâts et la vitesse de déplacement des héros alliés à proximité.",
+          "icons": [
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon2_alliance.png",
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon2_horde.png"
+          ]
+        },
+        {
+          "title": "Généraux",
+          "description": "L’idole de chaque équipe est remplacée par un général qui se défend contre les ennemis. Détruire un bastion réduit l’armure du général.",
+          "icons": [
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon3_alliance.png",
+            "ui_ingame_mapmechanic_loadscreen_wcav_icon3_horde.png"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "battlefield_of_eternity",
+      "name": "Les champs de l’éternité",
+      "art": "ui_ingame_mapmechanic_loadscreen_battlefieldofeternity.png",
+      "preview": "replayspreviewimage_battlefieldofeternity.png",
+      "objectives": [
+        {
+          "title": "Bataille d’Immortels",
+          "description": "L’ange Ilarian et le seigneur démon Beleth s’affrontent dans un combat sans fin.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_eternity_icon1.png"]
+        },
+        {
+          "title": "Renversez l’ennemi",
+          "description": "Aidez votre Immortel à l’emporter contre son adversaire.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_eternity_icon2.png"]
+        },
+        {
+          "title": "Dévastez les forts",
+          "description": "Accompagnez votre Immortel et réduisez en poussière les bâtiments ennemis !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_eternity_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "blackhearts_bay",
+      "name": "La baie de Cœur-Noir",
+      "art": "ui_ingame_mapmechanic_loadscreen_blackheartsbay.png",
+      "preview": "replayspreviewimage_blackheartsbay.png",
+      "objectives": [
+        {
+          "title": "Récupérez des doublons",
+          "description": "Attaquez les coffres au trésor et les mercenaires pour récupérer des doublons.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_blackheartsbay_icon1.png"]
+        },
+        {
+          "title": "Livrez les doublons",
+          "description": "Rapportez vos doublons à Cœur-Noir ou vous les perdrez tous si vous mourez !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_blackheartsbay_icon2.png"]
+        },
+        {
+          "title": "Bombardez vos ennemis",
+          "description": "Une fois qu’il aura reçu suffisamment de doublons de la part de votre équipe, Cœur-Noir bombardera les bâtiments de votre ennemi !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_blackheartsbay_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "blackhearts_revenge",
+      "name": "La Vengeance de Cœur-Noir",
+      "art": "ui_ingame_simple_loadscreen_blackheartsbay.png",
+      "preview": "replayspreviewimage_blackheartsrevenge.png",
+      "objectives": [
+        {
+          "title": "Tuez les héros adverses",
+          "description": "Empêchez les héros adverses de récupérer des boulets et d’utiliser les canons du navire de Cœur-Noir.",
+          "icons": [
+            "ui_ingame_mapmechanic_loadscreen_blackhearts_revenge_defend_icon1.png",
+            "ui_ingame_mapmechanic_loadscreen_blackhearts_revenge_attack_icon1.png"
+          ]
+        },
+        {
+          "title": "Protégez le navire de Cœur-Noir",
+          "description": "Défendez le navire jusqu’à ce qu’il atteigne les quais et détruise l’idole adverse pour gagner.",
+          "icons": [
+            "ui_ingame_mapmechanic_loadscreen_blackhearts_revenge_defend_icon2.png",
+            "ui_ingame_mapmechanic_loadscreen_blackhearts_revenge_attack_icon2.png"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "braxis_holdout",
+      "name": "Le laboratoire de Braxis",
+      "art": "storm_ui_homescreenbackground_braxisholdout.png",
+      "preview": "replayspreviewimage_braxisholdout.png",
+      "objectives": [
+        {
+          "title": "Capturer les balises",
+          "description": "Deux balises s’activent périodiquement. Emparez-vous-en pour remplir votre cellule de détention de Zergs.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_braxisholdout_icon1.png"]
+        },
+        {
+          "title": "Remplir les cellules de détention",
+          "description": "Si l’une des deux cellules de détention est pleine, celles-ci s’ouvrent et lâchent des vagues de Zergs sur les bases des équipes.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_braxisholdout_icon2.png"]
+        },
+        {
+          "title": "Ruée zerg",
+          "description": "Repoussez les Zergs ennemis tout en aidant les vôtres. Ils n’hésiteront pas à attaquer les héros, alors soyez prudents !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_braxisholdout_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "braxis_outpost",
+      "name": "L’avant-poste de Braxis",
+      "art": "storm_ui_homescreenbackground_braxisholdout.png",
+      "preview": "replayspreviewimage_braxisoutpost.png",
+      "objectives": [
+        {
+          "title": "De l’action en permanence",
+          "description": "Les héros ne regagnent pas de points de vie dans la zone de départ. Les pierres de foyer sont désactivées.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_braxisholdout_icon2.png"]
+        },
+        {
+          "title": "Globes de régénération",
+          "description": "Des globes de régénération apparaissent sur le champ de bataille. Ramassez-les pour récupérer des points de vie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_silvercity_icon2.png"]
+        },
+        {
+          "title": "Détruisez l’idole",
+          "description": "Il n’y a pas d’objectif supplémentaire sur ce champ de bataille. Détruisez l’idole adverse et c’est la victoire.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_braxisholdout_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "checkpoint_hanamura",
+      "name": "Point de contrôle : Hanamura",
+      "art": "ui_ingame_mapmechanic_loadscreen_hanamura_rework.png",
+      "preview": "replayspreviewimage_checkpointhanamura.png",
+      "objectives": [
+        {
+          "title": "Pas d’idoles",
+          "description": "Il n’y a pas d’idoles dans ce choc. La partie prend fin quand le convoi atteint sa destination ou que le temps imparti est écoulé.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hanamura_brawl_icon1.png"]
+        },
+        {
+          "title": "Escortez le convoi",
+          "description": "Un convoi apparaîtra pour votre équipe. Restez à proximité pour qu’il atteigne sa destination avant la fin du temps imparti.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hanamura_brawl_icon2.png"]
+        }
+      ]
+    },
+    {
+      "id": "cursed_hollow",
+      "name": "Le val maudit",
+      "art": "ui_ingame_mapmechanic_loadscreen_cursedhollow.png",
+      "preview": "replayspreviewimage_cursedhollow.png",
+      "objectives": [
+        {
+          "title": "Récupérez des tributs",
+          "description": "Le seigneur corbeau crée périodiquement des tributs. Emparez-vous-en pour votre équipe !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon1.png"]
+        },
+        {
+          "title": "Maudissez vos ennemis",
+          "description": "Une fois que vous aurez obtenu trois tributs, le seigneur corbeau maudira vos ennemis !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon2.png"]
+        },
+        {
+          "title": "Forts et serviteurs maudits",
+          "description": "Les bâtiments maudits ne pourront pas attaquer et les serviteurs maudits n’auront plus qu’un point de vie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "deadmans_stand",
+      "name": "Le baroud du mort",
+      "art": "storm_ui_homescreenbackground_deadmansstand_normal.png",
+      "preview": null,
+      "objectives": []
+    },
+    {
+      "id": "deadmans_stand_heroic",
+      "name": "Le baroud du mort (héroïque)",
+      "art": "storm_ui_homescreenbackground_deadmansstand_hard.png",
+      "preview": null,
+      "objectives": []
+    },
+    {
+      "id": "dragon_shire",
+      "name": "Le comté du dragon",
+      "art": "ui_ingame_mapmechanic_loadscreen_dragonshire.png",
+      "preview": "replayspreviewimage_dragonshire.png",
+      "objectives": [
+        {
+          "title": "Contrôlez les sanctuaires",
+          "description": "Votre équipe doit contrôler les deux sanctuaires pour activer la statue du chevalier dragon !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_dragonshire_icon1.png"]
+        },
+        {
+          "title": "Libérez le chevalier dragon",
+          "description": "Une fois la statue activée, envoyez un héros pour libérer le dragon de sa prison !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_dragonshire_icon2.png"]
+        },
+        {
+          "title": "Dévastez les forts ennemis",
+          "description": "Utilisez l’immense puissance du dragon pour raser les bâtiments ennemis !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_dragonshire_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "escape_from_braxis",
+      "name": "La fuite de Braxis",
+      "art": "storm_ui_homescreenbackground_escapefrombraxis_normal.png",
+      "preview": "replayspreviewimage_escapefrombraxis.png",
+      "objectives": []
+    },
+    {
+      "id": "escape_from_braxis_heroic",
+      "name": "La fuite de Braxis (héroïque)",
+      "art": "storm_ui_homescreenbackground_escapefrombraxis_hard.png",
+      "preview": "replayspreviewimage_escapefrombraxisheroic.png",
+      "objectives": []
+    },
+    {
+      "id": "garden_arena",
+      "name": "L’arène des jardins",
+      "art": "ui_ingame_simple_loadscreen_gardenofterror.png",
+      "preview": "replayspreviewimage_gardenarena.png",
+      "objectives": [
+        {
+          "title": "Vaincre les terreurs nocturnes",
+          "description": "Tuez les monstres des jardins pour récupérer des graines !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon3.png"]
+        },
+        {
+          "title": "Récoltez des graines",
+          "description": "Récupérez 100 graines pour gagner !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon2.png"]
+        }
+      ]
+    },
+    {
+      "id": "garden_of_terror",
+      "name": "Les jardins de terreur",
+      "art": "ui_ingame_mapmechanic_loadscreen_gardenofterror.png",
+      "preview": "replayspreviewimage_gardenofterror.png",
+      "objectives": [
+        {
+          "title": "Apparition des graines",
+          "description": "La reine Belladone invoque régulièrement une graine. Terrassez les traîne-racines qui la gardent et emparez-vous-en pour votre équipe !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon1.png"]
+        },
+        {
+          "title": "Récoltez des graines",
+          "description": "Une fois trois graines collectées, des terreurs de jardin se mettent à progresser sur chacune des voies.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon2.png"]
+        },
+        {
+          "title": "Terreurs de jardin",
+          "description": "Les terreurs de jardin neutralisent les bâtiments ennemis, donc profitez-en pour les accompagner !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "garden_of_terror_classic",
+      "name": "Garden of Terror Classic",
+      "art": "ui_ingame_mapmechanic_loadscreen_gardenofterror.png",
+      "preview": "replayspreviewimage_gardenofterrorclassic.png",
+      "objectives": [
+        {
+          "title": "Combattez les traîne-racines",
+          "description": "La nuit, des traîne-racines sortent des jardins.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon1.png"]
+        },
+        {
+          "title": "Récoltez des graines",
+          "description": "Tuez les traîne-racines et récupérez des graines pour votre équipe !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon2.png"]
+        },
+        {
+          "title": "Contrôlez une terreur de jardin",
+          "description": "Avec 100 graines, contrôlez votre propre terreur de jardin et détruisez vos ennemis !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_gardenofterror_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "hanamura_temple",
+      "name": "Le temple d’Hanamura",
+      "art": "ui_ingame_mapmechanic_loadscreen_hanamura_rework.png",
+      "preview": "replayspreviewimage_hanamuratemple.png",
+      "objectives": [
+        {
+          "title": "Un seul convoi",
+          "description": "Les deux équipes se disputent un convoi, qui apparaît au centre du champ de bataille à intervalles réguliers.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hanamura_icon1.png"]
+        },
+        {
+          "title": "Escortez le convoi",
+          "description": "Restez près de votre convoi pour le conduire à destination. Empêchez l’équipe adverse de faire de même.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hanamura_icon2.png"]
+        },
+        {
+          "title": "Bombardez l’ennemi",
+          "description": "Une fois qu’une équipe a conduit le convoi à destination, celui-ci ouvrira le feu sur les bâtiments adverses !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hanamura_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "haunted_mines",
+      "name": "La mine hantée",
+      "art": "ui_ingame_mapmechanic_loadscreen_hauntedmines.png",
+      "preview": "replayspreviewimage_hauntedmines.png",
+      "objectives": [
+        {
+          "title": "Aventurez-vous dans la mine",
+          "description": "La mine hantée ouvre ses portes périodiquement sur l’armée de morts-vivants qu’elle contient !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hauntedmines_icon1.png"]
+        },
+        {
+          "title": "Récupérez les crânes",
+          "description": "Détruisez les morts-vivants et récupérez leurs crânes pour alimenter vos golems !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hauntedmines_icon2.png"]
+        },
+        {
+          "title": "Lâchez les golems",
+          "description": "Une fois qu’une équipe a ramassé 55 crânes, les golems se réveilleront dans les deux équipes ! Plus votre équipe aura collecté de crânes, plus votre golem sera puissant !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_hauntedmines_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "industrial_district",
+      "name": "Le district industriel",
+      "art": "storm_ui_loadscreen_bashem_smashem.png",
+      "preview": "storm_ui_homescreenbackground_industrialdistrict.png",
+      "objectives": [
+        {
+          "title": "De l’action en permanence",
+          "description": "Les héros ne regagnent pas de points de vie dans la zone de départ. Les pierres de foyer sont désactivées.",
+          "icons": ["storm_ui_loadscreen_industrial_district_icon_01.png"]
+        },
+        {
+          "title": "Globes de régénération",
+          "description": "Des globes de régénération apparaissent sur le champ de bataille. Ramassez-les pour récupérer des points de vie.",
+          "icons": ["storm_ui_loadscreen_industrial_district_icon_02.png"]
+        },
+        {
+          "title": "Détruisez l’idole",
+          "description": "Il n’y a pas d’objectif supplémentaire sur ce champ de bataille. Détruisez l’idole adverse et c’est la victoire.",
+          "icons": ["storm_ui_loadscreen_industrial_district_icon_03.png"]
+        }
+      ]
+    },
+    {
+      "id": "infernal_shrines",
+      "name": "Les sanctuaires infernaux",
+      "art": "ui_ingame_mapmechanic_loadscreen_shrines.png",
+      "preview": "replayspreviewimage_infernalshrines.png",
+      "objectives": [
+        {
+          "title": "Activez les sanctuaires",
+          "description": "Les sanctuaires infernaux accumulent régulièrement de la puissance. Activez-les et préparez-vous à combattre.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_shrines_icon3.png"]
+        },
+        {
+          "title": "Combattez les gardiens",
+          "description": "Tuez 40 gardiens avant l’équipe adverse pour invoquer un puissant dominateur.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_shrines_icon1.png"]
+        },
+        {
+          "title": "Méfiez-vous des dominateurs",
+          "description": "Les dominateurs disposent d’un pouvoir dévastateur, parmi trois possibilités. Soyez sur vos gardes, car ils font des héros une cible prioritaire.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_shrines_icon2.png"]
+        }
+      ]
+    },
+    {
+      "id": "lost_cavern",
+      "name": "Le caveau perdu",
+      "art": "storm_ui_homescreenbackground_lostcavern.png",
+      "preview": "replayspreviewimage_lostcavern.png",
+      "objectives": [
+        {
+          "title": "De l’action en permanence",
+          "description": "Les héros ne regagnent pas de points de vie dans la zone de départ. Les pierres de foyer sont désactivées.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lostcavern_icon1.png"]
+        },
+        {
+          "title": "Globes de régénération",
+          "description": "Des globes de régénération apparaissent sur le champ de bataille. Ramassez-les pour récupérer des points de vie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lostcavern_icon2.png"]
+        },
+        {
+          "title": "Détruisez l’idole",
+          "description": "Il n’y a pas d’objectif supplémentaire sur ce champ de bataille. Détruisez l’idole adverse et c’est la victoire.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lostcavern_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "lunar_rocket_racing",
+      "name": "La piste aux fusées",
+      "art": "storm_ui_homescreenbackground_lunar18.png",
+      "preview": "replayspreviewimage_lunarrocketracing.png",
+      "objectives": [
+        {
+          "title": "Feu aux fusées",
+          "description": "Les héros se déplacent automatiquement en suivant le pointeur de le souris !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lunar18_icon1.png"]
+        },
+        {
+          "title": "Enveloppes",
+          "description": "Ramassez des enveloppes pour obtenir différentes capacités !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lunar18_icon2.png"]
+        },
+        {
+          "title": "Course",
+          "description": "Terminez 7 tours pour gagner ! Le dernier personnage-joueur perd la course.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_lunar18_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "pull_party",
+      "name": "Accro au crochet",
+      "art": "hb_w37_pull_party.png",
+      "preview": "replayspreviewimage_pullparty.png",
+      "objectives": []
+    },
+    {
+      "id": "punisher_arena",
+      "name": "L’arène des dominateurs",
+      "art": "ui_ingame_simple_loadscreen_battlefieldofeternity.png",
+      "preview": "replayspreviewimage_punisherarena.png",
+      "objectives": [
+        {
+          "title": "Gare aux dominateurs",
+          "description": "Les dominateurs s’affrontent d’abord mutuellement, puis s’en prennent aux héros. À chaque manche, les capacités magiques du dominateur changent.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_shrines_icon2.png"]
+        },
+        {
+          "title": "Tuez pour gagner",
+          "description": "Les héros adverses valent 4 points. Le dominateur adverse en vaut 10.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_punisherarena_icon2.png"]
+        }
+      ]
+    },
+    {
+      "id": "sandbox_cursed_hollow",
+      "name": "Bac à sable (Le val maudit)",
+      "art": "ui_ingame_mapmechanic_loadscreen_cursedhollow.png",
+      "preview": "replayspreviewimage_sandboxcursedhollow.png",
+      "objectives": [
+        {
+          "title": "Récupérez des tributs",
+          "description": "Le seigneur corbeau crée périodiquement des tributs. Emparez-vous-en pour votre équipe !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon1.png"]
+        },
+        {
+          "title": "Maudissez vos ennemis",
+          "description": "Une fois que vous aurez obtenu trois tributs, le seigneur corbeau maudira vos ennemis !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon2.png"]
+        },
+        {
+          "title": "Forts et serviteurs maudits",
+          "description": "Les bâtiments maudits ne pourront pas attaquer et les serviteurs maudits n’auront plus qu’un point de vie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_cursedhollow_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "sandbox_volskaya_foundry",
+      "name": "Bac à sable (La fonderie Volskaya)",
+      "art": "storm_ui_homescreenbackground_volskaya.png",
+      "preview": "storm_ui_gamemode_mapselect_volskaya_sandbox_sandboxvolskayafoundry.png",
+      "objectives": [
+        {
+          "title": "Capturez les points",
+          "description": "Des points de contrôle s’activent régulièrement. Placez-vous à l’intérieur pour les capturer et prendre les commandes d’un méca géant.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon1.png"]
+        },
+        {
+          "title": "Contrôlez le protecteur",
+          "description": "Le protecteur Triglav a besoin de deux opérateurs : un pilote et un artilleur. Pensez à vous coordonner !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon2.png"]
+        },
+        {
+          "title": "Semez la destruction",
+          "description": "Les capacités du protecteur infligent des dégâts colossaux aux bâtiments et aux héros. Utilisez-les pour anéantir vos adversaires.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "silver_city",
+      "name": "La cité d’argent",
+      "art": "ui_ingame_simple_loadscreen_battlefieldofeternity.png",
+      "preview": "replayspreviewimage_silvercity.png",
+      "objectives": [
+        {
+          "title": "De l’action en permanence",
+          "description": "Les héros ne regagnent pas de points de vie dans la zone de départ. Les pierres de foyer sont désactivées.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_silvercity_icon1.png"]
+        },
+        {
+          "title": "Globes de régénération",
+          "description": "Des globes de régénération apparaissent sur le champ de bataille. Ramassez-les pour récupérer des points de vie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_silvercity_icon2.png"]
+        },
+        {
+          "title": "Détruisez l’idole",
+          "description": "Il n’y a pas d’objectif supplémentaire sur ce champ de bataille. Détruisez l’idole adverse et c’est la victoire.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_silvercity_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "sky_temple",
+      "name": "Le temple céleste",
+      "art": "ui_ingame_mapmechanic_loadscreen_skytemple.png",
+      "preview": "replayspreviewimage_skytemple.png",
+      "objectives": [
+        {
+          "title": "Capturez les temples",
+          "description": "Les temples s’activent périodiquement. Tenez-vous dans leur enceinte pour en absorber la puissance !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_skytemple_icon1.png"]
+        },
+        {
+          "title": "Tenez les temples",
+          "description": "Restez dans l’enceinte du temple et il finira par déchaîner une attaque dévastatrice contre les bâtiments de vos adversaires !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_skytemple_icon2.png"]
+        },
+        {
+          "title": "Défendez les temples",
+          "description": "Les gardiens essaieront de reprendre le contrôle de leurs temples. Repoussez-les pour que votre équipe conserve leur puissance !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_skytemple_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "snow_brawl",
+      "name": "Choc au sommet",
+      "art": "storm_ui_homescreenbackground_snowbrawl.png",
+      "preview": "snowbrawlpreviewicon_snowbrawl.png",
+      "objectives": [
+        {
+          "title": "Lancez des boules de neige",
+          "description": "Des boules de neige apparaissent près des héros, des bâtiments, des tributs et des globes de régénération. Ramassez-les pour les lancer !",
+          "icons": ["storm_ui_loadscreen_snow_brawl_icon1.png"]
+        },
+        {
+          "title": "Récupérez des tributs",
+          "description": "Les apparitions de tribut de neige se succèdent rapidement. Collectez-en suffisamment pour lancer des boules de neige colossales sur les bâtiments ennemis !",
+          "icons": ["storm_ui_loadscreen_snow_brawl_icon2.png"]
+        },
+        {
+          "title": "Formez des bonshommes de neige",
+          "description": "Des bonshommes de neige inachevés apparaissent sur le champ de bataille. Complétez-les avec des boules de neige pour qu’ils se joignent à vous !",
+          "icons": ["storm_ui_loadscreen_snow_brawl_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "temple_arena",
+      "name": "L’arène des temples",
+      "art": "ui_ingame_simple_loadscreen_skytemple.png",
+      "preview": "replayspreviewimage_templearena.png",
+      "objectives": [
+        {
+          "title": "Temples changeants",
+          "description": "Chaque manche, un nombre aléatoire de temples s’active au cours de la partie.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_skytemple_icon1.png"]
+        },
+        {
+          "title": "Usez de leur puissance",
+          "description": "Capturez les temples pour détruire l’idole de l’ennemi.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_skytemple_icon2.png"]
+        }
+      ]
+    },
+    {
+      "id": "tomb_of_the_spider_queen",
+      "name": "La tombe de la reine araignée",
+      "art": "ui_ingame_mapmechanic_loadscreen_tombofthespiderqueen.png",
+      "preview": "replayspreviewimage_tombofthespiderqueen.png",
+      "objectives": [
+        {
+          "title": "Récupérez des gemmes",
+          "description": "Les serviteurs araignées et les héros adverses abandonnent des gemmes lorsqu’ils meurent. Collectez-en autant que possible.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_tombofthespiderqueen_icon1.png"]
+        },
+        {
+          "title": "Rapportez vos gemmes",
+          "description": "Rapportez vos gemmes à l’un des autels de la Reine araignée, ou vous les perdrez toutes si vous mourez !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_tombofthespiderqueen_icon2.png"]
+        },
+        {
+          "title": "Invoquez les tissetoiles",
+          "description": "L’équipe qui rapportera assez de gemmes la première bénéficiera de l’appui des tissetoiles pour détruire les défenses adverses.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_tombofthespiderqueen_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "towers_of_doom",
+      "name": "Les tours du destin",
+      "art": "ui_ingame_mapmechanic_loadscreen_towersofdoom.png",
+      "preview": "replayspreviewimage_towersofdoom.png",
+      "objectives": [
+        {
+          "title": "Idoles protégées",
+          "description": "Les deux idoles sont protégées par une barrière qui ne peut pas être attaquée par les héros. Pour remporter la victoire, vous devez activer des autels.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_towersofdoom_icon1.png"]
+        },
+        {
+          "title": "Activez les autels",
+          "description": "Ces autels s’élèveront périodiquement sur le champ de bataille. Activez-les pour que vos clochers tirent sur l’idole adverse.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_towersofdoom_icon2.png"]
+        },
+        {
+          "title": "Emparez-vous des clochers",
+          "description": "Détruisez les clochers de votre ennemi pour en prendre le contrôle. Plus vous en aurez, plus grands seront les dégâts infligés à l’activation des autels.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_towersofdoom_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "trial_grounds",
+      "name": "Le terrain d’entraînement",
+      "art": "storm_ui_homescreenbackground_trialgrounds.png",
+      "preview": "storm_ui_homescreenbackground_trialgrounds.png",
+      "objectives": [
+        {
+          "title": "Baptême du feu",
+          "description": "Éliminez l’équipe adverse pour remporter la manche.",
+          "icons": ["storm_ui_loadscreen_trial_grounds_icon1.png"]
+        },
+        {
+          "title": "Test expérimental",
+          "description": "Peu après le début de la manche, un objectif apparaît au centre du champ de bataille. Utilisez son pouvoir pour détruire vos ennemis !",
+          "icons": ["storm_ui_loadscreen_trial_grounds_icon2.png"]
+        },
+        {
+          "title": "Kits de soin",
+          "description": "Les kits de soin répartis sur le champ de bataille rendent une grande partie des points de vie et de ressource quand vous les ramassez.",
+          "icons": ["storm_ui_loadscreen_trial_grounds_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "volskaya_foundry",
+      "name": "La fonderie Volskaya",
+      "art": "storm_ui_homescreenbackground_volskaya.png",
+      "preview": "storm_ui_homescreenbackground_volskaya.png",
+      "objectives": [
+        {
+          "title": "Capturez les points",
+          "description": "Des points de contrôle s’activent régulièrement. Placez-vous à l’intérieur pour les capturer et prendre les commandes d’un méca géant.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon1.png"]
+        },
+        {
+          "title": "Contrôlez le protecteur",
+          "description": "Le protecteur Triglav a besoin de deux opérateurs : un pilote et un artilleur. Pensez à vous coordonner !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon2.png"]
+        },
+        {
+          "title": "Semez la destruction",
+          "description": "Les capacités du protecteur infligent des dégâts colossaux aux bâtiments et aux héros. Utilisez-les pour anéantir vos adversaires.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_volskaya_icon3.png"]
+        }
+      ]
+    },
+    {
+      "id": "warhead_junction",
+      "name": "Menace nucléaire",
+      "art": "storm_ui_homescreenbackground_warhead.png",
+      "preview": "replayspreviewimage_warheadjunction.png",
+      "objectives": [
+        {
+          "title": "Déploiement d’ogives",
+          "description": "Plusieurs ogives apparaissent périodiquement sur le champ de bataille.",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_warhead_icon1.png"]
+        },
+        {
+          "title": "Collecte des ogives",
+          "description": "Emparez-vous d’une ogive pour activer votre frappe. Utilisez-la rapidement car vous la perdrez à votre mort !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_warhead_icon2.png"]
+        },
+        {
+          "title": "Que pleuve l’enfer",
+          "description": "Déclenchez des frappes nucléaires qui brûleront les fortifications de l’équipe adverse. Attaquez leurs bâtiments pour prolonger l’incendie !",
+          "icons": ["ui_ingame_mapmechanic_loadscreen_warhead_icon3.png"]
+        }
+      ]
+    }
+  ]
+}

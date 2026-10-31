@@ -6,7 +6,7 @@ import type {
   DataDragonRunes,
 } from '#shared/types/dataDragon'
 import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
-import type { HotsHeroesResponse } from '#shared/types/hots'
+import type { HotsHeroesResponse, HotsMapsResponse } from '#shared/types/hots'
 import { hotsImage } from '~/utils/hotsImages'
 import type {
   ValorantAgentsResponse,
@@ -40,6 +40,7 @@ const valorantAgents = ref<ValorantAgentsResponse | null>(null)
 const valorantWeapons = ref<ValorantWeaponsResponse | null>(null)
 const valorantMaps = ref<ValorantMapsResponse | null>(null)
 const hotsHeroes = ref<HotsHeroesResponse | null>(null)
+const hotsMaps = ref<HotsMapsResponse | null>(null)
 const wowClasses = ref<WowClassesResponse | null>(null)
 const wowRaces = ref<WowRacesResponse | null>(null)
 const wowSpecializations = ref<WowSpecializationsResponse | null>(null)
@@ -160,6 +161,15 @@ const groups = computed<SearchGroup[]>(() => {
       to: `/hots/heroes/${encodeURIComponent(hero.id)}`,
       image: hotsImage('heroportraits', hero.portrait),
     }))
+  const hotsMapResults = (hotsMaps.value?.data ?? [])
+    .filter((map) => match(map.name))
+    .map((map) => ({
+      id: map.id,
+      name: map.name,
+      subtitle: 'Champ de bataille',
+      to: `/hots/maps/${encodeURIComponent(map.id)}`,
+      image: hotsImage('replaypreviews', map.preview),
+    }))
   const wowClassResults = (wowClasses.value?.data ?? [])
     .filter((entry) => match(entry.name))
     .map((entry) => ({
@@ -198,6 +208,7 @@ const groups = computed<SearchGroup[]>(() => {
     { label: 'Armes · Valorant', results: weaponResults },
     { label: 'Cartes · Valorant', results: mapResults },
     { label: 'Héros · Heroes of the Storm', results: hotsResults },
+    { label: 'Champs de bataille · Heroes of the Storm', results: hotsMapResults },
     { label: 'Classes · WoW', results: wowClassResults },
     { label: 'Races · WoW', results: wowRaceResults },
     { label: 'Spécialisations · WoW', results: wowSpecializationResults },
@@ -224,6 +235,7 @@ async function loadData() {
     valorantWeapons.value = null
     valorantMaps.value = null
     hotsHeroes.value = null
+    hotsMaps.value = null
     wowClasses.value = null
     wowRaces.value = null
     wowSpecializations.value = null
@@ -298,6 +310,13 @@ async function loadData() {
       label: 'héros Heroes of the Storm',
       run: async () => {
         hotsHeroes.value = await $fetch<HotsHeroesResponse>('/api/hots/heroes')
+      },
+    })
+  if (!hotsMaps.value)
+    requests.push({
+      label: 'champs de bataille Heroes of the Storm',
+      run: async () => {
+        hotsMaps.value = await $fetch<HotsMapsResponse>('/api/hots/maps')
       },
     })
   if (!wowClasses.value)

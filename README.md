@@ -185,7 +185,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] World of Warcraft : archive officielle des notes de mise à jour et correctifs (certains concernent aussi Classic)
   - [x] Heroes of the Storm : catalogue des héros, recherche, fiches, compétences et talents en français
   - [x] Heroes of the Storm : notes de mise à jour récentes avec liens vers les publications officielles
-  - [ ] Heroes of the Storm : étudier les champs de bataille selon les sources disponibles
+  - [x] Heroes of the Storm : catalogue et fiches des champs de bataille avec objectifs disponibles
   - [ ] World of Warcraft : étudier les autres contenus et versions selon les sources disponibles
   - [ ] Étudier les notes de patch pour chaque jeu et les intégrer lorsque les sources et leurs conditions d'utilisation le permettent
   - [x] Étendre la recherche commune aux unités, traits et objets Teamfight Tactics
@@ -197,13 +197,13 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
 
 ## Encyclopédie Heroes of the Storm
 
-Le catalogue des héros et leurs fiches utilisent une copie versionnée des données françaises de [HeroesToolChest](https://github.com/HeroesToolChest/heroes-data2), accompagnée de ses [images communautaires](https://github.com/HeroesToolChest/heroes-images). La version importée est affichée dans l’interface : ces données ne sont pas mises à jour automatiquement et peuvent différer du jeu après un nouveau patch. Les compétences et talents sont présentés avec leurs valeurs de base ; les effets peuvent évoluer au cours d’une partie. La rubrique des notes de patch présente les notes repérées parmi les 120 dernières actualités du [fil officiel Blizzard](https://news.blizzard.com/fr-fr/feed/heroes-of-the-storm) ; les dates affichées correspondent aux dernières mises à jour des articles.
+Les catalogues des héros et des champs de bataille utilisent une copie versionnée des données françaises de [HeroesToolChest](https://github.com/HeroesToolChest/heroes-data2), accompagnée de ses [images communautaires](https://github.com/HeroesToolChest/heroes-images). La version importée est affichée dans l’interface : ces données ne sont pas mises à jour automatiquement et peuvent différer du jeu après un nouveau patch. Les cartes comprennent des variantes et des modes anciens ou spéciaux ; elles ne représentent pas la rotation actuelle. Certains objectifs ou noms français ne sont pas disponibles dans la source. Les compétences et talents sont présentés avec leurs valeurs de base ; les effets peuvent évoluer au cours d’une partie. La rubrique des notes de patch présente les notes repérées parmi les 120 dernières actualités du [fil officiel Blizzard](https://news.blizzard.com/fr-fr/feed/heroes-of-the-storm) ; les dates affichées correspondent aux dernières mises à jour des articles.
 
 Pour actualiser cette copie, télécharger une archive `heroes-data-no-maps` publiée dans les [releases HeroesToolChest](https://github.com/HeroesToolChest/heroes-data2/releases), puis lancer :
 
 ```bash
 python3 scripts/import-hots-data.py chemin/vers/heroes-data-no-maps.zip
-npx biome format --write server/data/hots-heroes-a.json server/data/hots-heroes-b.json
+npx biome format --write server/data/hots-heroes-a.json server/data/hots-heroes-b.json server/data/hots-maps.json
 ```
 
 Vérifier ensuite la version, le contenu importé et les tests avant de publier les changements. Les données et visuels de jeu appartiennent à leurs ayants droit ; HeroesToolChest est une source communautaire indépendante.

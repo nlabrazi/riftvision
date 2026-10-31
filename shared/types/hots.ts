@@ -45,6 +45,35 @@ export interface HotsHeroResponse {
   data: HotsHero
 }
 
+export interface HotsMapObjective {
+  title: string
+  description: string
+  icons: string[]
+}
+
+export interface HotsMapSummary {
+  id: string
+  name: string
+  art: string | null
+  preview: string | null
+}
+
+export interface HotsMap extends HotsMapSummary {
+  objectives: HotsMapObjective[]
+}
+
+export interface HotsMapsResponse {
+  version: string
+  locale: 'fr_FR'
+  data: HotsMapSummary[]
+}
+
+export interface HotsMapResponse {
+  version: string
+  locale: 'fr_FR'
+  data: HotsMap
+}
+
 export interface HotsPatchNote {
   title: string
   updatedAt: string
