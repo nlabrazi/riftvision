@@ -304,7 +304,7 @@ test('recherche des contenus TFT et ouvre le catalogue filtré sur le bon identi
     .getByRole('region', { name: 'Unités · TFT' })
     .getByRole('link', { name: /Ahri.*Set 18/ })
     .click()
-  await expect(page).toHaveURL(/\/tft\/champions\/DA_Ahri$/)
+  await expect(page).toHaveURL(/\/tft\/units\/DA_Ahri$/)
   await expect(page.getByRole('heading', { name: 'Ahri' })).toBeVisible()
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click()
   await dialog.getByRole('searchbox').fill('solaire')

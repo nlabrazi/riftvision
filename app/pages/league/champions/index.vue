@@ -2,6 +2,16 @@
 import { computed, ref } from 'vue'
 import type { DataDragonChampions } from '#shared/types/dataDragon'
 
+definePageMeta({
+  middleware(to) {
+    if (to.hash === '#league-of-legends')
+      return navigateTo(
+        { path: '/league/compagnon', query: to.query, hash: to.hash },
+        { replace: true },
+      )
+  },
+})
+
 useHead({ title: 'Champions LoL — RiftVision' })
 
 const { data, status, error, refresh } =
@@ -49,7 +59,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <EncyclopediaLayout>
-    <NuxtLink to="/league" class="encyclopedia-back">← Retour à League of Legends</NuxtLink>
+    <NuxtLink to="/" class="encyclopedia-back">← Retour à tous les jeux</NuxtLink>
     <GameCatalogBanner game="league" eyebrow="Encyclopédie · League of Legends" title="Les champions" description="Découvrez les champions de la Faille, leurs histoires et leurs compétences." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
 
     <div v-if="status === 'pending'" class="encyclopedia-notice" role="status">Chargement des champions…</div>

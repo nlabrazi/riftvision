@@ -122,7 +122,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <EncyclopediaLayout>
-    <NuxtLink :to="id ? basePath : '/league'" class="encyclopedia-back">← {{ id ? isItems ? 'Retour aux objets' : 'Retour aux runes' : 'Retour à League of Legends' }}</NuxtLink>
+    <NuxtLink :to="id ? basePath : '/league/champions'" class="encyclopedia-back">← {{ id ? isItems ? 'Retour aux objets' : 'Retour aux runes' : 'Retour aux champions' }}</NuxtLink>
     <GameCatalogBanner v-if="!id" game="league" eyebrow="Encyclopédie · League of Legends" :title="isItems ? 'Les objets' : 'Les runes'" :description="isItems ? 'Explorez les objets achetables dans la Faille de l’invocateur.' : 'Découvrez les runes et leurs voies.'" :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <div v-if="status === 'pending' || status === 'idle'" class="encyclopedia-notice" role="status">Chargement des {{ isItems ? 'objets' : 'runes' }}…</div>
     <div v-else-if="error || !data" class="encyclopedia-notice" role="alert">

@@ -29,7 +29,7 @@ useHead({ title: computed(() => `${data.value?.data.name ?? 'Classe WoW'} — Ri
 
 <template>
   <WowLayout>
-    <NuxtLink to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
+    <NuxtLink to="/wow/classes" class="wow-back">← Retour aux classes WoW</NuxtLink>
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement de la classe…</div>
     <div v-else-if="error || !data" class="wow-notice" role="alert"><p>{{ error?.statusCode === 404 ? 'Cette classe est introuvable.' : 'La fiche est momentanément indisponible.' }}</p><button v-if="error?.statusCode !== 404" type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>

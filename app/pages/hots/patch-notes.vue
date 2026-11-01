@@ -29,7 +29,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <HotsLayout>
-    <NuxtLink to="/hots" class="hots-back">← Retour aux héros du Nexus</NuxtLink>
+    <NuxtLink to="/hots/heroes" class="hots-back">← Retour aux héros du Nexus</NuxtLink>
     <GameCatalogBanner game="hots" eyebrow="Heroes of the Storm · Mises à jour" title="Notes de patch" description="Retrouvez les notes récentes publiées par Blizzard et consultez leurs détails sur le site officiel.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Blizzard ↗ <span class="sr-only">(nouvel onglet)</span></a>
     </GameCatalogBanner>

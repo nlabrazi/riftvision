@@ -21,7 +21,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <WowLayout>
-    <NuxtLink to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
+    <NuxtLink to="/wow/classes" class="wow-back">← Retour aux classes WoW</NuxtLink>
     <GameCatalogBanner game="wow" eyebrow="World of Warcraft · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Blizzard et consultez leurs notes complètes. Certains correctifs concernent aussi WoW Classic.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Blizzard ↗ <span class="sr-only">(nouvel onglet)</span></a>
     </GameCatalogBanner>

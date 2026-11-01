@@ -51,7 +51,7 @@ test('explore les classes Retail et les spécialisations', async ({ page }) => {
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
-  await expect(page).toHaveURL(/\/wow$/)
+  await expect(page).toHaveURL(/\/wow\/classes$/)
   await expect(page.getByRole('heading', { name: 'Les classes WoW.' })).toBeVisible()
   await expect(page.getByText('2 classes', { exact: true })).toBeVisible()
   await page.getByLabel('Rechercher une classe').fill('mage')

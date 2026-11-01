@@ -23,7 +23,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <ValorantLayout>
-    <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
+    <NuxtLink to="/valorant/agents" class="val-back">← Retour aux agents Valorant</NuxtLink>
     <GameCatalogBanner game="valorant" eyebrow="Valorant · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Riot Games et consultez leurs notes complètes.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Riot ↗ <span class="sr-only">(nouvel onglet)</span></a>
     </GameCatalogBanner>

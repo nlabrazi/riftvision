@@ -9,7 +9,6 @@ import FlashAlertOverlay from '../components/FlashAlertOverlay.vue'
 import FocusRadarView from '../components/FocusRadarView.vue'
 import GamePortal from '../components/GamePortal.vue'
 import LeagueStandbyPanel from '../components/LeagueStandbyPanel.vue'
-import LeagueHome from '../components/LeagueHome.vue'
 import MatchHistoryModal from '../components/MatchHistoryModal.vue'
 import PostGameReport from '../components/PostGameReport.vue'
 import RvIcon from '../components/RvIcon.vue'
@@ -114,7 +113,7 @@ function handleSelectHistoricalMatch(m: SavedMatch) {
 
 const currentView = ref<'tactical' | 'radar'>('tactical')
 const route = useRoute()
-const isLeaguePage = computed(() => route.path === '/league')
+const isLeaguePage = computed(() => route.path.replace(/\/+$/, '') === '/league/compagnon')
 const isHelpOpen = ref(false)
 const isChangingMode = ref(false)
 const isRefreshing = ref(false)
@@ -333,7 +332,12 @@ onUnmounted(() => {
       </div>
 
       <GamePortal v-if="!isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
-      <LeagueHome v-if="isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" />
+      <section v-if="isLeaguePage && !hasGame && !isHelpOpen && !isLiveActive && !status.isMock" class="companion-page-intro" aria-labelledby="companion-page-title">
+        <NuxtLink to="/league/champions" class="companion-page-intro__back">← Retour aux champions</NuxtLink>
+        <p>LEAGUE OF LEGENDS · COMPAGNON DE PARTIE</p>
+        <h2 id="companion-page-title">Suivre ma partie<span>.</span></h2>
+        <p>Connectez votre partie ou explorez le tableau de bord en démo.</p>
+      </section>
 
       <div v-if="isHelpOpen" class="diagnostic-workspace">
         <section class="rv-panel help-panel" aria-labelledby="connection-help-title">

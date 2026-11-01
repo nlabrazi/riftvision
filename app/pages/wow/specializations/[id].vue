@@ -22,7 +22,7 @@ useHead({ title: computed(() => `${spec.value?.name ?? 'Spécialisation WoW'} �
 <template>
   <WowLayout>
     <NuxtLink v-if="spec" :to="`/wow/classes/${spec.class.id}`" class="wow-back">← Retour à {{ spec.class.name }}</NuxtLink>
-    <NuxtLink v-else to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
+    <NuxtLink v-else to="/wow/classes" class="wow-back">← Retour aux classes WoW</NuxtLink>
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement de la spécialisation…</div>
     <div v-else-if="error || !spec" class="wow-notice" role="alert"><p>{{ error?.statusCode === 404 ? 'Cette spécialisation est introuvable.' : 'La fiche est momentanément indisponible.' }}</p><button v-if="error?.statusCode !== 404" type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>

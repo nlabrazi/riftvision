@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test'
 
 test('présente les jeux et mène aux actions League of Legends', async ({ page, request }) => {
   await request.post('/api/riot/mock', { data: { enabled: false } })
+  await page.route('**/api/ddragon/champions', (route) =>
+    route.fulfill({ json: { version: '16.21.1', locale: 'fr_FR', data: {} } }),
+  )
   const initialStatus = page.waitForResponse((response) =>
     response.url().includes('/api/riot/status'),
   )
@@ -40,25 +43,32 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   await expect(page.getByTestId('live-toggle-button')).toHaveCount(0)
 
   await page.getByRole('link', { name: /Accéder à League of Legends/ }).click()
-  await expect(page).toHaveURL(/\/league$/)
-  await expect(page.getByRole('heading', { name: 'Bienvenue dans la Faille.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Champions', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/\/league\/champions$/)
+  await expect(page.getByRole('heading', { name: 'Les champions.' })).toBeVisible()
+  await page.getByRole('link', { name: 'Suivre ma partie', exact: true }).click()
+  await expect(page).toHaveURL(/\/league\/compagnon$/)
+  await expect(page.getByRole('heading', { name: 'Suivre ma partie.' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Connecter ma partie', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Explorer la démo' }).click()
   await expect(page.getByTestId('status-banner')).toContainText('Démo')
   await expect(page.getByTestId('scoreboard-header')).toBeVisible()
 })
 
-test('ouvre directement l’espace League of Legends et revient au portail', async ({
+test('redirige les anciennes adresses League et conserve l’accès au compagnon', async ({
   page,
   request,
 }) => {
   await request.post('/api/riot/mock', { data: { enabled: false } })
-  await page.goto('/league')
-
-  await expect(page.getByRole('heading', { name: 'Bienvenue dans la Faille.' })).toBeVisible()
-  await expect(page.locator('.league-section').filter({ hasText: 'À venir' })).toHaveCount(0)
+  await page.goto('/league?source=test')
+  await expect(page).toHaveURL(/\/league\/champions\?source=test$/)
+  await expect(page.getByRole('heading', { name: 'Les champions.' })).toBeVisible()
+  await page.goto('/league#league-of-legends')
+  await expect(page).toHaveURL(/\/league\/compagnon#league-of-legends$/)
   await expect(page.getByRole('button', { name: 'Explorer la démo' })).toBeVisible()
+  await page.goto('/league/compagnon/')
+  await expect(page.getByRole('button', { name: 'Explorer la démo' })).toBeVisible()
+  await page.getByRole('link', { name: '← Retour aux champions' }).click()
+  await expect(page).toHaveURL(/\/league\/champions$/)
   await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('heading', { name: 'Tous les jeux.' })).toBeVisible()

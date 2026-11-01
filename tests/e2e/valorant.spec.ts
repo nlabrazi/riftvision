@@ -62,7 +62,7 @@ test('explore les agents Valorant et consulte leurs compétences', async ({ page
   )
   await openHome(page)
   await page.locator('.game-card--valorant').click()
-  await expect(page).toHaveURL(/\/valorant$/)
+  await expect(page).toHaveURL(/\/valorant\/agents$/)
   await expect(page.getByRole('heading', { name: 'Les agents Valorant.' })).toBeVisible()
   await expect(page.getByText('2 agents', { exact: true })).toBeVisible()
   await page.getByRole('combobox', { name: 'Rôle', exact: true }).selectOption('Initiateur')

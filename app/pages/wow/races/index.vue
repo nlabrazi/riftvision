@@ -43,7 +43,7 @@ function resetFilters() {
 
 <template>
   <WowLayout>
-    <NuxtLink to="/wow" class="wow-back">← Retour aux classes WoW</NuxtLink>
+    <NuxtLink to="/wow/classes" class="wow-back">← Retour aux classes WoW</NuxtLink>
     <GameCatalogBanner game="wow" eyebrow="Encyclopédie · World of Warcraft Retail" title="Les races WoW" description="Explorez les races et leurs classes disponibles." />
     <p class="race-note">Certaines races apparaissent plusieurs fois : Blizzard distingue leurs variantes par faction.</p>
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement des races…</div>

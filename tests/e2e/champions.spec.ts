@@ -38,8 +38,9 @@ async function openLeague(page: import('@playwright/test').Page) {
   const initialStatus = page.waitForResponse((response) =>
     response.url().includes('/api/riot/status'),
   )
-  await page.goto('/league')
+  await page.goto('/')
   await initialStatus
+  await page.locator('.game-card--league').click()
 }
 
 test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {
@@ -63,7 +64,6 @@ test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {
     })
   })
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await expect(page).toHaveURL(/\/league\/champions$/)
   await expect(page.getByText('2 champions', { exact: true })).toBeVisible()
   await expect(page.getByText(`Données Data Dragon · ${version}`)).toBeVisible()
@@ -128,7 +128,6 @@ test('permet de réessayer après une erreur du catalogue', async ({ page }) => 
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } })
   })
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await expect(page.locator('.encyclopedia-notice[role="alert"]')).toContainText(
     'Le catalogue est momentanément indisponible.',
   )
@@ -148,7 +147,6 @@ test('affiche une fiche introuvable et permet de revenir au catalogue', async ({
       : route.fulfill({ json: { version, locale: 'fr_FR', data: { Unknown: ghost } } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await page.getByRole('link', { name: /Inconnu/ }).click()
   await expect(page.locator('.encyclopedia-notice[role="alert"]')).toContainText(
     'Ce champion est introuvable.',

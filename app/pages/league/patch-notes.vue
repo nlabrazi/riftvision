@@ -21,7 +21,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <EncyclopediaLayout>
-    <NuxtLink to="/league" class="encyclopedia-back">← Retour à League of Legends</NuxtLink>
+    <NuxtLink to="/league/champions" class="encyclopedia-back">← Retour aux champions</NuxtLink>
     <GameCatalogBanner game="league" eyebrow="League of Legends · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Riot Games et consultez leurs notes complètes.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Riot ↗ <span class="sr-only">(nouvel onglet)</span></a>
     </GameCatalogBanner>

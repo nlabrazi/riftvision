@@ -5,7 +5,7 @@
       <NuxtLink to="/" class="tft-brand">RiftVision</NuxtLink>
       <nav aria-label="Navigation Teamfight Tactics" class="tft-nav">
         <NuxtLink to="/">Tous les jeux</NuxtLink>
-        <NuxtLink to="/tft">Unités</NuxtLink>
+        <NuxtLink to="/tft/units">Unités</NuxtLink>
         <NuxtLink to="/tft/traits">Traits</NuxtLink>
         <NuxtLink to="/tft/items">Objets</NuxtLink>
         <NuxtLink to="/tft/patch-notes">Notes de patch</NuxtLink>

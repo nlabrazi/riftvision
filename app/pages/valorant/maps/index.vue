@@ -32,7 +32,7 @@ const maps = computed(() => {
 
 <template>
   <ValorantLayout>
-    <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
+    <NuxtLink to="/valorant/agents" class="val-back">← Retour aux agents Valorant</NuxtLink>
     <GameCatalogBanner game="valorant" eyebrow="Encyclopédie · Valorant" title="Les cartes Valorant" description="Découvrez les cartes et leurs plans disponibles." />
     <p class="maps-note">Ce catalogue contient des cartes de plusieurs modes, y compris l’entraînement. Il n’indique pas la rotation actuelle.</p>
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement des cartes…</div>

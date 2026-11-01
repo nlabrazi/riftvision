@@ -13,7 +13,7 @@ const games = [
   {
     card: 'tft',
     pages: [
-      ['/tft', 'Les unités TFT.'],
+      ['/tft/units', 'Les unités TFT.'],
       ['/tft/traits', 'Les traits TFT.'],
       ['/tft/items', 'Les objets TFT.'],
       ['/tft/patch-notes', 'Notes de patch.'],
@@ -22,7 +22,7 @@ const games = [
   {
     card: 'valorant',
     pages: [
-      ['/valorant', 'Les agents Valorant.'],
+      ['/valorant/agents', 'Les agents Valorant.'],
       ['/valorant/weapons', 'Les armes Valorant.'],
       ['/valorant/maps', 'Les cartes Valorant.'],
       ['/valorant/patch-notes', 'Notes de patch.'],
@@ -31,7 +31,7 @@ const games = [
   {
     card: 'wow',
     pages: [
-      ['/wow', 'Les classes WoW.'],
+      ['/wow/classes', 'Les classes WoW.'],
       ['/wow/races', 'Les races WoW.'],
       ['/wow/patch-notes', 'Notes de patch.'],
     ],
@@ -39,7 +39,7 @@ const games = [
   {
     card: 'hots',
     pages: [
-      ['/hots', 'Les héros du Nexus.'],
+      ['/hots/heroes', 'Les héros du Nexus.'],
       ['/hots/maps', 'Champs de bataille.'],
       ['/hots/patch-notes', 'Notes de patch.'],
     ],

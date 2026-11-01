@@ -4,12 +4,12 @@
     <header class="encyclopedia-header">
       <NuxtLink to="/" class="encyclopedia-brand">RiftVision</NuxtLink>
       <nav aria-label="Navigation League of Legends" class="encyclopedia-nav">
-        <NuxtLink to="/league">League of Legends</NuxtLink>
+        <NuxtLink to="/">Tous les jeux</NuxtLink>
         <NuxtLink to="/league/champions">Champions</NuxtLink>
         <NuxtLink to="/league/items">Objets</NuxtLink>
         <NuxtLink to="/league/runes">Runes</NuxtLink>
         <NuxtLink to="/league/patch-notes">Notes de patch</NuxtLink>
-        <NuxtLink to="/league#league-of-legends">Suivre ma partie</NuxtLink>
+        <NuxtLink to="/league/compagnon">Suivre ma partie</NuxtLink>
       </nav>
       <EncyclopediaSearch />
     </header>

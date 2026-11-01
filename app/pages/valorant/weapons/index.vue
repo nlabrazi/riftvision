@@ -38,7 +38,7 @@ function resetFilters() {
 
 <template>
   <ValorantLayout>
-    <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
+    <NuxtLink to="/valorant/agents" class="val-back">← Retour aux agents Valorant</NuxtLink>
     <GameCatalogBanner game="valorant" eyebrow="Encyclopédie · Valorant" title="Les armes Valorant" description="Explorez les armes et leurs caractéristiques disponibles." />
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement des armes…</div>
     <div v-else-if="error || !data" class="val-notice" role="alert"><p>Le catalogue des armes est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>

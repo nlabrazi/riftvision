@@ -27,7 +27,7 @@ function hideBrokenImage(event: Event) {
 
 <template>
   <HotsLayout>
-    <NuxtLink to="/hots" class="hots-back">← Retour aux héros du Nexus</NuxtLink>
+    <NuxtLink to="/hots/heroes" class="hots-back">← Retour aux héros du Nexus</NuxtLink>
     <div v-if="status === 'pending'" class="hots-notice" role="status">Chargement du héros…</div>
     <div v-else-if="error || !data" class="hots-notice" role="alert"><p>{{ error?.statusCode === 404 ? 'Ce héros est introuvable.' : 'La fiche est momentanément indisponible.' }}</p><button v-if="error?.statusCode !== 404" type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else-if="hero">

@@ -81,16 +81,16 @@ function showGenre(genre: Genre) {
           :aria-pressed="selectedGenre === genre" @click="selectedGenre = genre">{{ genre }}</button>
       </div>
       <div class="game-grid">
-        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--league" to="/league">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--league" to="/league/champions">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/league.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>League of Legends</h3>
-            <p>Suivez votre partie et retrouvez votre tableau de bord tactique.</p>
+            <p>Explorez les champions, objets et runes de la Faille.</p>
             <span class="game-card__link">Accéder à League of Legends <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('Stratégie')" class="game-card game-card--tft" to="/tft">
+        <NuxtLink v-if="showGenre('Stratégie')" class="game-card game-card--tft" to="/tft/units">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/tft.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>STRATÉGIE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
@@ -99,7 +99,7 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">Accéder au catalogue <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('FPS')" class="game-card game-card--valorant" to="/valorant">
+        <NuxtLink v-if="showGenre('FPS')" class="game-card game-card--valorant" to="/valorant/agents">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/valorant.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>FPS TACTIQUE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
@@ -117,7 +117,7 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">En préparation</span>
           </div>
         </article>
-        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--hots" to="/hots">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--hots" to="/hots/heroes">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/hots.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
@@ -126,7 +126,7 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">Explorer le Nexus <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow">
+        <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow/classes">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/wow.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MMORPG</span><span class="game-card__status game-card__status--available">Retail</span></div>
@@ -148,7 +148,7 @@ function showGenre(genre: Genre) {
     </section>
     <section id="compagnon" class="companion-section" aria-labelledby="companion-title">
       <div class="companion-intro">
-        <div><p class="portal-eyebrow">VOTRE COMPAGNON DE PARTIE</p><h2 id="companion-title">Vos parties, <span>au même endroit.</span></h2><p>Suivez vos parties et retrouvez leurs moments clés. Le compagnon commence avec League of Legends et pourra évoluer vers d’autres jeux.</p><NuxtLink to="/league#league-of-legends" class="portal-primary">Découvrir le suivi LoL <span aria-hidden="true">↗</span></NuxtLink></div>
+        <div><p class="portal-eyebrow">VOTRE COMPAGNON DE PARTIE</p><h2 id="companion-title">Vos parties, <span>au même endroit.</span></h2><p>Suivez vos parties et retrouvez leurs moments clés. Le compagnon commence avec League of Legends et pourra évoluer vers d’autres jeux.</p><NuxtLink to="/league/compagnon" class="portal-primary">Découvrir le suivi LoL <span aria-hidden="true">↗</span></NuxtLink></div>
         <div class="companion-visual" aria-hidden="true"><span>R</span><i></i></div>
       </div>
       <div class="companion-games" aria-label="Jeux et fonctionnalités du compagnon">

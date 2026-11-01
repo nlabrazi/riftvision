@@ -21,7 +21,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <TftLayout>
-    <NuxtLink to="/tft" class="tft-back">← Retour aux unités TFT</NuxtLink>
+    <NuxtLink to="/tft/units" class="tft-back">← Retour aux unités TFT</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Teamfight Tactics · Mises à jour" title="Notes de patch" description="Retrouvez les mises à jour publiées par Riot Games et consultez leurs notes complètes.">
       <a class="patch-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Archive officielle Riot ↗ <span class="sr-only">(nouvel onglet)</span></a>
     </GameCatalogBanner>

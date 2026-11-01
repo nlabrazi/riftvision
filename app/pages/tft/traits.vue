@@ -69,7 +69,7 @@ function resetFilters() {
 
 <template>
   <TftLayout>
-    <NuxtLink to="/tft" class="tft-back">← Retour aux unités TFT</NuxtLink>
+    <NuxtLink to="/tft/units" class="tft-back">← Retour aux unités TFT</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les traits TFT" description="Explorez les traits répertoriés dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <p class="traits-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set est déduit de l’identifiant lorsqu’il y figure : les autres entrées peuvent être communes ou non identifiées. Les données disponibles ne précisent pas les effets des traits ni les unités associées.</p>
     <div v-if="status === 'pending'" class="tft-notice" role="status">Chargement des traits…</div>

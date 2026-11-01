@@ -21,6 +21,8 @@
 
 **RiftVision** est un portail multijeu pour explorer des encyclopédies, consulter des notes de patch et retrouver des outils dédiés à ses jeux. Il propose actuellement des contenus pour **League of Legends**, **Teamfight Tactics**, **Valorant**, **World of Warcraft Retail** et **Heroes of the Storm**.
 
+Les catalogues principaux sont accessibles sur `/league/champions`, `/tft/units`, `/valorant/agents`, `/wow/classes` et `/hots/heroes`. Les racines de ces espaces redirigent provisoirement vers leur catalogue, afin de pouvoir accueillir plus tard une page propre à chaque jeu.
+
 Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tableau de bord sur second écran, suivi de partie, bilans et overlay Windows. L’extension des bilans à TFT et l’étude du suivi des arènes 3c3 de WoW font partie des pistes envisagées, sous réserve des données disponibles.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
@@ -213,7 +215,7 @@ Vérifier ensuite la version, le contenu importé et les tests avant de publier 
 
 ## Suivre une partie League of Legends
 
-1. **Connecter ma partie** : ouvrez l’espace League of Legends, lancez une partie sur l’ordinateur où RiftVision est installé, puis connectez-la depuis cette page. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
+1. **Connecter ma partie** : ouvrez le [compagnon League of Legends](/league/compagnon) depuis « Suivre ma partie », lancez une partie sur l’ordinateur où RiftVision est installé, puis connectez-la depuis cette page. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
 2. **Explorer la démo** : sans partie en cours, découvrez un exemple figé à 16:45. Le bandeau permet de tester une alerte, de connecter votre propre partie ou de quitter la démo.
 3. **Suivre le tableau de bord** : consultez la carte, les événements, les scores et les inventaires. Sélectionnez un champion ou un événement pour afficher son détail.
 4. **Agrandir la carte** : depuis la carte, passez à un affichage plus large, masquez le journal ou activez le plein écran. Revenez au tableau de bord avec le bouton de retour. La recherche, le filtre et l’événement sélectionné sont conservés entre ces affichages et lors d’un passage dans l’aide.

@@ -68,7 +68,7 @@ function resetFilters() {
 
 <template>
   <TftLayout>
-    <NuxtLink to="/tft" class="tft-back">← Retour aux unités TFT</NuxtLink>
+    <NuxtLink to="/tft/units" class="tft-back">← Retour aux unités TFT</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les objets TFT" description="Explorez les objets répertoriés dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <p class="objets-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set est déduit de l’identifiant lorsqu’il y figure : les autres entrées peuvent être communes ou non identifiées. Les entrées sans nom ne sont pas affichées. Les données disponibles ne précisent pas les effets ni les recettes des objets.</p>
     <div v-if="status === 'pending'" class="tft-notice" role="status">Chargement des objets…</div>

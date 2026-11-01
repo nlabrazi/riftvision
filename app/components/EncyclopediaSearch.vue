@@ -96,7 +96,7 @@ const groups = computed<SearchGroup[]>(() => {
       id: unit.id,
       name: unit.name,
       subtitle: `${unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}`} · ${unit.cost} PO${unit.cost === 0 ? ' (donnée Riot)' : ''}`,
-      to: `/tft/champions/${encodeURIComponent(unit.id)}`,
+      to: `/tft/units/${encodeURIComponent(unit.id)}`,
       image: `https://ddragon.leagueoflegends.com/cdn/${tftChampions.value?.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`,
     }))
   const tftTraitResults = (tftTraits.value?.data ?? [])

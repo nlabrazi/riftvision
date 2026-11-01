@@ -19,8 +19,9 @@ async function openLeague(page: import('@playwright/test').Page) {
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
   )
   const status = page.waitForResponse((response) => response.url().includes('/api/riot/status'))
-  await page.goto('/league')
+  await page.goto('/')
   await status
+  await page.locator('.game-card--league').click()
 }
 
 test('consulte les notes officielles et recherche dans l’historique', async ({ page }) => {
@@ -28,7 +29,7 @@ test('consulte les notes officielles et recherche dans l’historique', async ({
     route.fulfill({ json: { sourceUrl, articles } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: /Notes de patch.*Retrouvez/ }).click()
+  await page.getByRole('link', { name: 'Notes de patch', exact: true }).click()
   await expect(page).toHaveURL(/\/league\/patch-notes$/)
   await expect(page.getByRole('heading', { name: 'Notes de patch.' })).toBeVisible()
   await expect(page.locator('.patch-card')).toHaveCount(16)
@@ -71,7 +72,7 @@ test('propose l’archive officielle quand la source est indisponible', async ({
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: /Notes de patch.*Retrouvez/ }).click()
+  await page.getByRole('link', { name: 'Notes de patch', exact: true }).click()
   await expect(page.locator('.encyclopedia-notice[role="alert"]')).toContainText(
     'momentanément indisponibles',
   )

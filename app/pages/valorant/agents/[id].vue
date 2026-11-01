@@ -13,7 +13,7 @@ useHead({ title: computed(() => `${agent.value?.name ?? 'Agent Valorant'} — Ri
 
 <template>
   <ValorantLayout>
-    <NuxtLink to="/valorant" class="val-back">← Retour aux agents Valorant</NuxtLink>
+    <NuxtLink to="/valorant/agents" class="val-back">← Retour aux agents Valorant</NuxtLink>
     <div v-if="status === 'pending'" class="val-notice" role="status">Chargement de l’agent…</div>
     <div v-else-if="error || !data" class="val-notice" role="alert"><p>La fiche est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else-if="agent">
