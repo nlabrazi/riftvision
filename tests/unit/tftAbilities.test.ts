@@ -52,6 +52,54 @@ describe('compétences TFT CommunityDragon', () => {
     expect(await client.getAbility('DA_Ahri', 18, '16.21.1')).toBeNull()
   })
 
+  it('partage les données du set principal avec les compétences sans mélanger les modes', async () => {
+    const sets = {
+      setData: [
+        {
+          number: 18,
+          mutator: 'TFTSet18',
+          champions: [{ apiName: 'DA_Ahri', ability }],
+          traits: [{ apiName: 'DA_Solar18' }],
+          items: ['TFT_Item_BFSword', 'DA_18_Item'],
+        },
+        {
+          number: 18,
+          mutator: 'TFTSet18_PVEMODE',
+          champions: [{ apiName: 'DA_Other', ability }],
+          traits: [{ apiName: 'Other' }],
+          items: ['Other'],
+        },
+      ],
+    }
+    const fetcher = vi.fn<typeof fetch>(async () => new Response(JSON.stringify(sets)))
+    const client = createTftAbilitiesClient(fetcher)
+    const [set, detail] = await Promise.all([
+      client.getSet(18, '16.21.1'),
+      client.getAbility('DA_Ahri', 18, '16.21.1'),
+    ])
+    expect(set).toEqual({
+      units: ['DA_Ahri'],
+      traits: ['DA_Solar18'],
+      items: ['TFT_Item_BFSword', 'DA_18_Item'],
+    })
+    expect(detail?.name).toBe('Éclair')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('ne choisit pas arbitrairement entre deux définitions du set principal', async () => {
+    const set = {
+      number: 18,
+      mutator: 'TFTSet18',
+      champions: [{ apiName: 'DA_Ahri', ability }],
+      traits: [{ apiName: 'T' }],
+      items: ['I'],
+    }
+    const client = createTftAbilitiesClient(
+      async () => new Response(JSON.stringify({ setData: [set, set] })),
+    )
+    expect(await client.getSet(18, '16.21.1')).toBeNull()
+  })
+
   it('ignore les icônes invalides ou ambiguës sans masquer la compétence', async () => {
     const sourceWithIcons = {
       setData: [

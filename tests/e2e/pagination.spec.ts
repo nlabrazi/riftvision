@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 const version = '16.21.1'
 
 async function openHome(page: import('@playwright/test').Page) {
+  await page.route('**/api/tft/current-set', (route) => route.fulfill({ status: 503 }))
   await page.route('**/api/riot/status?*', (route) =>
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
   )

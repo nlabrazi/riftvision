@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import TftCurrentSetNotice from '~/components/TftCurrentSetNotice.vue'
 import { tftSetFromId } from '~/utils/tftCatalog'
-import type { TftTraitsResponse } from '#shared/types/tft'
+import type { TftCurrentSetResponse, TftTraitsResponse } from '#shared/types/tft'
 
 useHead({ title: 'Traits TFT — RiftVision' })
 const { data, status, error, refresh } =
   await useFetch<TftTraitsResponse>('/api/ddragon/tft/traits')
+const { data: season } = await useFetch<TftCurrentSetResponse>('/api/tft/current-set')
+const { current, currentIds, selectedSet, markSetChosen, showAllForDeepLink, resetSet } =
+  useTftCurrentSet(
+    season,
+    computed(() => data.value?.version),
+    computed(() => data.value?.data.map((trait) => trait.id) ?? []),
+    'traits',
+  )
 const search = ref('')
-const selectedSet = ref('all')
 const sortOrder = ref('asc')
 const sets = computed(() =>
   Array.from(
@@ -17,13 +25,16 @@ const sets = computed(() =>
         return set === null ? [] : [set]
       }),
     ),
-  ).sort((a, b) => b - a),
+  )
+    .filter((set) => set !== current.value?.number)
+    .sort((a, b) => b - a),
 )
 const route = useRoute()
 watch(
   () => route.query.id,
   (value) => {
     search.value = typeof value === 'string' ? value : ''
+    if (typeof value === 'string') showAllForDeepLink()
   },
   { immediate: true },
 )
@@ -45,9 +56,11 @@ const traits = computed(() => {
     .filter(
       (trait) =>
         selectedSet.value === 'all' ||
-        (selectedSet.value === 'other'
-          ? tftSetFromId(trait.id) === null
-          : String(tftSetFromId(trait.id)) === selectedSet.value),
+        (selectedSet.value === 'current'
+          ? currentIds.value.has(trait.id)
+          : selectedSet.value === 'other'
+            ? tftSetFromId(trait.id) === null
+            : String(tftSetFromId(trait.id)) === selectedSet.value),
     )
     .sort(
       (a, b) =>
@@ -62,7 +75,7 @@ const { page, pageCount, start, end } = usePagination(
 )
 function resetFilters() {
   search.value = ''
-  selectedSet.value = 'all'
+  resetSet()
   sortOrder.value = 'asc'
 }
 </script>
@@ -71,20 +84,21 @@ function resetFilters() {
   <TftLayout>
     <NuxtLink to="/tft/units" class="tft-back">← Retour aux unités TFT</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les traits TFT" description="Explorez les traits répertoriés dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
-    <p class="traits-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set est déduit de l’identifiant lorsqu’il y figure : les autres entrées peuvent être communes ou non identifiées. Les données disponibles ne précisent pas les effets des traits ni les unités associées.</p>
+    <TftCurrentSetNotice :current="current" />
+    <p class="traits-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set en cours suit les fichiers du mode principal. Pour les autres sets, le numéro est déduit de l’identifiant lorsqu’il y figure : les autres entrées peuvent être communes ou non identifiées. Les données disponibles ne précisent pas les effets des traits ni les unités associées.</p>
     <div v-if="status === 'pending'" class="tft-notice" role="status">Chargement des traits…</div>
     <div v-else-if="error || !data" class="tft-notice" role="alert"><p>Le catalogue des traits TFT est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
       <div class="traits-filters">
         <label class="traits-field"><span>Rechercher un trait</span><input v-model="search" type="search" placeholder="Nom ou identifiant" /></label>
-        <label class="traits-field traits-field--select"><span>Set identifié</span><select v-model="selectedSet"><option value="all">Tous les sets</option><option v-for="set in sets" :key="set" :value="String(set)">Set {{ set }}</option><option value="other">Non identifié ou commun</option></select></label>
+        <label class="traits-field traits-field--select"><span>Set identifié</span><select v-model="selectedSet" @change="markSetChosen"><option v-if="current" value="current">Set {{ current.number }} · Actuel</option><option value="all">Tous les sets</option><option v-for="set in sets" :key="set" :value="String(set)">Set {{ set }}</option><option value="other">Non identifié ou commun</option></select></label>
         <label class="traits-field traits-field--select"><span>Tri</span><select v-model="sortOrder"><option value="asc">Nom : A à Z</option><option value="desc">Nom : Z à A</option></select></label>
       </div>
       <p class="traits-count" role="status">{{ traits.length }} trait{{ traits.length > 1 ? 's' : '' }}</p>
       <div v-if="traits.length" id="catalog-results" tabindex="-1" class="traits-grid">
         <article v-for="trait in traits.slice(start, end)" :key="trait.id" class="traits-card">
           <img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-trait/${encodeURIComponent(trait.icon)}`" alt="" loading="lazy" decoding="async" />
-          <div><strong>{{ trait.name }}</strong><small>{{ trait.id }}</small></div>
+          <div><strong>{{ trait.name }}</strong><small>{{ trait.id }}</small><span v-if="currentIds.has(trait.id)" class="tft-current-badge">Saison en cours</span></div>
         </article>
       </div>
       <div v-else class="tft-notice"><p>Aucun trait ne correspond à votre recherche.</p><button type="button" class="rv-button" @click="resetFilters">Effacer les filtres</button></div>

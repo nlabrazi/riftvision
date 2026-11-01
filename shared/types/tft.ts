@@ -13,6 +13,15 @@ export interface TftChampionsResponse {
   data: TftChampion[]
 }
 
+export interface TftCurrentSetResponse {
+  number: number
+  patch: string
+  dataDragonVersion: string
+  units: string[]
+  traits: string[]
+  items: string[]
+}
+
 export interface TftAbility {
   name: string
   description: string

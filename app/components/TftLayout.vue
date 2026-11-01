@@ -30,5 +30,6 @@
 .tft-kicker { color: #c8aa6e; font: 700 11px 'Rajdhani', sans-serif; letter-spacing: .16em; text-transform: uppercase; }
 .tft-notice { margin-top: 24px; padding: 24px; border: 1px solid #ffffff20; border-radius: 6px; background: #0c1824; color: #c6d0d9; }
 .tft-notice p { margin: 0 0 14px; line-height: 1.5; }
+.tft-current-badge { align-self: start; padding: 3px 6px; border: 1px solid #ba91e266; border-radius: 3px; background: #76539a33; color: #e3caff; font: 700 11px 'Rajdhani', sans-serif; }
 @media (max-width: 600px) { .tft-header { padding: 14px 18px; } .tft-main { padding: 26px 18px 50px; } .tft-nav { gap: 8px 16px; } }
 </style>

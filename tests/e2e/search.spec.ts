@@ -81,6 +81,7 @@ const tftItems = {
 }
 
 async function mockTft(page: import('@playwright/test').Page) {
+  await page.route('**/api/tft/current-set', (route) => route.fulfill({ status: 503 }))
   await page.route('**/api/ddragon/tft/champions', (route) => route.fulfill({ json: tftChampions }))
   await page.route('**/api/ddragon/tft/traits', (route) => route.fulfill({ json: tftTraits }))
   await page.route('**/api/ddragon/tft/items', (route) => route.fulfill({ json: tftItems }))

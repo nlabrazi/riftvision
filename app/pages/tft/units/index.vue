@@ -1,21 +1,30 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import GameCatalogBanner from '~/components/GameCatalogBanner.vue'
-import type { TftChampionsResponse } from '#shared/types/tft'
+import TftCurrentSetNotice from '~/components/TftCurrentSetNotice.vue'
+import type { TftChampionsResponse, TftCurrentSetResponse } from '#shared/types/tft'
 
 useHead({ title: 'Unités TFT — RiftVision' })
 const { data, status, error, refresh } = await useFetch<TftChampionsResponse>(
   '/api/ddragon/tft/champions',
 )
+const { data: season } = await useFetch<TftCurrentSetResponse>('/api/tft/current-set')
+const { current, currentIds, selectedSet, markSetChosen, resetSet } = useTftCurrentSet(
+  season,
+  computed(() => data.value?.version),
+  computed(() => data.value?.data.map((unit) => unit.id) ?? []),
+  'units',
+)
 const search = ref('')
-const selectedSet = ref('all')
 const selectedCost = ref('all')
 const sets = computed(() =>
   Array.from(
     new Set(
       (data.value?.data ?? []).flatMap((unit) => (unit.setNumber === null ? [] : [unit.setNumber])),
     ),
-  ).sort((a, b) => b - a),
+  )
+    .filter((set) => set !== current.value?.number)
+    .sort((a, b) => b - a),
 )
 const costs = computed(() =>
   Array.from(new Set((data.value?.data ?? []).map((unit) => unit.cost))).sort((a, b) => a - b),
@@ -33,9 +42,11 @@ const units = computed(() => {
     .filter(
       (unit) =>
         selectedSet.value === 'all' ||
-        (selectedSet.value === 'other'
-          ? unit.setNumber === null
-          : String(unit.setNumber) === selectedSet.value),
+        (selectedSet.value === 'current'
+          ? currentIds.value.has(unit.id)
+          : selectedSet.value === 'other'
+            ? unit.setNumber === null
+            : String(unit.setNumber) === selectedSet.value),
     )
     .filter((unit) => selectedCost.value === 'all' || String(unit.cost) === selectedCost.value)
     .filter((unit) => normalize(`${unit.name} ${unit.id}`).includes(query))
@@ -43,7 +54,7 @@ const units = computed(() => {
 })
 function resetFilters() {
   search.value = ''
-  selectedSet.value = 'all'
+  resetSet()
   selectedCost.value = 'all'
 }
 const { page, pageCount, start, end } = usePagination(
@@ -57,20 +68,21 @@ const { page, pageCount, start, end } = usePagination(
   <TftLayout>
     <NuxtLink to="/" class="tft-back">← Retour à tous les jeux</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les unités TFT" description="Explorez les unités répertoriées dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
-    <p class="tft-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set affiché est déduit de l’identifiant fourni par Riot ; il ne désigne pas nécessairement le set actuel.</p>
+    <TftCurrentSetNotice :current="current" />
+    <p class="tft-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set en cours suit les fichiers du mode principal. Pour les autres unités, le set affiché est déduit de l’identifiant fourni par Riot ; il ne désigne pas nécessairement le set actuel.</p>
     <div v-if="status === 'pending'" class="tft-notice" role="status">Chargement des unités…</div>
     <div v-else-if="error || !data" class="tft-notice" role="alert"><p>Le catalogue TFT est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
       <div class="tft-filters">
         <label class="tft-field"><span>Rechercher une unité</span><input v-model="search" type="search" placeholder="Nom ou identifiant" /></label>
-        <label class="tft-field tft-field--select"><span>Set</span><select v-model="selectedSet"><option value="all">Tous les sets</option><option v-for="set in sets" :key="set" :value="String(set)">Set {{ set }}</option><option value="other">Autres ou non identifié</option></select></label>
+        <label class="tft-field tft-field--select"><span>Set</span><select v-model="selectedSet" @change="markSetChosen"><option v-if="current" value="current">Set {{ current.number }} · Actuel</option><option value="all">Tous les sets</option><option v-for="set in sets" :key="set" :value="String(set)">Set {{ set }}</option><option value="other">Autres ou non identifié</option></select></label>
         <label class="tft-field tft-field--select"><span>Coût</span><select v-model="selectedCost"><option value="all">Tous les coûts</option><option v-for="cost in costs" :key="cost" :value="String(cost)">{{ cost }} PO</option></select></label>
       </div>
       <p class="tft-count" role="status">{{ units.length }} unité{{ units.length > 1 ? 's' : '' }}</p>
       <div v-if="units.length" id="catalog-results" tabindex="-1" class="tft-grid">
         <NuxtLink v-for="unit in units.slice(start, end)" :key="unit.id" :to="`/tft/units/${unit.id}`" class="tft-card" :data-cost="unit.cost">
           <span class="tft-card__art"><img :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/tft-champion/${encodeURIComponent(unit.icon)}`" alt="" loading="lazy" decoding="async" /></span>
-          <span><strong>{{ unit.name }}</strong><small>{{ unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}` }} · {{ unit.cost }} PO{{ unit.cost === 0 ? ' (donnée Riot)' : '' }}</small></span>
+          <span><strong>{{ unit.name }}</strong><small>{{ currentIds.has(unit.id) ? `Set ${current?.number}` : unit.setNumber === null ? 'Set non identifié' : `Set ${unit.setNumber}` }} · {{ unit.cost }} PO{{ unit.cost === 0 ? ' (donnée Riot)' : '' }}</small><span v-if="currentIds.has(unit.id)" class="tft-current-badge">Saison en cours</span></span>
           <span class="tft-arrow" aria-hidden="true">↗</span>
         </NuxtLink>
       </div>
