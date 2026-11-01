@@ -45,6 +45,7 @@ test('ouvre la spécialisation depuis la classe et revient à sa fiche', async (
   await page.getByRole('link', { name: 'Mage' }).click()
   await page.getByRole('link', { name: /Arcanes/ }).click()
   await expect(page.getByRole('heading', { name: 'Arcanes' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Caractéristiques', exact: true })).toBeVisible()
   await expect(page.getByText('Dégâts', { exact: true }).last()).toBeVisible()
   await expect(page.getByText('Intelligence', { exact: true })).toBeVisible()
   await expect(page.getByText('Manipule les arcanes.')).toHaveCount(1)

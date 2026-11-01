@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { DataDragonChampionDetails } from '#shared/types/dataDragon'
+import type { ChampionAbilitySlot } from '#shared/types/championMedia'
+import ChampionAbilities from '~/components/ChampionAbilities.vue'
 import { lolStatIcon } from '~/utils/lolStats'
 
 const route = useRoute()
@@ -27,16 +29,18 @@ const abilities = computed(() => {
   if (!champion) return []
   const spells = Array.isArray(champion.spells) ? champion.spells : []
   return [champion.passive, ...spells].flatMap((ability, index) => {
-    if (!isRecord(ability) || typeof ability.name !== 'string') return []
+    const slot = (['P', 'Q', 'W', 'E', 'R'] as ChampionAbilitySlot[])[index]
+    if (!slot || !isRecord(ability) || typeof ability.name !== 'string') return []
     const filename =
       isRecord(ability.image) && typeof ability.image.full === 'string' ? ability.image.full : ''
     return [
       {
+        slot,
         key: ['P', 'A', 'Z', 'E', 'R'][index] ?? '',
         name: ability.name,
         description: plainText(ability.description),
         filename,
-        group: index === 0 ? 'passive' : 'spell',
+        group: index === 0 ? ('passive' as const) : ('spell' as const),
       },
     ]
   })
@@ -98,12 +102,7 @@ const roles: Record<string, string> = {
           <section class="detail-section" aria-labelledby="abilities-title">
             <p class="encyclopedia-kicker">EN JEU</p>
             <h2 id="abilities-title">Compétences</h2>
-            <div v-if="abilities.length" class="abilities">
-              <article v-for="ability in abilities" :key="`${ability.key}-${ability.name}`" class="ability">
-                <img v-if="ability.filename" :src="`https://ddragon.leagueoflegends.com/cdn/${data.version}/img/${ability.group}/${encodeURIComponent(ability.filename)}`" alt="" loading="lazy" />
-                <div><p class="ability-key">{{ ability.key === 'P' ? 'PASSIF' : ability.key }}</p><h3>{{ ability.name }}</h3><p>{{ ability.description || 'Description indisponible.' }}</p></div>
-              </article>
-            </div>
+            <ChampionAbilities v-if="abilities.length" :key="data.data.id" :champion-key="data.data.key" :champion-name="data.data.name" :version="data.version" :abilities="abilities" />
             <p v-else class="champion-story">Compétences indisponibles pour cette version.</p>
           </section>
         </div>
@@ -130,12 +129,6 @@ const roles: Record<string, string> = {
 .detail-section { margin-top: 42px; }
 .detail-section h2, .stats-panel h2 { margin: 8px 0 18px; color: #f1f1ee; font: 700 29px/1.1 'Rajdhani', sans-serif; }
 .champion-story { max-width: 850px; color: #c0cbd4; line-height: 1.75; }
-.abilities { display: grid; gap: 10px; }
-.ability { display: flex; align-items: start; gap: 16px; padding: 18px; border: 1px solid #ffffff1a; border-radius: 6px; background: #0b1824; }
-.ability img { flex: 0 0 52px; width: 52px; height: 52px; border: 1px solid #c8aa6e50; border-radius: 4px; }
-.ability h3 { margin: 3px 0 6px; color: #f0f2f2; font: 700 19px 'Rajdhani', sans-serif; }
-.ability p:not(.ability-key) { margin: 0; color: #bfcbd3; line-height: 1.55; }
-.ability-key { margin: 0; color: #d5bb85; font: 700 11px 'Rajdhani', sans-serif; letter-spacing: .12em; }
 .stats-panel { margin-top: 42px; padding: 22px; border: 1px solid #ffffff1a; border-radius: 6px; background: #0b1824; }
 .stats-panel h2 { font-size: 24px; }
 .stats-panel dl { margin: 0; }

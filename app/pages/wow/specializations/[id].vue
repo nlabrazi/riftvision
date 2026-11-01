@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { WowSpecializationResponse } from '#shared/types/wow'
+import WowClassFeatures from '~/components/WowClassFeatures.vue'
 import { wowClassArt } from '~/utils/wowClassArt'
 
 const route = useRoute()
@@ -26,8 +27,8 @@ useHead({ title: computed(() => `${spec.value?.name ?? 'Spécialisation WoW'} �
     <div v-else-if="error || !spec" class="wow-notice" role="alert"><p>{{ error?.statusCode === 404 ? 'Cette spécialisation est introuvable.' : 'La fiche est momentanément indisponible.' }}</p><button v-if="error?.statusCode !== 404" type="button" class="rv-button" @click="refresh()">Réessayer</button></div>
     <template v-else>
       <section class="spec-hero"><img v-if="wowClassArt(spec.class.id)" class="spec-art" :src="wowClassArt(spec.class.id)!" alt="" /><img v-if="spec.icon" :src="spec.icon" alt="" /><span v-else class="spec-placeholder" aria-hidden="true">✦</span><div><p class="wow-kicker">SPÉCIALISATION · WORLD OF WARCRAFT RETAIL</p><h1>{{ spec.name }}</h1><p>{{ spec.class.name }}<template v-if="spec.role"> · {{ spec.role }}</template></p></div></section>
-      <div class="spec-detail-grid"><section class="spec-details" aria-labelledby="spec-info-title"><p class="wow-kicker">EN JEU</p><h2 id="spec-info-title">Informations</h2><dl v-if="spec.role || spec.powerType || spec.primaryStat" class="spec-stats"><div v-if="spec.role"><dt>Rôle</dt><dd>{{ spec.role }}</dd></div><div v-if="spec.powerType"><dt>Ressource</dt><dd>{{ spec.powerType }}</dd></div><div v-if="spec.primaryStat"><dt>Caractéristique principale</dt><dd>{{ spec.primaryStat }}</dd></div></dl><p v-else>Les informations ne sont pas disponibles pour cette spécialisation.</p></section>
-      <section class="spec-details" aria-labelledby="spec-description-title"><h2 id="spec-description-title">Présentation</h2><template v-if="differentDescriptions"><p class="spec-label">Description au masculin</p><p class="spec-description">{{ spec.descriptionMale }}</p><p class="spec-label">Description au féminin</p><p class="spec-description">{{ spec.descriptionFemale }}</p></template><p v-else-if="spec.descriptionMale || spec.descriptionFemale" class="spec-description">{{ spec.descriptionMale ?? spec.descriptionFemale }}</p><p v-else>La description n’est pas disponible pour cette spécialisation.</p></section></div>
+      <div class="spec-detail-grid"><div class="spec-main"><section class="spec-details" aria-labelledby="spec-info-title"><p class="wow-kicker">EN JEU</p><h2 id="spec-info-title">Informations</h2><dl v-if="spec.role || spec.powerType || spec.primaryStat" class="spec-stats"><div v-if="spec.role"><dt>Rôle</dt><dd>{{ spec.role }}</dd></div><div v-if="spec.powerType"><dt>Ressource</dt><dd>{{ spec.powerType }}</dd></div><div v-if="spec.primaryStat"><dt>Caractéristique principale</dt><dd>{{ spec.primaryStat }}</dd></div></dl><p v-else>Les informations ne sont pas disponibles pour cette spécialisation.</p></section>
+      <section class="spec-details" aria-labelledby="spec-description-title"><h2 id="spec-description-title">Présentation</h2><template v-if="differentDescriptions"><p class="spec-label">Description au masculin</p><p class="spec-description">{{ spec.descriptionMale }}</p><p class="spec-label">Description au féminin</p><p class="spec-description">{{ spec.descriptionFemale }}</p></template><p v-else-if="spec.descriptionMale || spec.descriptionFemale" class="spec-description">{{ spec.descriptionMale ?? spec.descriptionFemale }}</p><p v-else>La description n’est pas disponible pour cette spécialisation.</p></section></div><WowClassFeatures :class-id="spec.class.id" /></div>
       <WowSpecializationTalents :specialization-id="spec.id" />
       <p class="spec-source">Données : Blizzard · World of Warcraft Retail · Europe · Français</p>
     </template>
@@ -42,7 +43,8 @@ useHead({ title: computed(() => `${spec.value?.name ?? 'Spécialisation WoW'} �
 .spec-placeholder { display: grid; place-items: center; color: #d6bb83; background: #28313b; font-size: 34px; }
 .spec-hero h1 { margin: 9px 0; color: #f1f1ee; font: 700 clamp(38px, 4vw, 58px)/1.05 'Rajdhani', sans-serif; }
 .spec-hero p:not(.wow-kicker) { color: #d0d9df; line-height: 1.6; }
-.spec-detail-grid { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); gap: 16px; margin-top: 18px; }
+.spec-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); align-items: start; gap: 16px; margin-top: 18px; }
+.spec-main { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); gap: 16px; }
 .spec-details { min-width: 0; padding: 24px; border: 1px solid #ffffff1a; border-radius: 6px; background: #0c1824; color: #c6d0d9; }
 .spec-details h2 { margin: 8px 0 20px; color: #f1f1ee; font: 700 28px 'Rajdhani', sans-serif; }
 .spec-stats { display: flex; flex-wrap: wrap; gap: 16px 36px; margin: 0; }
@@ -51,6 +53,7 @@ useHead({ title: computed(() => `${spec.value?.name ?? 'Spécialisation WoW'} �
 .spec-description { white-space: pre-line; line-height: 1.7; }
 .spec-label { margin: 20px 0 0; color: #dfc58d; font: 700 14px 'Rajdhani', sans-serif; }
 .spec-source { margin-top: 24px; color: #aebbc8; font: 600 13px 'Rajdhani', sans-serif; }
-@media (max-width: 700px) { .spec-detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .spec-main { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .spec-detail-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .spec-hero { gap: 16px; min-height: 150px; padding: 20px; } .spec-hero img:not(.spec-art), .spec-placeholder { width: 64px; height: 64px; flex-basis: 64px; } .spec-details { padding: 20px; } }
 </style>
