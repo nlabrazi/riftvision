@@ -70,6 +70,7 @@ test.describe('Network resilience and error handling', () => {
     page,
   }) => {
     let callCount = 0
+    let gameAvailable = false
     // Snapshot 1: base mock game data (Darius has 3 kills)
     const snapshot1 = JSON.parse(JSON.stringify(mockGameData))
 
@@ -92,13 +93,13 @@ test.describe('Network resilience and error handling', () => {
     }
     snapshot2.events.Events.push(newKillEvent)
 
-    // Route status to report an active live game (not mock)
+    // Route status to report an active live game (not mock) once connection is initiated
     await page.route('**/api/riot/status*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          status: 'IN_GAME',
+          status: gameAvailable ? 'IN_GAME' : 'DISCONNECTED',
           isMock: false,
           gameTime: 1005.5,
         }),
@@ -119,7 +120,12 @@ test.describe('Network resilience and error handling', () => {
       })
     })
 
+    const initialStatus = page.waitForResponse((res) => res.url().includes('/api/riot/status'))
     await page.goto('/league/compagnon', { waitUntil: 'domcontentloaded' })
+    await initialStatus
+
+    // Game is now ready to be connected
+    gameAvailable = true
 
     // Click connect to live match
     await page.getByRole('button', { name: 'Connecter ma partie' }).click()
