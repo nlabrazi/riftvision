@@ -44,6 +44,38 @@ export interface WowSpecializationResponse {
   data: WowSpecializationDetails
 }
 
+export interface WowTalentRank {
+  rank: number
+  description: string | null
+  defaultPoints: number
+}
+
+export interface WowTalentOption {
+  id: number
+  name: string
+  spellId: number | null
+  ranks: WowTalentRank[]
+}
+
+export interface WowTalentNode {
+  id: number
+  row: number
+  column: number
+  options: WowTalentOption[]
+}
+
+export interface WowTalentGroup {
+  id: string
+  name: string
+  nodes: WowTalentNode[]
+}
+
+export interface WowTalentsResponse {
+  locale: 'fr_FR'
+  edition: 'retail'
+  data: { groups: WowTalentGroup[] } | null
+}
+
 export interface WowSpecializationSummary extends WowSpecialization {
   class: { id: number; name: string }
   icon: string | null

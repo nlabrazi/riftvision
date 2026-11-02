@@ -320,6 +320,43 @@ button:disabled {
   padding: 0 24px 16px;
 }
 
+.companion-page-intro {
+  margin: 24px 0;
+}
+
+.companion-page-intro__back {
+  color: #d8bd87;
+  font: 600 14px 'Rajdhani', sans-serif;
+  text-decoration: none;
+}
+
+.companion-page-intro__back:hover {
+  text-decoration: underline;
+}
+
+.companion-page-intro > p:first-of-type {
+  margin: 24px 0 8px;
+  color: #c8aa6e;
+  font: 700 11px 'Rajdhani', sans-serif;
+  letter-spacing: .16em;
+}
+
+.companion-page-intro h2 {
+  margin: 0;
+  color: #f1f1ee;
+  font: 700 clamp(28px, 3vw, 38px)/1.1 'Rajdhani', sans-serif;
+}
+
+.companion-page-intro h2 span {
+  color: #d6bb83;
+}
+
+.companion-page-intro > p:last-child {
+  margin: 10px 0 0;
+  color: #aebbc8;
+  line-height: 1.5;
+}
+
 .standby-panel {
   position: relative;
   display: grid;

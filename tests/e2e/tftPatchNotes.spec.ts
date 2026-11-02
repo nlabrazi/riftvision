@@ -19,6 +19,7 @@ const champions = {
   data: [{ id: 'DA_Ahri', name: 'Ahri', tier: 3, cost: 3, icon: 'DA_Ahri.png', setNumber: 18 }],
 }
 async function openTft(page: import('@playwright/test').Page) {
+  await page.route('**/api/tft/current-set', (route) => route.fulfill({ status: 503 }))
   await page.route('**/api/riot/status?*', (route) =>
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
   )
@@ -27,6 +28,7 @@ async function openTft(page: import('@playwright/test').Page) {
   await page.goto('/')
   await status
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Notes de patch', exact: true }).click()
 }
 

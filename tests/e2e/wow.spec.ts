@@ -51,7 +51,8 @@ test('explore les classes Retail et les spécialisations', async ({ page }) => {
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
-  await expect(page).toHaveURL(/\/wow$/)
+  await page.getByTestId('encyclopedia-action').click()
+  await expect(page).toHaveURL(/\/wow\/classes$/)
   await expect(page.getByRole('heading', { name: 'Les classes WoW.' })).toBeVisible()
   await expect(page.getByText('2 classes', { exact: true })).toBeVisible()
   await page.getByLabel('Rechercher une classe').fill('mage')
@@ -59,13 +60,20 @@ test('explore les classes Retail et les spécialisations', async ({ page }) => {
   await page.getByRole('link', { name: 'Mage' }).click()
   await expect(page.getByRole('heading', { name: 'Mage' })).toBeVisible()
   await expect(page.getByText('Ressource principale : Mana')).toBeVisible()
-  await expect(page.getByRole('listitem').filter({ hasText: 'Arcanes' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Caractéristiques', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Téléportation', exact: true })).toBeVisible()
+  await expect(page.locator('.class-features img')).toHaveCount(4)
+  await expect(
+    page.locator('.spec-list').getByRole('listitem').filter({ hasText: 'Arcanes' }),
+  ).toBeVisible()
   await expect(page.getByRole('link', { name: /Arcanes/ }).locator('img')).toHaveAttribute(
     'src',
     'https://render.worldofwarcraft.com/spec.png',
   )
   await expect(page.getByRole('link', { name: /Arcanes/ })).toContainText('Dégâts')
-  await expect(page.getByRole('listitem').filter({ hasText: 'Feu' })).toBeVisible()
+  await expect(
+    page.locator('.spec-list').getByRole('listitem').filter({ hasText: 'Feu' }),
+  ).toBeVisible()
   await expect(page.locator('.spec-list')).toHaveCSS('grid-template-columns', /\S+ \S+ \S+/)
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('.spec-list')).toHaveCSS('grid-template-columns', /^\S+$/)
@@ -88,6 +96,7 @@ test('propose de réessayer si le catalogue est indisponible', async ({ page }) 
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.locator('.wow-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
   )

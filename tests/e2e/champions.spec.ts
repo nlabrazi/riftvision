@@ -38,11 +38,24 @@ async function openLeague(page: import('@playwright/test').Page) {
   const initialStatus = page.waitForResponse((response) =>
     response.url().includes('/api/riot/status'),
   )
-  await page.goto('/league')
+  await page.goto('/')
   await initialStatus
+  await page.locator('.game-card--league').click()
+  await page.getByTestId('encyclopedia-action').click()
 }
 
 test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {
+  const video = (slot: string) => ({
+    videoMp4: `https://lol.dyn.riotcdn.net/x/videos/champion-abilities/0103/ability_0103_${slot}1.mp4`,
+    videoWebm: `https://lol.dyn.riotcdn.net/x/videos/champion-abilities/0103/ability_0103_${slot}1.webm`,
+    poster: `https://lol.dyn.riotcdn.net/x/videos/champion-abilities/0103/ability_0103_${slot}1.jpg`,
+  })
+  await page.route('**/api/league/champion-abilities/**', (route) =>
+    route.fulfill({ json: { abilities: { P: video('P'), Q: video('Q') } } }),
+  )
+  await page.route('**/x/videos/champion-abilities/**/*.mp4', (route) =>
+    route.fulfill({ path: 'public/assets/videos/tft.mp4', contentType: 'video/mp4' }),
+  )
   await page.route('**/api/ddragon/champions**', (route) => {
     const path = new URL(route.request().url()).pathname
     return route.fulfill({
@@ -52,7 +65,6 @@ test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {
     })
   })
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await expect(page).toHaveURL(/\/league\/champions$/)
   await expect(page.getByText('2 champions', { exact: true })).toBeVisible()
   await expect(page.getByText(`Données Data Dragon · ${version}`)).toBeVisible()
@@ -74,7 +86,28 @@ test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {
   await expect(page.getByText('Une voyageuse du royaume spirituel.')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Vol essentiel' })).toBeVisible()
   await expect(page.getByText('Ahri récupère des PV. Après une élimination.')).toBeVisible()
+  const abilityVideo = page.locator('.ability-view video')
+  await expect(abilityVideo.locator('source[type="video/mp4"]')).toHaveAttribute(
+    'src',
+    /0103_P1\.mp4$/,
+  )
+  await expect
+    .poll(() => abilityVideo.evaluate((element: HTMLVideoElement) => element.paused))
+    .toBe(false)
+  await page.getByRole('button', { name: 'A : Orbe d’illusion' }).click()
   await expect(page.getByRole('heading', { name: 'Orbe d’illusion' })).toBeVisible()
+  await expect(abilityVideo.locator('source[type="video/mp4"]')).toHaveAttribute(
+    'src',
+    /0103_Q1\.mp4$/,
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(abilityVideo).not.toHaveAttribute('autoplay', '')
+  await expect(abilityVideo).toHaveAttribute('controls', '')
+  await expect
+    .poll(() => abilityVideo.evaluate((element: HTMLVideoElement) => element.paused))
+    .toBe(true)
+  await page.getByRole('button', { name: 'Z : Luciole' }).click()
+  await expect(page.getByText('Aperçu vidéo indisponible.')).toBeVisible()
   await expect(page.getByText('Points de vie')).toBeVisible()
   await expect(page.locator('dd').filter({ hasText: '590' })).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
@@ -96,7 +129,6 @@ test('permet de réessayer après une erreur du catalogue', async ({ page }) => 
       : route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } })
   })
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await expect(page.locator('.encyclopedia-notice[role="alert"]')).toContainText(
     'Le catalogue est momentanément indisponible.',
   )
@@ -116,7 +148,6 @@ test('affiche une fiche introuvable et permet de revenir au catalogue', async ({
       : route.fulfill({ json: { version, locale: 'fr_FR', data: { Unknown: ghost } } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
   await page.getByRole('link', { name: /Inconnu/ }).click()
   await expect(page.locator('.encyclopedia-notice[role="alert"]')).toContainText(
     'Ce champion est introuvable.',

@@ -9,7 +9,9 @@ import type {
   WowSpecializationResponse,
   WowSpecializationSummary,
   WowSpecializationsResponse,
+  WowTalentsResponse,
 } from '#shared/types/wow'
+import { normalizeTalentTree, talentTreeId } from './wowTalents'
 
 const API_ORIGIN = 'https://eu.api.blizzard.com'
 const TOKEN_URL = 'https://oauth.battle.net/token'
@@ -49,6 +51,24 @@ export function createWowClassesClient(
   let pendingToken: Promise<string> | null = null
   const cache = new Map<string, { value: unknown; expiresAt: number }>()
   const pending = new Map<string, Promise<unknown>>()
+  let activeIcons = 0
+  const iconQueue: (() => void)[] = []
+
+  async function limitedIcon<T>(load: () => Promise<T>): Promise<T> {
+    if (activeIcons >= 6) {
+      if (iconQueue.length >= 150) throw new WowUnavailableError('Trop de demandes de visuels.')
+      await new Promise<void>((resolve) => iconQueue.push(resolve))
+    } else {
+      activeIcons++
+    }
+    try {
+      return await load()
+    } finally {
+      const next = iconQueue.shift()
+      if (next) next()
+      else activeIcons--
+    }
+  }
 
   async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
     const entry = cache.get(key)
@@ -388,7 +408,51 @@ export function createWowClassesClient(
     })
   }
 
-  return { getClasses, getClass, getRaces, getSpecialization, getSpecializations }
+  async function getTalents(id: number): Promise<WowTalentsResponse> {
+    if (!validId(id)) throw new WowSpecializationNotFoundError('Spécialisation introuvable.')
+    return cached(`talents:${id}`, async () => {
+      const index = await cached('talents:index', () => request('/data/wow/talent-tree/index'))
+      let treeId: number | null
+      try {
+        treeId = talentTreeId(index, id)
+      } catch {
+        throw new WowUnavailableError('Index des talents invalide.')
+      }
+      if (treeId === null) return { locale: 'fr_FR', edition: 'retail', data: null }
+      const tree = await request(`/data/wow/talent-tree/${treeId}/playable-specialization/${id}`)
+      try {
+        return {
+          locale: 'fr_FR',
+          edition: 'retail',
+          data: { groups: normalizeTalentTree(tree, id) },
+        }
+      } catch {
+        throw new WowUnavailableError('Arbre de talents invalide.')
+      }
+    })
+  }
+
+  async function getSpellIcon(id: number): Promise<string | null> {
+    if (!Number.isSafeInteger(id) || id <= 0 || id > 10000000) return null
+    return cached(`spell-icon:${id}`, () =>
+      limitedIcon(async () => {
+        const media = await request(`/data/wow/media/spell/${id}`)
+        if (!isRecord(media) || !Array.isArray(media.assets)) return null
+        const asset = media.assets.find((item: unknown) => isRecord(item) && item.key === 'icon')
+        return isRecord(asset) ? imageUrl(asset.value) : null
+      }),
+    )
+  }
+
+  return {
+    getClasses,
+    getClass,
+    getRaces,
+    getSpecialization,
+    getSpecializations,
+    getTalents,
+    getSpellIcon,
+  }
 }
 
 let shared: {

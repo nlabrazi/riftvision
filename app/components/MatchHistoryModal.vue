@@ -25,6 +25,7 @@ const emit = defineEmits<{
             <p class="history-subtitle">
               {{ matches.length }} {{ matches.length > 1 ? 'parties enregistrées' : 'partie enregistrée' }} localement
             </p>
+            <p class="history-subtitle">Historique actuellement disponible pour League of Legends.</p>
           </div>
         </div>
         <button type="button" class="rv-icon-button" aria-label="Fermer" title="Fermer l'historique"
@@ -45,7 +46,7 @@ const emit = defineEmits<{
           </div>
           <h4>Aucune partie enregistrée</h4>
           <p>
-            Chaque fin de match jouée avec RiftVision sera automatiquement archivée ici. Vous pourrez rouvrir le bilan
+            Les parties League of Legends suivies avec RiftVision sont archivées ici. Vous pourrez rouvrir le bilan
             complet, comparer l'économie et analyser vos performances à tout moment.
           </p>
         </div>

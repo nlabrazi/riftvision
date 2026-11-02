@@ -74,16 +74,30 @@ const paths = [
 
 async function openLeague(page: import('@playwright/test').Page) {
   const status = page.waitForResponse((response) => response.url().includes('/api/riot/status'))
-  await page.goto('/league')
+  await page.goto('/')
   await status
+  await page.locator('.game-card--league').click()
+  await page.getByTestId('encyclopedia-action').click()
 }
+
+test('conserve la bannière des objets si les données sont indisponibles', async ({ page }) => {
+  await page.route('**/api/ddragon/items', (route) =>
+    route.fulfill({ status: 503, json: { statusMessage: 'Indisponible' } }),
+  )
+  await openLeague(page)
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
+  await expect(
+    page.locator('.catalog-banner--league').getByRole('heading', { name: 'Les objets.' }),
+  ).toBeVisible()
+  await expect(page.locator('.encyclopedia-notice[role="alert"]')).toBeVisible()
+})
 
 test('recherche des objets, filtre et suit les composants', async ({ page }) => {
   await page.route('**/api/ddragon/items', (route) =>
     route.fulfill({ json: { version, locale: 'fr_FR', data: items } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: 'Objets →' }).click()
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les objets.' })).toBeVisible()
   await expect(page.getByText('3 objet(s)')).toBeVisible()
   await page.getByLabel('Catégorie').selectOption('magic')
@@ -112,7 +126,7 @@ test('filtre les runes par voie et affiche leur description', async ({ page }) =
     route.fulfill({ json: { version, locale: 'fr_FR', data: paths } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: 'Runes →' }).click()
+  await page.getByRole('link', { name: 'Runes', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les runes.' })).toBeVisible()
   await page.getByLabel('Voie').selectOption('8100')
   await expect(page.getByRole('link', { name: /Électrocution/ })).toBeVisible()
@@ -147,7 +161,7 @@ test('présente les statistiques et la fabrication avec les visuels officiels', 
     route.fulfill({ json: { version, locale: 'fr_FR', data: [mejai, seal] } }),
   )
   await openLeague(page)
-  await page.getByRole('link', { name: 'Objets →' }).click()
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await page.getByRole('link', { name: /Voleur d’âmes de Mejai/ }).click()
   await expect(page.getByText('+20 puissance')).toBeVisible()
   await expect(page.getByText('+100 PV')).toBeVisible()

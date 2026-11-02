@@ -20,6 +20,16 @@ export interface ValorantAgentsResponse {
   data: ValorantAgent[]
 }
 
+export interface ValorantAbilityMedia {
+  videoMp4: string | null
+  videoWebm: string | null
+  poster: string | null
+}
+
+export interface ValorantAbilityMediaResponse {
+  abilities: Record<string, ValorantAbilityMedia>
+}
+
 export interface ValorantDamageRange {
   start: number
   end: number

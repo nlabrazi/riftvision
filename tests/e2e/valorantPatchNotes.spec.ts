@@ -36,6 +36,7 @@ async function openValorant(page: import('@playwright/test').Page) {
   await page.goto('/')
   await status
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Notes de patch', exact: true }).click()
 }
 

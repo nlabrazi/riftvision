@@ -2,6 +2,7 @@
 
 - `league-ahri-splash.jpg` : illustration officielle d'Ahri fournie par Riot Games via [Data Dragon](https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg). Riot documente les [visuels de champions Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon_champions).
 - `game-tft.webp` : capture de Teamfight Tactics [présentée par MetaBot](https://metabot.gg/web/backgrounds/tft-background.webp), redimensionnée et compressée ; provenance initiale et droits de redistribution à confirmer.
+- `game-tft-banner.webp` : visuel de Teamfight Tactics publié par [Riot Games](https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/280f4846cd102ddcf78f0c77fef90f724211a55b-1280x720.jpg?accountingTag=TFT), converti en WebP.
 - `game-valorant.webp` : fond d'écran de Viper publié dans la [médiathèque officielle de Valorant](https://playvalorant.com/en-us/media/) ([archive](https://cmsassets.rgpub.io/sanity/files/dsfx7636/news/a60dfbd768e5d8e6ef8d27fdaad90a769654f69d.zip)), redimensionné et compressé.
 - `game-wow.webp` : fond d'écran Midnight publié par [Blizzard](https://news.blizzard.com/en-us/article/24264417/world-of-warcraft-midnighttm-now-live) ([original](https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/AZNVF42KU9BY1756855683235.png)), redimensionné et compressé.
 - `game-cs2.webp` : visuel de Counter-Strike 2 [présenté par MetaBot](https://metabot.gg/web/cards/cs2.webp), compressé ; provenance initiale et droits de redistribution à confirmer.
@@ -11,3 +12,6 @@ Les vidéos de `public/assets/videos/` sont des extraits raccourcis et compress�
 
 - `cs2.mp4` : extrait raccourci et compressé de la [vidéo utilisée par MetaBot](https://metabot.gg/web/cs2/cs-bg-vid.mp4) ; droits de redistribution à vérifier avant publication.
 - `hots.mp4` : extrait raccourci et compressé de la vidéo « Hanamura Overview enUS » du [press kit Blizzard](https://blizzard.gamespress.com/en-GB/Heroes-Overwatch) ; droits de redistribution à vérifier avant publication.
+
+- `portal-hero.mp4` : montage sans son d’extraits des vidéos de fond officielles de [League of Legends](https://cmsassets.rgpub.io/sanity/files/dsfx7636/news/8ab3e227121c53aacab0c9b9f7a48adbc65db520.webm?accountingTag=LoL), [Teamfight Tactics](https://cmsassets.rgpub.io/sanity/files/dsfx7636/news/e494d0d05a00342c5d690f4ab000ecae15088748.webm?accountingTag=TFT), [VALORANT](https://cmsassets.rgpub.io/sanity/files/dsfx7636/news_live/74d9d9fd8664d1c431b4b82d007f968eacb3e8b4.mp4?accountingTag=VAL), [World of Warcraft](https://blz-contentstack-assets.akamaized.net/v3/assets/blt3452e3b114fab0cd/blte9cfd96e5bcf37a9/69b09104eb1d690008436dec/MidnightCinematic_masthead3.webm) et de `hots.mp4` ci-dessus. Les extraits ont été raccourcis, recadrés et compressés ; droits de redistribution à vérifier avant publication.
+- `portal-hero.webm` : le même montage encodé en VP9, avec le MP4 comme format de secours.

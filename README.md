@@ -19,7 +19,11 @@
 
 ### ℹ️ Description
 
-**RiftVision** est un copilote tactique pour **League of Legends** combinant un tableau de bord web « second screen » pour les analyses d'équipe et un **compagnon overlay tête haute (HUD) in-game**, affichant les alertes d'impact en surimpression directe sur votre écran de jeu sans jamais gêner vos clics.
+**RiftVision** est un portail multijeu pour explorer des encyclopédies, consulter des notes de patch et retrouver des outils dédiés à ses jeux. Il propose actuellement des contenus pour **League of Legends**, **Teamfight Tactics**, **Valorant**, **World of Warcraft Retail** et **Heroes of the Storm**.
+
+Les catalogues principaux sont accessibles sur `/league/champions`, `/tft/units`, `/valorant/agents`, `/wow/classes` et `/hots/heroes`. Les racines de ces espaces redirigent provisoirement vers leur catalogue, afin de pouvoir accueillir plus tard une page propre à chaque jeu.
+
+Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tableau de bord sur second écran, suivi de partie, bilans et overlay Windows. L’extension des bilans à TFT et l’étude du suivi des arènes 3c3 de WoW font partie des pistes envisagées, sous réserve des données disponibles.
 
 - 🧭 **Connexion directe** : Dialogue local avec la **Live Client Data API** officielle de Riot (`https://127.0.0.1:2999`).
 - 🎮 **3 Modes de fonctionnement** :
@@ -30,15 +34,16 @@
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🎨 **Icônes Font Awesome** : composant Vue officiel enregistré par un plugin Nuxt, utilisé pour l’interface et les liens du footer. Seules les icônes nécessaires sont importées.
 - 🔊 **Alertes audio** : 17 fichiers WAV intégrés, sons contextuels synthétisés et commande pour couper ou réactiver le son.
+- 🔍 **Daily Data Scan & Supervision Sentinel** : Surveillance automatisée quotidienne des sources de données et patch notes (LoL, TFT, Valorant, WoW, HotS), détection des dérives et intégration native au format `cron-status.json` de **Sentinel**.
 - 🧹 **Outillage performant** : **Biome** pour le linting et le formatage ultra-rapide.
 - 🧪 **Qualité & Tests** : Tests unitaires via **Vitest** et tests E2E via **Playwright**.
 - 🐳 **Développement Docker** : réseau hôte pour joindre le client LoL (`127.0.0.1:2999`) depuis WSL2 en mode mirrored, code monté en volume et hot reload avec polling toutes les 300 ms.
 
 ---
 
-## ⚖️ Conformité Riot Games & Fair Play
+## ⚖️ Suivi League of Legends et Riot Games
 
-RiftVision est conçu dans le respect strict des **Riot Games Developer Policies** :
+Le suivi League of Legends s’appuie sur les **Riot Games Developer Policies** :
 1. **Aucune injection mémoire ni altération de client** : L'application n'injecte aucun code et ne lit pas la mémoire du jeu. Elle consulte uniquement l'API locale HTTP mise à disposition par Riot Games pendant les parties.
 2. **Pas d'avantage déloyal (*Unfair Advantage*)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
 3. **Mention légale obligatoire** :
@@ -161,6 +166,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [ ] Présenter League of Legends, Teamfight Tactics, Valorant, Counter-Strike 2, Heroes of the Storm et World of Warcraft ; identifier les jeux non disponibles et prévoir des emplacements pour les futurs jeux
   - [ ] Préserver l'identité RiftVision et les parcours existants : suivi LoL, démo, historique et compagnon desktop
   - [ ] Recenser les sources, les droits d'utilisation des visuels et les conditions d'accès aux données pour chaque jeu
+  - [ ] Étudier les bilans de partie Teamfight Tactics et le suivi des arènes 3c3 World of Warcraft selon les données et autorisations disponibles
 - [ ] **Encyclopédie League of Legends**
   - [ ] Intégrer les données et visuels Data Dragon avec gestion des versions, de la langue et du cache
   - [x] Ajouter une recherche et des filtres pour les champions, avec fiches détaillées (compétences, statistiques de base et visuels)
@@ -208,9 +214,9 @@ npx biome format --write server/data/hots-heroes-a.json server/data/hots-heroes-
 
 Vérifier ensuite la version, le contenu importé et les tests avant de publier les changements. Les données et visuels de jeu appartiennent à leurs ayants droit ; HeroesToolChest est une source communautaire indépendante.
 
-## Suivre une partie
+## Suivre une partie League of Legends
 
-1. **Connecter ma partie** : lancez une partie de League of Legends sur l’ordinateur où RiftVision est installé, puis connectez-la depuis l’accueil. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
+1. **Connecter ma partie** : ouvrez le [compagnon League of Legends](/league/compagnon) depuis « Suivre ma partie », lancez une partie sur l’ordinateur où RiftVision est installé, puis connectez-la depuis cette page. Le tableau de bord s’ouvre automatiquement dès la détection ; vous pouvez annuler la recherche à tout moment.
 2. **Explorer la démo** : sans partie en cours, découvrez un exemple figé à 16:45. Le bandeau permet de tester une alerte, de connecter votre propre partie ou de quitter la démo.
 3. **Suivre le tableau de bord** : consultez la carte, les événements, les scores et les inventaires. Sélectionnez un champion ou un événement pour afficher son détail.
 4. **Agrandir la carte** : depuis la carte, passez à un affichage plus large, masquez le journal ou activez le plein écran. Revenez au tableau de bord avec le bouton de retour. La recherche, le filtre et l’événement sélectionné sont conservés entre ces affichages et lors d’un passage dans l’aide.
@@ -239,11 +245,12 @@ La rubrique **Notes de patch** liste les titres et dates de l'[archive officiell
 - `GET /api/ddragon/tft/champions` : unités Teamfight Tactics disponibles dans les données Riot.
 - `GET /api/ddragon/tft/traits` : traits Teamfight Tactics disponibles dans les données Riot.
 - `GET /api/ddragon/tft/items` : objets Teamfight Tactics nommés disponibles dans les données Riot.
+- `GET /api/tft/current-set` : set principal et identifiants associés pour la version Data Dragon disponible.
 - `GET /api/tft/champions/{id}/ability` : compétence de l'unité lorsque la correspondance est non ambiguë.
 
 La version est conservée en mémoire une heure et les fichiers de données 24 heures, par processus serveur. Un redémarrage vide ce cache. Si Riot est indisponible ou renvoie des données invalides, l'API répond `503` ; un identifiant de champion inconnu répond `404`. Data Dragon peut être mis à jour après le patch du jeu : la version affichée est celle des données disponibles, pas nécessairement celle du client LoL. Les écrans de partie utilisent encore leurs utilitaires d'images existants.
 
-Les catalogues TFT peuvent contenir plusieurs sets et modes. Pour les unités, le numéro de set n'est déduit que lorsque la clé fournie par Riot contient un identifiant numérique reconnaissable ; il ne permet pas d'identifier automatiquement le set actuel. Les unités sans numéro identifiable restent visibles séparément. Les fichiers Data Dragon des traits et objets fournissent leur nom et leur icône, mais pas leurs effets, recettes ou liens avec les unités. Les objets sans nom sont exclus du catalogue.
+Les catalogues TFT affichent par défaut le set principal, identifié à partir des notes de patch Riot et des fichiers du jeu publiés par CommunityDragon pour la version Data Dragon disponible. Cette liste inclut les éléments communs sans numéro de set dans leur identifiant et peut contenir des éléments techniques présents dans les fichiers du jeu. Les autres sets restent accessibles avec le filtre. Si les sources sont indisponibles ou incohérentes, le filtre par défaut est désactivé ; lors de l'annonce d'un nouveau set, une marge de 24 heures est appliquée avant de le considérer comme actif. Pour les anciens sets, les numéros sont déduits des identifiants et peuvent être incomplets. Les fichiers Data Dragon des traits et objets fournissent leur nom et leur icône, mais pas leurs effets, recettes ou liens avec les unités. Les objets sans nom sont exclus du catalogue.
 
 La rubrique **Notes de patch TFT** liste les titres et dates de l'[archive officielle Riot TFT](https://teamfighttactics.leagueoflegends.com/fr-fr/news/tags/patch-notes/) et renvoie vers les articles complets. `GET /api/tft/patch-notes` lit les métadonnées intégrées à la page et les conserve en mémoire une heure par processus. Ce format n'est pas une API publique documentée : s'il change ou si Riot est indisponible, la page propose un lien direct vers l'archive officielle.
 
@@ -365,6 +372,19 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 
 ---
 
+## 🔍 Supervision des données & Daily Data Scan
+
+RiftVision intègre un moteur de scan quotidien pour surveiller l'état et l'actualité de ses sources externes (LoL DataDragon, TFT, Valorant API, patch notes Blizzard WoW/HotS) :
+
+- 📊 **4 états normalisés** : `OK` (aucune modification), `UPDATED` (nouveau patch/contenu détecté), `DEGRADED` (échec partiel avec préservation du snapshot), `ERROR` (panne totale).
+- 🛡️ **Zéro faux positif** : Hachage canonique déterministe SHA-256 sur des vues normalisées et ordonnées.
+- 📡 **Intégration native Sentinel** : Alimentation directe du contrat `/srv/apps/riftvision/sentinel/cron-status.json` pour la supervision des crons sur le VPS Debian 12.
+- 🔐 **Double déclenchement** : Script CLI autonome (`npm run scan:data`) et endpoints API Nitro sécurisés (`POST /api/admin/scan` via `NUXT_SCAN_SECRET`).
+
+Consultez la [documentation complète du Daily Data Scan](docs/daily-data-scan.md) pour les détails d'architecture et la mise en place du cron.
+
+---
+
 ## 🛠️ Scripts Disponibles
 
 | Commande | Description |
@@ -378,6 +398,8 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 | `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
 | `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
 | `npm run overlay:build` | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/` |
+| `npm run scan:data` | Exécute le scan quotidien des sources externes et affiche le rapport |
+| `npm run scan:data:sentinel` | Exécute le scan et met à jour `sentinel/cron-status.json` |
 
 ---
 

@@ -7,9 +7,18 @@ const MAX_BYTES = 40 * 1024 * 1024
 
 type AbilityEntry = { setNumber: number; ability: TftAbility }
 type AbilityIndex = Map<string, AbilityEntry[]>
+type SetMembership = { units: string[]; traits: string[]; items: string[] }
+type Snapshot = { abilities: AbilityIndex; sets: Map<number, SetMembership | null> }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function abilityIcon(value: unknown, patch: string): string | null {
+  if (typeof value !== 'string') return null
+  const path = value.toLowerCase()
+  if (!/^assets\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.tex$/.test(path)) return null
+  return `${ORIGIN}/${patch}/game/${path.slice(0, -4)}.png`
 }
 
 function plainDescription(value: string): string {
@@ -32,14 +41,14 @@ export function createTftAbilitiesClient(
   fetcher: typeof fetch = fetch,
   now: () => number = Date.now,
 ) {
-  let cache: { version: string; index: AbilityIndex; expiresAt: number } | null = null
-  const pending = new Map<string, Promise<AbilityIndex>>()
+  let cache: { version: string; snapshot: Snapshot; expiresAt: number } | null = null
+  const pending = new Map<string, Promise<Snapshot>>()
 
-  async function getIndex(version: string): Promise<AbilityIndex> {
+  async function getSnapshot(version: string): Promise<Snapshot> {
     if (!/^\d+\.\d+\.\d+$/.test(version))
       throw new DataDragonUnavailableError('Version TFT invalide.')
     const patch = version.split('.').slice(0, 2).join('.')
-    if (cache?.version === patch && cache.expiresAt > now()) return cache.index
+    if (cache?.version === patch && cache.expiresAt > now()) return cache.snapshot
     const inFlight = pending.get(patch)
     if (inFlight) return inFlight
     const request = (async () => {
@@ -77,9 +86,34 @@ export function createTftAbilitiesClient(
       if (!isRecord(body) || !Array.isArray(body.setData))
         throw new DataDragonUnavailableError('Les compétences TFT reçues sont invalides.')
       const index: AbilityIndex = new Map()
+      const sets = new Map<number, SetMembership | null>()
       for (const set of body.setData) {
         if (!isRecord(set) || !Number.isInteger(set.number) || !Array.isArray(set.champions))
           continue
+        const number = set.number as number
+        if (
+          set.mutator === `TFTSet${number}` &&
+          Array.isArray(set.traits) &&
+          Array.isArray(set.items)
+        ) {
+          const ids = (values: unknown[], field?: string) => [
+            ...new Set(
+              values.flatMap((value) => {
+                const candidate = field && isRecord(value) ? value[field] : value
+                return typeof candidate === 'string' && /^[A-Za-z0-9_]+$/.test(candidate)
+                  ? [candidate]
+                  : []
+              }),
+            ),
+          ]
+          const membership = {
+            units: ids(set.champions, 'apiName'),
+            traits: ids(set.traits, 'apiName'),
+            items: ids(set.items),
+          }
+          if (membership.units.length && membership.traits.length && membership.items.length)
+            sets.set(number, sets.has(number) ? null : membership)
+        }
         for (const champion of set.champions) {
           if (
             !isRecord(champion) ||
@@ -97,15 +131,20 @@ export function createTftAbilitiesClient(
           const entries = index.get(champion.apiName) ?? []
           entries.push({
             setNumber: set.number as number,
-            ability: { name: champion.ability.name.trim(), description },
+            ability: {
+              name: champion.ability.name.trim(),
+              description,
+              icon: abilityIcon(champion.ability.icon, patch),
+            },
           })
           index.set(champion.apiName, entries)
         }
       }
       if (!index.size)
         throw new DataDragonUnavailableError('Les compétences TFT reçues sont vides.')
-      cache = { version: patch, index, expiresAt: now() + TTL }
-      return index
+      const snapshot = { abilities: index, sets }
+      cache = { version: patch, snapshot, expiresAt: now() + TTL }
+      return snapshot
     })()
     pending.set(patch, request)
     try {
@@ -120,21 +159,29 @@ export function createTftAbilitiesClient(
     setNumber: number | null,
     version: string,
   ): Promise<TftAbility | null> {
-    const index = await getIndex(version)
-    const entries = (index.get(id) ?? []).filter(
+    const snapshot = await getSnapshot(version)
+    const entries = (snapshot.abilities.get(id) ?? []).filter(
       (entry) => setNumber === null || entry.setNumber === setNumber,
     )
     const ability = entries[0]?.ability
     if (!ability) return null
-    return entries.every(
+    const sameAbility = entries.every(
       (entry) =>
         entry.ability.name === ability.name && entry.ability.description === ability.description,
     )
-      ? ability
-      : null
+    if (!sameAbility) return null
+    const icons = new Set(
+      entries.map((entry) => entry.ability.icon).filter((icon) => icon !== null),
+    )
+    return { ...ability, icon: icons.size === 1 ? ([...icons][0] ?? null) : null }
   }
 
-  return { getAbility }
+  async function getSet(number: number, version: string): Promise<SetMembership | null> {
+    if (!Number.isSafeInteger(number) || number <= 0) return null
+    return (await getSnapshot(version)).sets.get(number) ?? null
+  }
+
+  return { getAbility, getSet }
 }
 
 export const tftAbilities = createTftAbilitiesClient()

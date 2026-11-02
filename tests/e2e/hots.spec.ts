@@ -19,7 +19,8 @@ test('explore les héros, les compétences et les talents du Nexus', async ({ pa
 
   await openHome(page)
   await page.locator('.game-card--hots').click()
-  await expect(page).toHaveURL(/\/hots$/)
+  await page.getByTestId('encyclopedia-action').click()
+  await expect(page).toHaveURL(/\/hots\/heroes$/)
   await expect(page.getByRole('heading', { name: 'Les héros du Nexus.' })).toBeVisible()
   await page
     .getByRole('combobox', { name: 'Rôle', exact: true })

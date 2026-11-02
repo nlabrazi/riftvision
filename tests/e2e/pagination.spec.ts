@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 const version = '16.21.1'
 
 async function openHome(page: import('@playwright/test').Page) {
+  await page.route('**/api/tft/current-set', (route) => route.fulfill({ status: 503 }))
   await page.route('**/api/riot/status?*', (route) =>
     route.fulfill({ json: { status: 'DISCONNECTED', isMock: false, globalMockEnabled: false } }),
   )
@@ -31,7 +32,7 @@ test('pagine les champions et réinitialise la page avec les filtres', async ({ 
   )
   await openHome(page)
   await page.locator('.game-card--league').click()
-  await page.getByRole('link', { name: /Champions.*Recherchez/ }).click()
+  await page.getByTestId('encyclopedia-action').click()
   const pagination = page.getByRole('navigation', { name: 'Pagination des résultats' })
   await expect(page.locator('.champion-card')).toHaveCount(34)
   await expect(pagination).toContainText('Page 1 sur 3')
@@ -78,7 +79,8 @@ test('pagine les objets LoL et conserve la recherche sur tout le catalogue', asy
   )
   await openHome(page)
   await page.locator('.game-card--league').click()
-  await page.getByRole('link', { name: 'Objets →' }).click()
+  await page.getByTestId('encyclopedia-action').click()
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await expect(page.locator('.collection-card')).toHaveCount(33)
   await page.getByRole('button', { name: /Suivant/ }).click()
   await expect(page.getByRole('link', { name: /Objet 34/ })).toBeVisible()
@@ -101,6 +103,7 @@ test('pagine les traits TFT et filtre au-delà de la première page', async ({ p
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Traits', exact: true }).click()
   await expect(page.locator('.traits-card')).toHaveCount(33)
   await page.getByRole('button', { name: /Suivant/ }).click()
@@ -121,6 +124,7 @@ test('laisse les 13 classes WoW sur une seule page', async ({ page }) => {
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.locator('.class-card')).toHaveCount(13)
   await expect(page.getByRole('link', { name: /Classe 13/ })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Pagination des résultats' })).toHaveCount(0)
@@ -140,7 +144,8 @@ test('laisse les runes LoL sur une seule page', async ({ page }) => {
   )
   await openHome(page)
   await page.locator('.game-card--league').click()
-  await page.getByRole('link', { name: 'Runes →' }).click()
+  await page.getByTestId('encyclopedia-action').click()
+  await page.getByRole('link', { name: 'Runes', exact: true }).click()
   await expect(page.locator('.collection-card')).toHaveCount(62)
   await expect(page.getByRole('link', { name: /Rune 62/ })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Pagination des résultats' })).toHaveCount(0)

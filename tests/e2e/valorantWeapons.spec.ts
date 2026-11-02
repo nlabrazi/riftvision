@@ -59,6 +59,7 @@ test('recherche une arme par nom et catégorie puis consulte ses caractéristiqu
   await page.route('**/api/valorant/weapons', (route) => route.fulfill({ json: weapons }))
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Armes Valorant', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les armes Valorant.' })).toBeVisible()
   await expect(page.getByText('2 armes', { exact: true })).toBeVisible()
@@ -91,6 +92,7 @@ test('gère les résultats vides et une indisponibilité du catalogue des armes'
   )
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Armes Valorant', exact: true }).click()
   await expect(page.locator('.val-notice[role="alert"]')).toContainText(
     'momentanément indisponible',

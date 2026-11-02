@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import RvIcon from './RvIcon.vue'
 
+const { data: installer } = await useFetch<{ available: boolean }>('/api/download/availability')
+
 defineProps<{
   isMock: boolean
   isLiveActive: boolean
@@ -54,14 +56,14 @@ const emit = defineEmits<{
           {{ isChangingMode ? 'Connexion…' : isLiveActive ? 'Annuler la recherche' : 'Connecter ma partie' }}
         </button>
         <a
-          v-if="!isLiveActive"
+          v-if="!isLiveActive && installer?.available"
           href="/api/download/overlay"
           download
           class="rv-button"
           title="Télécharger l'installateur Windows officiel (.exe)"
         >
           <RvIcon name="download" :size="16" />
-          <span>Télécharger l’application (.exe)</span>
+          <span>Télécharger le compagnon (.exe)</span>
         </a>
         <button v-if="!isLiveActive" type="button" data-testid="mock-toggle-button" class="rv-button rv-button-quiet" :disabled="isChangingMode" @click="emit('start-demo')">
           Explorer la démo<RvIcon name="arrow-up-right" :size="16" />
@@ -78,7 +80,7 @@ const emit = defineEmits<{
         </button>
       </div>
       <p v-if="!isLiveActive && !isMock" class="standby-hint">
-        {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : 'Pas encore installé ? Téléchargez l’application Windows ou découvrez la démo en 1 clic.' }}
+        {{ isOverlayConnected ? 'Compagnon prêt ! Cliquez sur « Connecter ma partie » dès que votre jeu est lancé.' : installer?.available ? 'Pas encore installé ? Téléchargez le compagnon Windows ou découvrez la démo en 1 clic.' : 'Le téléchargement du compagnon Windows est indisponible. Vous pouvez découvrir la démo en 1 clic.' }}
       </p>
     </div>
     <div class="standby-map" aria-hidden="true">
