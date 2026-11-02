@@ -20,7 +20,9 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "overlay": "npx electron scripts/desktop-overlay.cjs",
-    "overlay:build": "npx --yes electron-builder --win --config electron-builder.json"
+    "overlay:build": "npx --yes electron-builder --win --config electron-builder.json",
+    "scan:data": "npx --yes tsx scripts/daily-scan.ts",
+    "scan:data:sentinel": "npx --yes tsx scripts/daily-scan.ts --sentinel"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
