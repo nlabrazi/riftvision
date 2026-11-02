@@ -65,3 +65,20 @@ export interface SentinelCronStatusPayload {
   cron_jobs: SentinelCronJobEntry[]
 }
 
+export interface SourceInspection {
+  id: string
+  name: string
+  game: GameId
+  syncMode: SyncMode
+  version?: string
+  fingerprint: string
+  metadata?: Record<string, unknown>
+}
+
+export interface SourceAdapter {
+  id: string
+  name: string
+  game: GameId
+  syncMode: SyncMode
+  inspect: () => Promise<SourceInspection>
+}

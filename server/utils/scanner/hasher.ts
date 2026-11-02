@@ -31,4 +31,3 @@ export function computeCanonicalHash(data: unknown, length = 16): string {
   const serialized = canonicalStringify(data)
   return createHash('sha256').update(serialized).digest('hex').slice(0, length)
 }
-

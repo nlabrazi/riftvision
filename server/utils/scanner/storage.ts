@@ -72,4 +72,3 @@ export function clearStoredSnapshots(filePath: string = DEFAULT_SNAPSHOTS_FILE):
     console.error('[RiftVision Scanner] Erreur de réinitialisation des snapshots :', err)
   }
 }
-
