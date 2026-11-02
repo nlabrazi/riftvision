@@ -39,15 +39,15 @@ pipeline {
             }
         }
 
-        stage('End-to-end tests') {
-            steps {
-                sh 'npm run e2e'
-            }
-        }
-
         stage('Build') {
             steps {
                 sh 'npm run build'
+            }
+        }
+
+        stage('End-to-end tests') {
+            steps {
+                sh 'npm run e2e'
             }
         }
     }
