@@ -34,6 +34,7 @@ Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tab
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🎨 **Icônes Font Awesome** : composant Vue officiel enregistré par un plugin Nuxt, utilisé pour l’interface et les liens du footer. Seules les icônes nécessaires sont importées.
 - 🔊 **Alertes audio** : 17 fichiers WAV intégrés, sons contextuels synthétisés et commande pour couper ou réactiver le son.
+- 🔍 **Daily Data Scan & Supervision Sentinel** : Surveillance automatisée quotidienne des sources de données et patch notes (LoL, TFT, Valorant, WoW, HotS), détection des dérives et intégration native au format `cron-status.json` de **Sentinel**.
 - 🧹 **Outillage performant** : **Biome** pour le linting et le formatage ultra-rapide.
 - 🧪 **Qualité & Tests** : Tests unitaires via **Vitest** et tests E2E via **Playwright**.
 - 🐳 **Développement Docker** : réseau hôte pour joindre le client LoL (`127.0.0.1:2999`) depuis WSL2 en mode mirrored, code monté en volume et hot reload avec polling toutes les 300 ms.
@@ -371,6 +372,19 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 
 ---
 
+## 🔍 Supervision des données & Daily Data Scan
+
+RiftVision intègre un moteur de scan quotidien pour surveiller l'état et l'actualité de ses sources externes (LoL DataDragon, TFT, Valorant API, patch notes Blizzard WoW/HotS) :
+
+- 📊 **4 états normalisés** : `OK` (aucune modification), `UPDATED` (nouveau patch/contenu détecté), `DEGRADED` (échec partiel avec préservation du snapshot), `ERROR` (panne totale).
+- 🛡️ **Zéro faux positif** : Hachage canonique déterministe SHA-256 sur des vues normalisées et ordonnées.
+- 📡 **Intégration native Sentinel** : Alimentation directe du contrat `/srv/apps/riftvision/sentinel/cron-status.json` pour la supervision des crons sur le VPS Debian 12.
+- 🔐 **Double déclenchement** : Script CLI autonome (`npm run scan:data`) et endpoints API Nitro sécurisés (`POST /api/admin/scan` via `NUXT_SCAN_SECRET`).
+
+Consultez la [documentation complète du Daily Data Scan](docs/daily-data-scan.md) pour les détails d'architecture et la mise en place du cron.
+
+---
+
 ## 🛠️ Scripts Disponibles
 
 | Commande | Description |
@@ -384,6 +398,8 @@ place, ainsi que le compagnon et l’API de réception pour le live distant.
 | `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
 | `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
 | `npm run overlay:build` | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/` |
+| `npm run scan:data` | Exécute le scan quotidien des sources externes et affiche le rapport |
+| `npm run scan:data:sentinel` | Exécute le scan et met à jour `sentinel/cron-status.json` |
 
 ---
 

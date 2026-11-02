@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Daily Data Scan & Supervision Sentinel
+- **Moteur de scan quotidien** : Surveillance automatique des sources externes pour 5 jeux (League of Legends, TFT, Valorant, World of Warcraft et Heroes of the Storm).
+- **Gestion des 4 états normalisés** : `OK` (aucun changement), `UPDATED` (nouveau patch ou contenu détecté), `DEGRADED` (panne partielle sans écrasement de snapshot) et `ERROR` (panne totale).
+- **Hachage canonique déterministe** : Algorithme SHA-256 évitant les faux positifs dus à l'ordre des propriétés JSON ou aux timestamps de build.
+- **Support des sources statiques** : Alerte ciblée `[ACTION REQUISE]` pour les données manuelles (catalogue Heroes of the Storm).
+- **Contrat Sentinel & VPS Debian 12** : Génération automatique du payload supervisé `/srv/apps/riftvision/sentinel/cron-status.json`.
+- **Commandes CLI autonomes** : `npm run scan:data` et `npm run scan:data:sentinel` (avec options `--dry-run`, `--json`, `--report`).
+- **Endpoints d'administration sécurisés** : `POST /api/admin/scan` et `GET /api/admin/scan` protégés par `NUXT_SCAN_SECRET`.
+
 ## [1.3.0] - 2026-10-14
 
 ### Objectifs & Timers Neutres (Patch 14.8 Saison 14)
