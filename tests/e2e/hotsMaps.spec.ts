@@ -8,6 +8,7 @@ test('explore les cartes, leurs objectifs et les données manquantes', async ({ 
   expect((await request.get('/api/hots/maps/inconnu')).status()).toBe(404)
 
   await page.goto('/hots')
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Champs de bataille', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Champs de bataille.' })).toBeVisible()
   await expect(page.getByText(/ne représente pas la rotation actuelle/)).toBeVisible()

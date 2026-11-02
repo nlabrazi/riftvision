@@ -54,6 +54,7 @@ async function openHome(page: Page, options: { available?: boolean; stale?: bool
   await page.goto('/')
   await status
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.getByRole('heading', { name: 'Les unités TFT.' })).toBeVisible()
 }
 

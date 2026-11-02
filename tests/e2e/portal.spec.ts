@@ -42,7 +42,10 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   await expect(page.getByTestId('mock-toggle-button')).toHaveCount(0)
   await expect(page.getByTestId('live-toggle-button')).toHaveCount(0)
 
-  await page.getByRole('link', { name: /Accéder à League of Legends/ }).click()
+  await page.getByRole('link', { name: /Découvrir League of Legends/ }).click()
+  await expect(page).toHaveURL(/\/league$/)
+  await expect(page.getByRole('heading', { name: 'League of Legends.' })).toBeVisible()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page).toHaveURL(/\/league\/champions$/)
   await expect(page.getByRole('heading', { name: 'Les champions.' })).toBeVisible()
   await page.getByRole('link', { name: 'Suivre ma partie', exact: true }).click()
@@ -54,17 +57,16 @@ test('présente les jeux et mène aux actions League of Legends', async ({ page,
   await expect(page.getByTestId('scoreboard-header')).toBeVisible()
 })
 
-test('redirige les anciennes adresses League et conserve l’accès au compagnon', async ({
+test('la racine League mène vers l’encyclopédie et conserve l’accès au compagnon', async ({
   page,
   request,
 }) => {
   await request.post('/api/riot/mock', { data: { enabled: false } })
   await page.goto('/league?source=test')
-  await expect(page).toHaveURL(/\/league\/champions\?source=test$/)
-  await expect(page.getByRole('heading', { name: 'Les champions.' })).toBeVisible()
-  await page.goto('/league#league-of-legends')
-  await expect(page).toHaveURL(/\/league\/compagnon#league-of-legends$/)
-  await expect(page.getByRole('button', { name: 'Explorer la démo' })).toBeVisible()
+  await expect(page).toHaveURL(/\/league\?source=test$/)
+  await expect(page.getByRole('heading', { name: 'League of Legends.' })).toBeVisible()
+  await page.getByTestId('encyclopedia-action').click()
+  await expect(page).toHaveURL(/\/league\/champions$/)
   await page.goto('/league/compagnon/')
   await expect(page.getByRole('button', { name: 'Explorer la démo' })).toBeVisible()
   await page.getByRole('link', { name: '← Retour aux champions' }).click()
@@ -80,7 +82,7 @@ test('explique lorsque le compagnon Windows ne peut pas être téléchargé', as
   )
   await page.goto('/hots')
   await page.waitForLoadState('networkidle')
-  await page.getByRole('link', { name: 'Tous les jeux', exact: true }).click()
+  await page.getByRole('link', { name: '← Tous les jeux', exact: true }).click()
   const hero = page.locator('.portal-hero')
   await expect(hero.getByText(/téléchargement indisponible/)).toBeVisible()
   await expect(hero.getByRole('link', { name: /Découvrir le compagnon/ })).toHaveAttribute(
@@ -116,7 +118,7 @@ test('anime la carte disponible au clavier et respecte la réduction des mouveme
 }) => {
   await request.post('/api/riot/mock', { data: { enabled: false } })
   await page.goto('/')
-  const leagueCard = page.getByRole('link', { name: /Accéder à League of Legends/ })
+  const leagueCard = page.getByRole('link', { name: /Découvrir League of Legends/ })
 
   await leagueCard.focus()
   await expect(leagueCard).toBeFocused()
@@ -195,7 +197,7 @@ test('charge les illustrations des jeux', async ({ page }) => {
     const art = page.locator(`.game-card--${game} .game-card__art`)
     const imageUrl = await art.evaluate((element) => {
       const background = getComputedStyle(element, '::before').backgroundImage
-      return background.match(/url\("?([^"\)]+)"?\)/)?.[1]
+      return background.match(/url\("?([^")]+)"?\)/)?.[1]
     })
     expect(imageUrl, `Image manquante pour ${game}`).toBeTruthy()
     const response = await page.request.get(imageUrl as string)

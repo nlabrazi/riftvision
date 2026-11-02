@@ -22,7 +22,7 @@ const classes = computed(() => {
 
 <template>
   <WowLayout>
-    <NuxtLink to="/" class="wow-back">← Retour à tous les jeux</NuxtLink>
+    <NuxtLink to="/wow" class="wow-back">← Retour à World of Warcraft</NuxtLink>
     <GameCatalogBanner game="wow" eyebrow="Encyclopédie · World of Warcraft Retail" title="Les classes WoW" description="Découvrez les classes et leurs spécialisations dans World of Warcraft Retail." />
     <div v-if="status === 'pending'" class="wow-notice" role="status">Chargement des classes…</div>
     <div v-else-if="error || !data" class="wow-notice" role="alert"><p>Le catalogue des classes est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>

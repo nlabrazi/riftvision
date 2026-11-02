@@ -62,6 +62,7 @@ test('explore les agents Valorant et consulte leurs compétences', async ({ page
   )
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page).toHaveURL(/\/valorant\/agents$/)
   await expect(page.getByRole('heading', { name: 'Les agents Valorant.' })).toBeVisible()
   await expect(page.getByText('2 agents', { exact: true })).toBeVisible()
@@ -104,6 +105,7 @@ test('permet de réessayer après une indisponibilité et affiche un agent intro
   )
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.locator('.val-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
   )

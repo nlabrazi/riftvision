@@ -81,31 +81,31 @@ function showGenre(genre: Genre) {
           :aria-pressed="selectedGenre === genre" @click="selectedGenre = genre">{{ genre }}</button>
       </div>
       <div class="game-grid">
-        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--league" to="/league/champions">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--league" to="/league">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/league.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>League of Legends</h3>
             <p>Explorez les champions, objets et runes de la Faille.</p>
-            <span class="game-card__link">Accéder à League of Legends <span aria-hidden="true">↗</span></span>
+            <span class="game-card__link">Découvrir League of Legends <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('Stratégie')" class="game-card game-card--tft" to="/tft/units">
+        <NuxtLink v-if="showGenre('Stratégie')" class="game-card game-card--tft" to="/tft">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/tft.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>STRATÉGIE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Teamfight Tactics</h3>
             <p>Explorez les unités disponibles dans le catalogue TFT.</p>
-            <span class="game-card__link">Accéder au catalogue <span aria-hidden="true">↗</span></span>
+            <span class="game-card__link">Découvrir Teamfight Tactics <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('FPS')" class="game-card game-card--valorant" to="/valorant/agents">
+        <NuxtLink v-if="showGenre('FPS')" class="game-card game-card--valorant" to="/valorant">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/valorant.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>FPS TACTIQUE</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Valorant</h3>
             <p>Découvrez les agents, leurs rôles et leurs compétences.</p>
-            <span class="game-card__link">Accéder aux agents <span aria-hidden="true">↗</span></span>
+            <span class="game-card__link">Découvrir Valorant <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
         <article v-if="showGenre('FPS')" class="game-card game-card--cs2">
@@ -117,22 +117,22 @@ function showGenre(genre: Genre) {
             <span class="game-card__link">En préparation</span>
           </div>
         </article>
-        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--hots" to="/hots/heroes">
+        <NuxtLink v-if="showGenre('MOBA')" class="game-card game-card--hots" to="/hots">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/hots.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MOBA</span><span class="game-card__status game-card__status--available">Disponible</span></div>
             <h3>Heroes of the Storm</h3>
             <p>Découvrez les héros, leurs compétences et leurs talents.</p>
-            <span class="game-card__link">Explorer le Nexus <span aria-hidden="true">↗</span></span>
+            <span class="game-card__link">Découvrir le Nexus <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
-        <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow/classes">
+        <NuxtLink v-if="showGenre('MMO')" class="game-card game-card--wow" to="/wow">
           <div class="game-card__art" aria-hidden="true"><HoverPreview src="/assets/videos/wow.mp4" /></div>
           <div class="game-card__body">
             <div class="game-card__meta"><span>MMORPG</span><span class="game-card__status game-card__status--available">Retail</span></div>
             <h3>World of Warcraft</h3>
             <p>Découvrez les classes et spécialisations de World of Warcraft Retail.</p>
-            <span class="game-card__link">Accéder aux classes <span aria-hidden="true">↗</span></span>
+            <span class="game-card__link">Découvrir World of Warcraft <span aria-hidden="true">↗</span></span>
           </div>
         </NuxtLink>
         <article v-if="selectedGenre === 'Tous'" class="game-card game-card--future">

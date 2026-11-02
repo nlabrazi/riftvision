@@ -94,6 +94,7 @@ async function openSpec(page: import('@playwright/test').Page) {
   await page.goto('/')
   await status
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Mage' }).click()
   await page.getByRole('link', { name: /Arcanes/ }).click()
 }

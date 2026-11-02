@@ -41,6 +41,7 @@ async function openLeague(page: import('@playwright/test').Page) {
   await page.goto('/')
   await initialStatus
   await page.locator('.game-card--league').click()
+  await page.getByTestId('encyclopedia-action').click()
 }
 
 test('recherche, filtre et ouvre une fiche de champion', async ({ page }) => {

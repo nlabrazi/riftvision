@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { TftChampionsResponse, TftCurrentSetResponse } from '#shared/types/tft'
 import GameCatalogBanner from '~/components/GameCatalogBanner.vue'
 import TftCurrentSetNotice from '~/components/TftCurrentSetNotice.vue'
-import type { TftChampionsResponse, TftCurrentSetResponse } from '#shared/types/tft'
 
 useHead({ title: 'Unités TFT — RiftVision' })
 const { data, status, error, refresh } = await useFetch<TftChampionsResponse>(
@@ -66,7 +66,7 @@ const { page, pageCount, start, end } = usePagination(
 
 <template>
   <TftLayout>
-    <NuxtLink to="/" class="tft-back">← Retour à tous les jeux</NuxtLink>
+    <NuxtLink to="/tft" class="tft-back">← Retour à Teamfight Tactics</NuxtLink>
     <GameCatalogBanner game="tft" eyebrow="Encyclopédie · Teamfight Tactics" title="Les unités TFT" description="Explorez les unités répertoriées dans les données officielles." :badge="data ? `Données Data Dragon · ${data.version}` : undefined" />
     <TftCurrentSetNotice :current="current" />
     <p class="tft-source-note">Ce catalogue peut contenir plusieurs sets et modes. Le set en cours suit les fichiers du mode principal. Pour les autres unités, le set affiché est déduit de l’identifiant fourni par Riot ; il ne désigne pas nécessairement le set actuel.</p>

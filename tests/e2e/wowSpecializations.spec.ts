@@ -42,6 +42,7 @@ test('ouvre la spécialisation depuis la classe et revient à sa fiche', async (
   await page.route('**/api/wow/specializations/62', (route) => route.fulfill({ json: specDetail }))
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Mage' }).click()
   await page.getByRole('link', { name: /Arcanes/ }).click()
   await expect(page.getByRole('heading', { name: 'Arcanes' })).toBeVisible()
@@ -79,6 +80,7 @@ test('affiche les deux descriptions lorsqu’elles diffèrent et permet de rées
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Mage' }).click()
   await page.getByRole('link', { name: /Arcanes/ }).click()
   await expect(page.locator('.wow-notice[role="alert"]')).toContainText(

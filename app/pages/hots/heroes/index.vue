@@ -52,7 +52,7 @@ function hideBrokenImage(event: Event) {
 
 <template>
   <HotsLayout>
-    <NuxtLink to="/" class="hots-back">← Retour à tous les jeux</NuxtLink>
+    <NuxtLink to="/hots" class="hots-back">← Retour à Heroes of the Storm</NuxtLink>
     <GameCatalogBanner game="hots" eyebrow="Encyclopédie · Heroes of the Storm" title="Les héros du Nexus" description="Retrouvez les héros de vos univers Blizzard, leurs compétences et leurs talents." :badge="data ? `Données communautaires · ${data.version}` : undefined" />
     <div v-if="status === 'pending'" class="hots-notice" role="status">Chargement des héros…</div>
     <div v-else-if="error || !data" class="hots-notice" role="alert"><p>Le catalogue des héros est momentanément indisponible.</p><button type="button" class="rv-button" @click="refresh()">Réessayer</button></div>

@@ -60,6 +60,7 @@ test('recherche une carte et consulte son plan et ses zones', async ({ page }) =
   await page.route('**/api/valorant/maps', (route) => route.fulfill({ json: maps }))
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Cartes Valorant', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les cartes Valorant.' })).toBeVisible()
   await expect(page.getByText(/n’indique pas la rotation actuelle/)).toBeVisible()
@@ -98,6 +99,7 @@ test('gère les résultats vides et une indisponibilité du catalogue des cartes
   )
   await openHome(page)
   await page.locator('.game-card--valorant').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Cartes Valorant', exact: true }).click()
   await expect(page.locator('.val-notice[role="alert"]')).toContainText(
     'momentanément indisponible',

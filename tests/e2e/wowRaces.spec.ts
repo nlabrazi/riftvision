@@ -49,6 +49,7 @@ test('filtre les races par faction puis consulte les classes disponibles', async
   await page.route('**/api/wow/races', (route) => route.fulfill({ json: races }))
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Races WoW', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les races WoW.' })).toBeVisible()
   await expect(page.getByText('3 races', { exact: true })).toBeVisible()
@@ -95,6 +96,7 @@ test('propose de réessayer si les races sont indisponibles', async ({ page }) =
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Races WoW', exact: true }).click()
   await expect(page.locator('.wow-notice[role="alert"]')).toContainText(
     'momentanément indisponible',

@@ -51,6 +51,7 @@ test('explore les classes Retail et les spécialisations', async ({ page }) => {
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page).toHaveURL(/\/wow\/classes$/)
   await expect(page.getByRole('heading', { name: 'Les classes WoW.' })).toBeVisible()
   await expect(page.getByText('2 classes', { exact: true })).toBeVisible()
@@ -95,6 +96,7 @@ test('propose de réessayer si le catalogue est indisponible', async ({ page }) 
   )
   await openHome(page)
   await page.locator('.game-card--wow').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.locator('.wow-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
   )

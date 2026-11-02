@@ -42,6 +42,7 @@ test('explore les unités TFT par set et coût puis ouvre une fiche', async ({ p
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page).toHaveURL(/\/tft\/units$/)
   await expect(page.getByRole('heading', { name: 'Les unités TFT.' })).toBeVisible()
   await expect(page.getByText(/ne désigne pas nécessairement le set actuel/)).toBeVisible()
@@ -82,6 +83,7 @@ test('permet de réessayer si le catalogue TFT est indisponible', async ({ page 
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await expect(page.locator('.tft-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
   )
@@ -104,6 +106,7 @@ test('consulte et recherche les traits TFT depuis la navigation', async ({ page 
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Traits', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les traits TFT.' })).toBeVisible()
   await expect(page.getByText('3 traits', { exact: true })).toBeVisible()
@@ -148,6 +151,7 @@ test('permet de réessayer si les traits TFT sont indisponibles', async ({ page 
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Traits', exact: true }).click()
   await expect(page.locator('.tft-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
@@ -171,6 +175,7 @@ test('consulte et recherche les objets TFT depuis la navigation', async ({ page 
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Les objets TFT.' })).toBeVisible()
   await expect(page.getByText('3 objets', { exact: true })).toBeVisible()
@@ -216,6 +221,7 @@ test('permet de réessayer si les objets TFT sont indisponibles', async ({ page 
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await expect(page.locator('.tft-notice[role="alert"]')).toContainText(
     'momentanément indisponible',
@@ -239,6 +245,7 @@ test('la fiche reste utilisable si la compétence est indisponible puis permet d
   )
   await openHome(page)
   await page.locator('.game-card--tft').click()
+  await page.getByTestId('encyclopedia-action').click()
   await page.getByRole('link', { name: /Ahri.*Set 18/ }).click()
   await expect(page.getByRole('heading', { name: 'Ahri' })).toBeVisible()
   await expect(page.getByText('3 PO', { exact: true })).toBeVisible()

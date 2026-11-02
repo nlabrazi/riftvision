@@ -22,6 +22,7 @@ async function openLeague(page: import('@playwright/test').Page) {
   await page.goto('/')
   await status
   await page.locator('.game-card--league').click()
+  await page.getByTestId('encyclopedia-action').click()
 }
 
 test('consulte les notes officielles et recherche dans l’historique', async ({ page }) => {
