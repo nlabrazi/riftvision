@@ -47,7 +47,7 @@ describe('Scanner Engine', () => {
     }
   })
 
-  it('performs initial scan, detects initialization as UPDATED, and persists snapshots', async () => {
+  it('performs initial scan, establishes baseline as OK without false update alerts, and persists snapshots', async () => {
     const adapter1 = createMockAdapter('src1', 'Source 1', 'automatic', {
       version: '1.0.0',
       fingerprint: 'fp-1',
@@ -63,11 +63,14 @@ describe('Scanner Engine', () => {
       persist: true,
     })
 
-    expect(report.status).toBe('UPDATED')
+    expect(report.status).toBe('OK')
     expect(report.summary.total).toBe(2)
-    expect(report.summary.updated).toBe(2)
-    expect(report.summary.ok).toBe(0)
+    expect(report.summary.updated).toBe(0)
+    expect(report.summary.ok).toBe(2)
     expect(report.summary.error).toBe(0)
+    expect(report.sources[0].status).toBe('OK')
+    expect(report.sources[0].message).toContain('Initialisation')
+    expect(report.sources[0].diffs).toEqual([])
 
     const saved = getStoredSnapshots(TEST_STORAGE)
     expect(saved.sources.src1.fingerprint).toBe('fp-1')
@@ -209,8 +212,8 @@ describe('Scanner Engine', () => {
     })
 
     expect(report.status).toBe('DEGRADED')
-    expect(report.summary.ok).toBe(0)
-    expect(report.summary.updated).toBe(1) // src_ok is first-time updated
+    expect(report.summary.ok).toBe(1) // src_ok initializes with OK
+    expect(report.summary.updated).toBe(0)
     expect(report.summary.error).toBe(1)
 
     // Vérifie que le snapshot de la source en échec n'a pas été écrasé
@@ -278,9 +281,57 @@ describe('Scanner Engine', () => {
       retryDelayMs: 10,
     })
 
-    expect(report.status).toBe('UPDATED')
+    expect(report.status).toBe('OK')
+    expect(report.summary.ok).toBe(1)
+    expect(report.summary.updated).toBe(0)
     expect(report.summary.error).toBe(0)
     expect(callCount).toBe(2)
+  })
+
+  it('treats new source as OK initialization while detecting UPDATED on existing modified source', async () => {
+    saveSnapshots(
+      {
+        version: 1,
+        lastScan: '2026-11-01T00:00:00.000Z',
+        sources: {
+          src_existing: {
+            version: '1.0.0',
+            fingerprint: 'fp-existing-old',
+            lastSuccessfulScan: '2026-11-01T00:00:00.000Z',
+          },
+        },
+      },
+      TEST_STORAGE,
+    )
+
+    const existingAdapter = createMockAdapter('src_existing', 'Existing Source', 'automatic', {
+      version: '1.1.0',
+      fingerprint: 'fp-existing-new',
+    })
+    const newAdapter = createMockAdapter('src_new', 'New Source', 'automatic', {
+      version: '2.0.0',
+      fingerprint: 'fp-new',
+    })
+
+    const report = await runDailyScan({
+      adapters: [existingAdapter, newAdapter],
+      storagePath: TEST_STORAGE,
+      persist: true,
+    })
+
+    expect(report.status).toBe('UPDATED')
+    expect(report.summary.ok).toBe(1)
+    expect(report.summary.updated).toBe(1)
+    expect(report.summary.error).toBe(0)
+
+    const existingReport = report.sources.find((s) => s.id === 'src_existing')
+    expect(existingReport?.status).toBe('UPDATED')
+    expect(existingReport?.diffs?.length).toBeGreaterThan(0)
+
+    const newReport = report.sources.find((s) => s.id === 'src_new')
+    expect(newReport?.status).toBe('OK')
+    expect(newReport?.message).toContain('Initialisation')
+    expect(newReport?.diffs).toEqual([])
   })
 
   it('times out and reports ERROR when source inspection hangs', async () => {

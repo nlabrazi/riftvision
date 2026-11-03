@@ -22,10 +22,13 @@ Chaque analyse attribue un statut global parmi quatre états normalisés :
 
 | Statut | Description | Notification Telegram / Sentinel |
 | :--- | :--- | :--- |
-| **`OK`** | 100% des sources ont répondu, aucune modification constatée. | Archivé silencieusement, récapitulatif du bilan quotidien. |
-| **`UPDATED`** | 100% des sources ont répondu, au moins une nouveauté a été détectée. | Notification Telegram immédiate précisant les jeux et versions modifiés. |
+| **`OK`** | 100% des sources ont répondu, aucune modification constatée (ou initialisation de la baseline). | Archivé silencieusement, récapitulatif du bilan quotidien. |
+| **`UPDATED`** | 100% des sources ont répondu, au moins une nouveauté a été détectée par rapport à la baseline. | Notification Telegram immédiate précisant les jeux et versions modifiés. |
 | **`DEGRADED`** | Panne partielle : 1 à N-1 sources ont échoué (ex. timeout ou 503). | Notification d'avertissement avec diagnostic de la source indisponible. |
 | **`ERROR`** | Panne totale (toutes les sources échouent) ou crash fatal du script. | Alerte critique Telegram, statut `failed` dans Sentinel. |
+
+### Initialisation sans faux positif
+Lors du tout premier scan (ou lorsqu'une nouvelle source est ajoutée sans snapshot préexistant), l'état est comptabilisé comme `OK` avec le message `Initialisation du snapshot pour cette source`. Les snapshots de référence sont enregistrés sans déclencher d'alerte Telegram intempestive de mise à jour.
 
 ### Persistance sélective
 Si une source échoue lors d'un scan (état `DEGRADED`), son snapshot précédent est conservé intact dans `server/data/scan-snapshots.json`. Seules les sources ayant répondu avec succès voient leur empreinte mise à jour.
