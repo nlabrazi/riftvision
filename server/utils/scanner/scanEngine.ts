@@ -1,5 +1,5 @@
 import { createDefaultSourceAdapters } from './sources'
-import { DEFAULT_SNAPSHOTS_FILE, getStoredSnapshots, saveSnapshots } from './storage'
+import { getSnapshotsFilePath, getStoredSnapshots, saveSnapshots } from './storage'
 import type {
   ScanReport,
   ScanSnapshots,
@@ -98,7 +98,7 @@ function computeDiffs(prev: SourceSnapshot | undefined, current: SourceInspectio
 export async function runDailyScan(options: ScanEngineOptions = {}): Promise<ScanReport> {
   const {
     adapters = createDefaultSourceAdapters(),
-    storagePath = DEFAULT_SNAPSHOTS_FILE,
+    storagePath = getSnapshotsFilePath(),
     timeoutMs = 6000,
     retryAttempts = 1,
     retryDelayMs = 50,

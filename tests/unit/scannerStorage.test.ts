@@ -5,6 +5,9 @@ import { canonicalStringify, computeCanonicalHash } from '../../server/utils/sca
 import {
   clearStoredSnapshots,
   createEmptySnapshots,
+  getReportFilePath,
+  getScannerDataDir,
+  getSnapshotsFilePath,
   getStoredSnapshots,
   saveSnapshots,
 } from '../../server/utils/scanner/storage'
@@ -126,5 +129,33 @@ describe('Scanner Storage', () => {
     clearStoredSnapshots(TEST_STORAGE_FILE)
     const cleared = getStoredSnapshots(TEST_STORAGE_FILE)
     expect(cleared.sources).toEqual({})
+  })
+
+  it('respects SCAN_DATA_DIR, SCAN_STORAGE_PATH, and SCAN_REPORT_PATH environment variables', () => {
+    const origDataDir = process.env.SCAN_DATA_DIR
+    const origStoragePath = process.env.SCAN_STORAGE_PATH
+    const origReportPath = process.env.SCAN_REPORT_PATH
+
+    try {
+      process.env.SCAN_DATA_DIR = '/custom/data/dir'
+      expect(getScannerDataDir()).toBe('/custom/data/dir')
+      expect(getSnapshotsFilePath()).toBe(path.join('/custom/data/dir', 'scan-snapshots.json'))
+      expect(getReportFilePath()).toBe(path.join('/custom/data/dir', 'scan-report.json'))
+
+      process.env.SCAN_STORAGE_PATH = '/var/lib/custom-snapshots.json'
+      expect(getSnapshotsFilePath()).toBe('/var/lib/custom-snapshots.json')
+
+      process.env.SCAN_REPORT_PATH = '/var/log/custom-report.json'
+      expect(getReportFilePath()).toBe('/var/log/custom-report.json')
+    } finally {
+      if (origDataDir !== undefined) process.env.SCAN_DATA_DIR = origDataDir
+      else delete process.env.SCAN_DATA_DIR
+
+      if (origStoragePath !== undefined) process.env.SCAN_STORAGE_PATH = origStoragePath
+      else delete process.env.SCAN_STORAGE_PATH
+
+      if (origReportPath !== undefined) process.env.SCAN_REPORT_PATH = origReportPath
+      else delete process.env.SCAN_REPORT_PATH
+    }
   })
 })

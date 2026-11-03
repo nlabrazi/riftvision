@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   formatSentinelLog,
   formatSentinelPayload,
+  getSentinelStatusFilePath,
   writeSentinelStatus,
 } from '../../server/utils/scanner/sentinel'
 import type { ScanReport, SentinelCronStatusPayload } from '../../server/utils/scanner/types'
@@ -156,5 +157,16 @@ describe('Scanner Sentinel Integration', () => {
     const raw = fs.readFileSync(TEST_SENTINEL_FILE, 'utf-8')
     const parsed = JSON.parse(raw)
     expect(parsed.cron_jobs[0].last_log).toBe('Tout est OK')
+  })
+
+  it('respects SENTINEL_STATUS_FILE environment variable', () => {
+    const orig = process.env.SENTINEL_STATUS_FILE
+    try {
+      process.env.SENTINEL_STATUS_FILE = '/custom/sentinel/cron-status.json'
+      expect(getSentinelStatusFilePath()).toBe('/custom/sentinel/cron-status.json')
+    } finally {
+      if (orig !== undefined) process.env.SENTINEL_STATUS_FILE = orig
+      else delete process.env.SENTINEL_STATUS_FILE
+    }
   })
 })

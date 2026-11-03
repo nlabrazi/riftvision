@@ -75,7 +75,17 @@ npm run scan:data:sentinel
 
 # Sauvegarde d'un rapport détaillé dans server/data/scan-report.json
 npm run scan:data -- --report
+
+# Personnalisation des chemins via flags CLI
+npm run scan:data -- --storage-file /var/lib/riftvision/snapshots.json --report-file /var/log/scan-report.json
 ```
+
+### Variables d'environnement pour la persistance
+Les emplacements de stockage peuvent être personnalisés pour déporter les données hors de l'arborescence git :
+- `SCAN_DATA_DIR` : Répertoire de base des données (par défaut : `server/data`).
+- `SCAN_STORAGE_PATH` : Fichier des snapshots persistants (par défaut : `<SCAN_DATA_DIR>/scan-snapshots.json`).
+- `SCAN_REPORT_PATH` : Fichier du dernier rapport détaillé (par défaut : `<SCAN_DATA_DIR>/scan-report.json`).
+- `SENTINEL_STATUS_FILE` : Emplacement du fichier de statut Sentinel (par défaut : `sentinel/cron-status.json`).
 
 ### Codes de retour
 - `0` : Scan réussi avec statut `OK` ou `UPDATED`.
