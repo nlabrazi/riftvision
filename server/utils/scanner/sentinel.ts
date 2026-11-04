@@ -2,7 +2,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { ScanReport, SentinelCronJobEntry, SentinelCronStatusPayload } from './types'
 
-export const DEFAULT_SENTINEL_FILE = path.join(process.cwd(), 'sentinel', 'cron-status.json')
+export function getSentinelStatusFilePath(): string {
+  return (
+    process.env.SENTINEL_STATUS_FILE ||
+    process.env.SENTINEL_FILE ||
+    path.join(process.cwd(), 'sentinel', 'cron-status.json')
+  )
+}
+
+export const DEFAULT_SENTINEL_FILE = getSentinelStatusFilePath()
 
 /**
  * Produit un résumé textuel clair et concis (taille maximale de 4000 octets pour Sentinel).
@@ -77,6 +85,7 @@ export function formatSentinelPayload(
   }
 
   return {
+    jobs: [jobEntry],
     cron_jobs: [jobEntry],
   }
 }
@@ -86,7 +95,7 @@ export function formatSentinelPayload(
  */
 export function writeSentinelStatus(
   payload: SentinelCronStatusPayload,
-  filePath: string = DEFAULT_SENTINEL_FILE,
+  filePath: string = getSentinelStatusFilePath(),
 ): void {
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) {

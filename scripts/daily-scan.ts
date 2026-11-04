@@ -3,10 +3,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { runDailyScan } from '../server/utils/scanner/scanEngine'
 import {
-  DEFAULT_SENTINEL_FILE,
   formatSentinelPayload,
+  getSentinelStatusFilePath,
   writeSentinelStatus,
 } from '../server/utils/scanner/sentinel'
+import { getReportFilePath, getSnapshotsFilePath } from '../server/utils/scanner/storage'
 
 const args = process.argv.slice(2)
 const isJson = args.includes('--json')
@@ -16,23 +17,33 @@ const withSentinel = args.includes('--sentinel')
 const allowDegraded = args.includes('--allow-degraded')
 const withReport = args.includes('--report')
 
+const storageFileIndex =
+  args.indexOf('--storage-file') !== -1
+    ? args.indexOf('--storage-file')
+    : args.indexOf('--snapshots-file')
+const storageFile =
+  storageFileIndex !== -1 && args[storageFileIndex + 1]
+    ? args[storageFileIndex + 1]
+    : getSnapshotsFilePath()
+
 const sentinelFileIndex = args.indexOf('--sentinel-file')
 const sentinelFile =
   sentinelFileIndex !== -1 && args[sentinelFileIndex + 1]
     ? args[sentinelFileIndex + 1]
-    : DEFAULT_SENTINEL_FILE
+    : getSentinelStatusFilePath()
 
 const reportFileIndex = args.indexOf('--report-file')
 const reportFile =
   reportFileIndex !== -1 && args[reportFileIndex + 1]
     ? args[reportFileIndex + 1]
-    : path.join(process.cwd(), 'server', 'data', 'scan-report.json')
+    : getReportFilePath()
 
 async function main() {
   const startTime = Date.now()
 
   try {
     const report = await runDailyScan({
+      storagePath: storageFile,
       persist: !isDryRun,
     })
 

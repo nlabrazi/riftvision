@@ -22,10 +22,13 @@ Chaque analyse attribue un statut global parmi quatre états normalisés :
 
 | Statut | Description | Notification Telegram / Sentinel |
 | :--- | :--- | :--- |
-| **`OK`** | 100% des sources ont répondu, aucune modification constatée. | Archivé silencieusement, récapitulatif du bilan quotidien. |
-| **`UPDATED`** | 100% des sources ont répondu, au moins une nouveauté a été détectée. | Notification Telegram immédiate précisant les jeux et versions modifiés. |
+| **`OK`** | 100% des sources ont répondu, aucune modification constatée (ou initialisation de la baseline). | Archivé silencieusement, récapitulatif du bilan quotidien. |
+| **`UPDATED`** | 100% des sources ont répondu, au moins une nouveauté a été détectée par rapport à la baseline. | Notification Telegram immédiate précisant les jeux et versions modifiés. |
 | **`DEGRADED`** | Panne partielle : 1 à N-1 sources ont échoué (ex. timeout ou 503). | Notification d'avertissement avec diagnostic de la source indisponible. |
 | **`ERROR`** | Panne totale (toutes les sources échouent) ou crash fatal du script. | Alerte critique Telegram, statut `failed` dans Sentinel. |
+
+### Initialisation sans faux positif
+Lors du tout premier scan (ou lorsqu'une nouvelle source est ajoutée sans snapshot préexistant), l'état est comptabilisé comme `OK` avec le message `Initialisation du snapshot pour cette source`. Les snapshots de référence sont enregistrés sans déclencher d'alerte Telegram intempestive de mise à jour.
 
 ### Persistance sélective
 Si une source échoue lors d'un scan (état `DEGRADED`), son snapshot précédent est conservé intact dans `server/data/scan-snapshots.json`. Seules les sources ayant répondu avec succès voient leur empreinte mise à jour.
@@ -72,7 +75,17 @@ npm run scan:data:sentinel
 
 # Sauvegarde d'un rapport détaillé dans server/data/scan-report.json
 npm run scan:data -- --report
+
+# Personnalisation des chemins via flags CLI
+npm run scan:data -- --storage-file /var/lib/riftvision/snapshots.json --report-file /var/log/scan-report.json
 ```
+
+### Variables d'environnement pour la persistance
+Les emplacements de stockage peuvent être personnalisés pour déporter les données hors de l'arborescence git :
+- `SCAN_DATA_DIR` : Répertoire de base des données (par défaut : `server/data`).
+- `SCAN_STORAGE_PATH` : Fichier des snapshots persistants (par défaut : `<SCAN_DATA_DIR>/scan-snapshots.json`).
+- `SCAN_REPORT_PATH` : Fichier du dernier rapport détaillé (par défaut : `<SCAN_DATA_DIR>/scan-report.json`).
+- `SENTINEL_STATUS_FILE` : Emplacement du fichier de statut Sentinel (par défaut : `sentinel/cron-status.json`).
 
 ### Codes de retour
 - `0` : Scan réussi avec statut `OK` ou `UPDATED`.
@@ -100,11 +113,25 @@ NUXT_SCAN_SECRET="votre-token-secret-aleatoire-32-chars"
 
 ## 7. Intégration sur le VPS Debian 12 & Sentinel
 
+### Sonde de supervision (`./status.sh`)
+Sentinel interroge l'état du cron via SSH en exécutant `cd /srv/apps/riftvision && ./status.sh`. Ce script renvoie le JSON de `sentinel/cron-status.json` sur `stdout` (ou un état vide `{"jobs":[],"cron_jobs":[]}` s'il n'a pas encore tourné).
+
 ### Contrat Sentinel (`cron-status.json`)
-Sentinel supervise les crons via `/srv/apps/riftvision/sentinel/cron-status.json` :
+Le fichier généré sous `/srv/apps/riftvision/sentinel/cron-status.json` expose à la fois la clé `jobs` (recommandée par Sentinel v1) et `cron_jobs` (rétrocompatibilité) pour supprimer tout warning dans les logs :
 
 ```json
 {
+  "jobs": [
+    {
+      "name": "daily-data-scan",
+      "command": "npm run scan:data",
+      "schedule": "0 3 * * *",
+      "last_execution_at": "2026-11-03T03:00:15Z",
+      "last_status": "success",
+      "last_duration": 2,
+      "last_log": "Statut: OK · LoL: OK | TFT: OK | Valorant: OK | WoW: OK | HotS: OK"
+    }
+  ],
   "cron_jobs": [
     {
       "name": "daily-data-scan",
@@ -113,31 +140,19 @@ Sentinel supervise les crons via `/srv/apps/riftvision/sentinel/cron-status.json
       "last_execution_at": "2026-11-03T03:00:15Z",
       "last_status": "success",
       "last_duration": 2,
-      "last_log": "Statut: UPDATED · LoL: OK | Valorant: UPDATED | WoW: OK | HotS: OK"
+      "last_log": "Statut: OK · LoL: OK | TFT: OK | Valorant: OK | WoW: OK | HotS: OK"
     }
   ]
 }
 ```
 
-### Wrapper Cron recommandé (`/srv/apps/riftvision/scripts/cron-scan.sh`)
+### Wrapper Cron sécurisé (`scripts/cron-scan.sh`)
+Un wrapper avec verrou non-bloquant (`flock` sur `/tmp/riftvision-scan.lock`) empêche les exécutions concurrentes en cas de lancement manuel ou de scan prolongé :
+
 ```bash
 #!/usr/bin/env bash
-set -u
-
-PROJECT_DIR="/srv/apps/riftvision"
-cd "$PROJECT_DIR" || exit 1
-
-# Exécution du scan avec mise à jour Sentinel et journalisation
-npm run scan:data:sentinel -- --report
-EXIT_CODE=$?
-
-# Hook d'alerte Telegram (optionnel si non géré par Sentinel)
-if [ $EXIT_CODE -ne 0 ]; then
-  # Notification d'erreur vers Telegram
-  echo "[RiftVision] Échec du Daily Data Scan"
-fi
-
-exit $EXIT_CODE
+# Exécution du scan avec mise à jour Sentinel, rapport et protection flock
+./scripts/cron-scan.sh
 ```
 
 ### Crontab système (`/etc/cron.d/riftvision-scan`)

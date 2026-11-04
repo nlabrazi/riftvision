@@ -21,8 +21,8 @@
     "e2e": "playwright test",
     "overlay": "npx electron scripts/desktop-overlay.cjs",
     "overlay:build": "npx --yes electron-builder --win --config electron-builder.json",
-    "scan:data": "npx --yes tsx scripts/daily-scan.ts",
-    "scan:data:sentinel": "npx --yes tsx scripts/daily-scan.ts --sentinel"
+    "scan:data": "tsx scripts/daily-scan.ts",
+    "scan:data:sentinel": "tsx scripts/daily-scan.ts --sentinel"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -40,6 +40,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",
     "@playwright/test": "^1.63.0",
+    "tsx": "^4.23.15",
     "vitest": "^5.0.0"
   }
 }

@@ -2,8 +2,28 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { ScanSnapshots } from './types'
 
-export const DEFAULT_DATA_DIR = path.join(process.cwd(), 'server', 'data')
-export const DEFAULT_SNAPSHOTS_FILE = path.join(DEFAULT_DATA_DIR, 'scan-snapshots.json')
+export function getScannerDataDir(): string {
+  return process.env.SCAN_DATA_DIR || path.join(process.cwd(), 'server', 'data')
+}
+
+export function getSnapshotsFilePath(): string {
+  return (
+    process.env.SCAN_STORAGE_PATH ||
+    process.env.SCAN_SNAPSHOTS_FILE ||
+    path.join(getScannerDataDir(), 'scan-snapshots.json')
+  )
+}
+
+export function getReportFilePath(): string {
+  return (
+    process.env.SCAN_REPORT_PATH ||
+    process.env.SCAN_REPORT_FILE ||
+    path.join(getScannerDataDir(), 'scan-report.json')
+  )
+}
+
+export const DEFAULT_DATA_DIR = getScannerDataDir()
+export const DEFAULT_SNAPSHOTS_FILE = getSnapshotsFilePath()
 
 export function createEmptySnapshots(): ScanSnapshots {
   return {
@@ -24,7 +44,7 @@ function ensureDirectoryExists(filePath: string): void {
  * Lit et retourne les snapshots enregistrés.
  * Si le fichier n'existe pas ou est corrompu, retourne une structure vierge.
  */
-export function getStoredSnapshots(filePath: string = DEFAULT_SNAPSHOTS_FILE): ScanSnapshots {
+export function getStoredSnapshots(filePath: string = getSnapshotsFilePath()): ScanSnapshots {
   try {
     if (!fs.existsSync(filePath)) {
       return createEmptySnapshots()
@@ -51,7 +71,7 @@ export function getStoredSnapshots(filePath: string = DEFAULT_SNAPSHOTS_FILE): S
  */
 export function saveSnapshots(
   snapshots: ScanSnapshots,
-  filePath: string = DEFAULT_SNAPSHOTS_FILE,
+  filePath: string = getSnapshotsFilePath(),
 ): void {
   ensureDirectoryExists(filePath)
   const tempFile = `${filePath}.tmp.${Date.now()}`
@@ -63,7 +83,7 @@ export function saveSnapshots(
 /**
  * Réinitialise complètement le fichier de snapshots.
  */
-export function clearStoredSnapshots(filePath: string = DEFAULT_SNAPSHOTS_FILE): void {
+export function clearStoredSnapshots(filePath: string = getSnapshotsFilePath()): void {
   try {
     ensureDirectoryExists(filePath)
     const empty = createEmptySnapshots()

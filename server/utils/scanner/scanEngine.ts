@@ -1,5 +1,5 @@
 import { createDefaultSourceAdapters } from './sources'
-import { DEFAULT_SNAPSHOTS_FILE, getStoredSnapshots, saveSnapshots } from './storage'
+import { getSnapshotsFilePath, getStoredSnapshots, saveSnapshots } from './storage'
 import type {
   ScanReport,
   ScanSnapshots,
@@ -57,13 +57,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts: number, delayMs: num
 
 function computeDiffs(prev: SourceSnapshot | undefined, current: SourceInspection): SourceDiff[] {
   if (!prev) {
-    return [
-      {
-        field: 'initialization',
-        previous: null,
-        current: current.fingerprint,
-      },
-    ]
+    return []
   }
 
   const diffs: SourceDiff[] = []
@@ -104,7 +98,7 @@ function computeDiffs(prev: SourceSnapshot | undefined, current: SourceInspectio
 export async function runDailyScan(options: ScanEngineOptions = {}): Promise<ScanReport> {
   const {
     adapters = createDefaultSourceAdapters(),
-    storagePath = DEFAULT_SNAPSHOTS_FILE,
+    storagePath = getSnapshotsFilePath(),
     timeoutMs = 6000,
     retryAttempts = 1,
     retryDelayMs = 50,
@@ -127,8 +121,9 @@ export async function runDailyScan(options: ScanEngineOptions = {}): Promise<Sca
       )
 
       const prevSnapshot = previousSnapshots.sources[adapter.id]
-      const diffs = computeDiffs(prevSnapshot, inspection)
-      const hasChanged = !prevSnapshot || prevSnapshot.fingerprint !== inspection.fingerprint
+      const isInitial = !prevSnapshot
+      const hasChanged = !isInitial && prevSnapshot.fingerprint !== inspection.fingerprint
+      const diffs = hasChanged ? computeDiffs(prevSnapshot, inspection) : []
 
       const currentSnapshot: SourceSnapshot = {
         version: inspection.version,
@@ -141,7 +136,7 @@ export async function runDailyScan(options: ScanEngineOptions = {}): Promise<Sca
       updatedSources[adapter.id] = currentSnapshot
 
       let message = 'Aucun changement détecté'
-      if (!prevSnapshot) {
+      if (isInitial) {
         message = 'Initialisation du snapshot pour cette source'
       } else if (hasChanged) {
         message =
@@ -157,7 +152,7 @@ export async function runDailyScan(options: ScanEngineOptions = {}): Promise<Sca
         syncMode: adapter.syncMode,
         status: hasChanged ? 'UPDATED' : 'OK',
         message,
-        diffs: hasChanged ? diffs : [],
+        diffs,
         durationMs: now() - sourceStart,
         currentSnapshot,
       }
