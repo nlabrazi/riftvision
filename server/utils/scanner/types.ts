@@ -62,6 +62,7 @@ export interface SentinelCronJobEntry {
 }
 
 export interface SentinelCronStatusPayload {
+  jobs: SentinelCronJobEntry[]
   cron_jobs: SentinelCronJobEntry[]
 }
 

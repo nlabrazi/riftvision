@@ -105,11 +105,13 @@ describe('Scanner Sentinel Integration', () => {
     }
 
     const payload = formatSentinelPayload(report)
+    expect(payload.jobs).toHaveLength(1)
     expect(payload.cron_jobs).toHaveLength(1)
-    expect(payload.cron_jobs[0].name).toBe('daily-data-scan')
-    expect(payload.cron_jobs[0].last_status).toBe('success')
-    expect(payload.cron_jobs[0].last_duration).toBe(3)
-    expect(payload.cron_jobs[0].command).toBe('npm run scan:data')
+    expect(payload.jobs).toEqual(payload.cron_jobs)
+    expect(payload.jobs[0].name).toBe('daily-data-scan')
+    expect(payload.jobs[0].last_status).toBe('success')
+    expect(payload.jobs[0].last_duration).toBe(3)
+    expect(payload.jobs[0].command).toBe('npm run scan:data')
   })
 
   it('formats payload with last_status=failed on DEGRADED or ERROR', () => {
@@ -132,23 +134,24 @@ describe('Scanner Sentinel Integration', () => {
     }
 
     const payload = formatSentinelPayload(degradedReport)
+    expect(payload.jobs[0].last_status).toBe('failed')
     expect(payload.cron_jobs[0].last_status).toBe('failed')
-    expect(payload.cron_jobs[0].last_log).toContain('Gateway Timeout')
+    expect(payload.jobs[0].last_log).toContain('Gateway Timeout')
   })
 
-  it('writes Sentinel status payload atomically to disk', () => {
+  it('writes Sentinel status payload atomically to disk with jobs and cron_jobs', () => {
+    const jobEntry = {
+      name: 'daily-data-scan',
+      command: 'npm run scan:data',
+      schedule: '0 3 * * *',
+      last_execution_at: '2026-11-02T22:00:00Z',
+      last_status: 'success' as const,
+      last_duration: 2,
+      last_log: 'Tout est OK',
+    }
     const mockPayload: SentinelCronStatusPayload = {
-      cron_jobs: [
-        {
-          name: 'daily-data-scan',
-          command: 'npm run scan:data',
-          schedule: '0 3 * * *',
-          last_execution_at: '2026-11-02T22:00:00Z',
-          last_status: 'success',
-          last_duration: 2,
-          last_log: 'Tout est OK',
-        },
-      ],
+      jobs: [jobEntry],
+      cron_jobs: [jobEntry],
     }
 
     writeSentinelStatus(mockPayload, TEST_SENTINEL_FILE)
@@ -156,6 +159,7 @@ describe('Scanner Sentinel Integration', () => {
     expect(fs.existsSync(TEST_SENTINEL_FILE)).toBe(true)
     const raw = fs.readFileSync(TEST_SENTINEL_FILE, 'utf-8')
     const parsed = JSON.parse(raw)
+    expect(parsed.jobs[0].last_log).toBe('Tout est OK')
     expect(parsed.cron_jobs[0].last_log).toBe('Tout est OK')
   })
 

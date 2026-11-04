@@ -85,6 +85,7 @@ export function formatSentinelPayload(
   }
 
   return {
+    jobs: [jobEntry],
     cron_jobs: [jobEntry],
   }
 }

@@ -113,11 +113,25 @@ NUXT_SCAN_SECRET="votre-token-secret-aleatoire-32-chars"
 
 ## 7. Intégration sur le VPS Debian 12 & Sentinel
 
+### Sonde de supervision (`./status.sh`)
+Sentinel interroge l'état du cron via SSH en exécutant `cd /srv/apps/riftvision && ./status.sh`. Ce script renvoie le JSON de `sentinel/cron-status.json` sur `stdout` (ou un état vide `{"jobs":[],"cron_jobs":[]}` s'il n'a pas encore tourné).
+
 ### Contrat Sentinel (`cron-status.json`)
-Sentinel supervise les crons via `/srv/apps/riftvision/sentinel/cron-status.json` :
+Le fichier généré sous `/srv/apps/riftvision/sentinel/cron-status.json` expose à la fois la clé `jobs` (recommandée par Sentinel v1) et `cron_jobs` (rétrocompatibilité) pour supprimer tout warning dans les logs :
 
 ```json
 {
+  "jobs": [
+    {
+      "name": "daily-data-scan",
+      "command": "npm run scan:data",
+      "schedule": "0 3 * * *",
+      "last_execution_at": "2026-11-03T03:00:15Z",
+      "last_status": "success",
+      "last_duration": 2,
+      "last_log": "Statut: OK · LoL: OK | TFT: OK | Valorant: OK | WoW: OK | HotS: OK"
+    }
+  ],
   "cron_jobs": [
     {
       "name": "daily-data-scan",
@@ -126,31 +140,19 @@ Sentinel supervise les crons via `/srv/apps/riftvision/sentinel/cron-status.json
       "last_execution_at": "2026-11-03T03:00:15Z",
       "last_status": "success",
       "last_duration": 2,
-      "last_log": "Statut: UPDATED · LoL: OK | Valorant: UPDATED | WoW: OK | HotS: OK"
+      "last_log": "Statut: OK · LoL: OK | TFT: OK | Valorant: OK | WoW: OK | HotS: OK"
     }
   ]
 }
 ```
 
-### Wrapper Cron recommandé (`/srv/apps/riftvision/scripts/cron-scan.sh`)
+### Wrapper Cron sécurisé (`scripts/cron-scan.sh`)
+Un wrapper avec verrou non-bloquant (`flock` sur `/tmp/riftvision-scan.lock`) empêche les exécutions concurrentes en cas de lancement manuel ou de scan prolongé :
+
 ```bash
 #!/usr/bin/env bash
-set -u
-
-PROJECT_DIR="/srv/apps/riftvision"
-cd "$PROJECT_DIR" || exit 1
-
-# Exécution du scan avec mise à jour Sentinel et journalisation
-npm run scan:data:sentinel -- --report
-EXIT_CODE=$?
-
-# Hook d'alerte Telegram (optionnel si non géré par Sentinel)
-if [ $EXIT_CODE -ne 0 ]; then
-  # Notification d'erreur vers Telegram
-  echo "[RiftVision] Échec du Daily Data Scan"
-fi
-
-exit $EXIT_CODE
+# Exécution du scan avec mise à jour Sentinel, rapport et protection flock
+./scripts/cron-scan.sh
 ```
 
 ### Crontab système (`/etc/cron.d/riftvision-scan`)

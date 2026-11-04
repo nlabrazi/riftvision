@@ -28,3 +28,8 @@ logs
 test-results
 playwright-report
 blob-report
+
+# Scanner runtime data & Sentinel status
+sentinel/cron-status.json
+server/data/scan-snapshots.json
+server/data/scan-report.json
