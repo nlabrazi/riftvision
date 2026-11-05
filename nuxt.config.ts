@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     blizzardClientId: '',
     blizzardClientSecret: '',
     scanSecret: '',
+    adminSecret: '',
   },
 
   modules: ['@nuxt/hints', '@nuxt/image', '@nuxt/ui'],

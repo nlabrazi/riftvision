@@ -1,21 +1,12 @@
 import type { H3Event } from 'h3'
-import { createError, getHeader } from 'h3'
+import { createError } from 'h3'
+import { extractAuthToken } from '../auth'
 
 /**
- * Extrait le token de l'événement H3 (Authorization Bearer ou header x-scan-secret).
+ * Extrait le token de scan de l'événement H3 (Authorization Bearer, x-scan-secret ou x-admin-secret).
  */
 export function extractScanToken(event: H3Event): string | null {
-  const authHeader = getHeader(event, 'authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice(7).trim()
-  }
-
-  const customHeader = getHeader(event, 'x-scan-secret')
-  if (customHeader) {
-    return customHeader.trim()
-  }
-
-  return null
+  return extractAuthToken(event)
 }
 
 /**

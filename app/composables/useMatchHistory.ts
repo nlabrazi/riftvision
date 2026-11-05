@@ -19,11 +19,37 @@ export function useMatchHistory() {
       if (response.ok) {
         const data = await response.json()
         if (Array.isArray(data?.matches)) {
-          matches.value = data.matches
-          // Met à jour la copie locale de secours
-          if (typeof window !== 'undefined') {
+          // Récupère les données locales existantes pour ne pas les écraser en environnement public
+          let localMatches: SavedMatch[] = []
+          if (typeof localStorage !== 'undefined') {
             try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(data.matches))
+              const raw = localStorage.getItem(STORAGE_KEY)
+              if (raw) {
+                const parsed = JSON.parse(raw)
+                if (Array.isArray(parsed)) {
+                  localMatches = parsed
+                }
+              }
+            } catch {
+              // Ignore
+            }
+          }
+
+          // Fusionne les matchs serveur et locaux sans doublon
+          const merged = [...data.matches]
+          for (const localMatch of localMatches) {
+            if (!merged.some((m) => m.id === localMatch.id)) {
+              merged.push(localMatch)
+            }
+          }
+          merged.sort((a, b) => b.timestamp - a.timestamp)
+          const finalMatches = merged.slice(0, 50)
+
+          matches.value = finalMatches
+          // Met à jour la copie locale de secours
+          if (typeof localStorage !== 'undefined') {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(finalMatches))
             } catch {
               // Ignore
             }
@@ -39,7 +65,7 @@ export function useMatchHistory() {
     }
 
     // 2. Fallback localStorage
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       try {
         const raw = localStorage.getItem(STORAGE_KEY)
         if (raw) {
@@ -65,7 +91,7 @@ export function useMatchHistory() {
     ].slice(0, 50)
 
     // Sauvegarde en localStorage (immédiat)
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(matches.value))
       } catch {
@@ -87,7 +113,7 @@ export function useMatchHistory() {
 
   async function deleteMatch(matchId: string) {
     matches.value = matches.value.filter((m) => m.id !== matchId)
-    if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(matches.value))
       } catch {
