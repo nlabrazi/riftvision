@@ -1,12 +1,7 @@
 @Library('nabster-ci') _
 
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.63.0-noble'
-            args '--ipc=host'
-        }
-    }
+    agent any
 
     stages {
         stage('Notify start') {
@@ -15,46 +10,57 @@ pipeline {
             }
         }
 
-        stage('Install') {
-            steps {
-                sh 'npm ci'
+        stage('CI & Tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.63.0-noble'
+                    args '--ipc=host'
+                    reuseNode true
+                }
             }
-        }
+            stages {
+                stage('Install') {
+                    steps {
+                        sh 'npm ci'
+                    }
+                }
 
-        stage('Lint') {
-            steps {
-                sh 'npm run lint'
-            }
-        }
+                stage('Lint') {
+                    steps {
+                        sh 'npm run lint'
+                    }
+                }
 
-        stage('Format check') {
-            steps {
-                sh 'npm run format:check'
-            }
-        }
+                stage('Format check') {
+                    steps {
+                        sh 'npm run format:check'
+                    }
+                }
 
-        stage('Unit tests') {
-            steps {
-                sh 'npm test'
-            }
-        }
+                stage('Unit tests') {
+                    steps {
+                        sh 'npm test'
+                    }
+                }
 
-        stage('Build') {
-            steps {
-                sh 'npm run build'
-            }
-        }
+                stage('Build') {
+                    steps {
+                        sh 'npm run build'
+                    }
+                }
 
-        stage('End-to-end tests') {
-            steps {
-                sh 'npm run e2e'
+                stage('End-to-end tests') {
+                    steps {
+                        sh 'npm run e2e'
+                    }
+                }
             }
         }
 
         stage('Docker production build') {
-          steps {
-            sh 'docker build --target prod -t riftvision:ci .'
-          }
+            steps {
+                sh 'docker build --target prod -t riftvision:ci .'
+            }
         }
     }
 
