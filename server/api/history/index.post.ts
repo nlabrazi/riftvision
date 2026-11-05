@@ -1,7 +1,13 @@
 import type { SavedMatch } from '../../../shared/types/history'
+import { assertMutationAuthorized } from '../../utils/auth'
 import { saveMatch } from '../../utils/matchHistoryStorage'
 
 export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig(event)
+  assertMutationAuthorized(event, {
+    configuredSecret: (config.adminSecret || config.scanSecret) as string | undefined,
+  })
+
   const body = await readBody<SavedMatch>(event)
 
   if (!body?.id || !body?.gameData) {

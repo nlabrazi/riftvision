@@ -1,3 +1,4 @@
+import { assertMutationAuthorized } from '../../utils/auth'
 import {
   clearAllStoredMatches,
   deleteStoredMatch,
@@ -5,6 +6,11 @@ import {
 } from '../../utils/matchHistoryStorage'
 
 export default defineEventHandler((event) => {
+  const config = useRuntimeConfig(event)
+  assertMutationAuthorized(event, {
+    configuredSecret: (config.adminSecret || config.scanSecret) as string | undefined,
+  })
+
   const query = getQuery(event)
 
   if (query.clear === '1' || query.clear === 'true') {

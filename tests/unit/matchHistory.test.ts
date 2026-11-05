@@ -185,4 +185,107 @@ describe('useMatchHistory Composable', () => {
     closeMatchReport()
     expect(activeReportMatch.value).toBeNull()
   })
+
+  it('preserves local storage matches when server returns empty list in public deployment', async () => {
+    const { loadHistory, matches } = useMatchHistory()
+
+    const localMatch: SavedMatch = {
+      id: 'local-saved-1',
+      timestamp: 2000,
+      dateFormatted: '15 oct.',
+      durationSeconds: 1200,
+      formattedGameTime: '20:00',
+      result: 'VICTORY',
+      championName: 'Garen',
+      summonerName: 'SoloPlayer',
+      team: 'ORDER',
+      kda: { kills: 5, deaths: 0, assists: 5, ratio: 'Parfait' },
+      cs: 150,
+      csPerMin: '7.5',
+      gameData: {} as RiotAllGameData,
+      blueEconomy: {} as TeamEconomySummary,
+      redEconomy: {} as TeamEconomySummary,
+      goldDifference: 4000,
+    }
+    store.riftvision_match_history = JSON.stringify([localMatch])
+
+    // Mock du fetch serveur qui répond avec une liste vide (serveur public sans historique partagé)
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        json: async () => ({ success: true, count: 0, matches: [] }),
+      }) as unknown as Response
+
+    try {
+      await loadHistory()
+      expect(matches.value.length).toBe(1)
+      expect(matches.value[0].id).toBe('local-saved-1')
+      expect(store.riftvision_match_history).toContain('local-saved-1')
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('merges remote server matches and local matches without duplication', async () => {
+    const { loadHistory, matches } = useMatchHistory()
+
+    const localMatch: SavedMatch = {
+      id: 'match-shared',
+      timestamp: 1000,
+      dateFormatted: '14 oct.',
+      durationSeconds: 1000,
+      formattedGameTime: '16:40',
+      result: 'VICTORY',
+      championName: 'Darius',
+      summonerName: 'TopLane',
+      team: 'ORDER',
+      kda: { kills: 3, deaths: 1, assists: 2, ratio: '5.0' },
+      cs: 120,
+      csPerMin: '7.2',
+      gameData: {} as RiotAllGameData,
+      blueEconomy: {} as TeamEconomySummary,
+      redEconomy: {} as TeamEconomySummary,
+      goldDifference: 1000,
+    }
+    const serverOnlyMatch: SavedMatch = {
+      id: 'match-remote-only',
+      timestamp: 2500,
+      dateFormatted: '15 oct.',
+      durationSeconds: 1500,
+      formattedGameTime: '25:00',
+      result: 'DEFEAT',
+      championName: 'Jinx',
+      summonerName: 'AdcPlayer',
+      team: 'CHAOS',
+      kda: { kills: 10, deaths: 4, assists: 3, ratio: '3.25' },
+      cs: 200,
+      csPerMin: '8.0',
+      gameData: {} as RiotAllGameData,
+      blueEconomy: {} as TeamEconomySummary,
+      redEconomy: {} as TeamEconomySummary,
+      goldDifference: -2000,
+    }
+
+    store.riftvision_match_history = JSON.stringify([localMatch])
+
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        json: async () => ({
+          success: true,
+          count: 2,
+          matches: [serverOnlyMatch, localMatch],
+        }),
+      }) as unknown as Response
+
+    try {
+      await loadHistory()
+      expect(matches.value.length).toBe(2)
+      expect(matches.value.map((m) => m.id)).toEqual(['match-remote-only', 'match-shared'])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
 })
