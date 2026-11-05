@@ -50,6 +50,12 @@ pipeline {
                 sh 'npm run e2e'
             }
         }
+
+        stage('Docker production build') {
+          steps {
+            sh 'docker build --target prod -t riftvision:ci .'
+          }
+        }
     }
 
     post {
