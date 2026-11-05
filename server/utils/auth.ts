@@ -43,10 +43,7 @@ export interface MutationAuthOptions {
  *   - Si un token est fourni mais invalide -> 401 Unauthorized
  *   - Si le token correspond au secret -> Autorisé
  */
-export function assertMutationAuthorized(
-  event: H3Event,
-  options?: MutationAuthOptions,
-): void {
+export function assertMutationAuthorized(event: H3Event, options?: MutationAuthOptions): void {
   const isProduction =
     options?.forceProduction !== undefined
       ? options.forceProduction

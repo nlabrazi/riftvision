@@ -2,14 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { H3Event } from 'h3'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import {
-  assertMutationAuthorized,
-  extractAuthToken,
-} from '../../server/utils/auth'
-import {
-  assertScanAuthorized,
-  extractScanToken,
-} from '../../server/utils/scanner/auth'
+import { assertMutationAuthorized, extractAuthToken } from '../../server/utils/auth'
+import { assertScanAuthorized, extractScanToken } from '../../server/utils/scanner/auth'
 
 function createMockEvent(headers: Record<string, string> = {}): H3Event {
   return {
