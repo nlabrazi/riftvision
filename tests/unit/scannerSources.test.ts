@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import {
-  createDefaultSourceAdapters,
-  createHotsSourceAdapter,
-  createLolSourceAdapter,
-  createTftSourceAdapter,
-  createValorantSourceAdapter,
-  createWowSourceAdapter,
-} from '../../server/utils/scanner/sources'
+import { createDefaultSourceAdapters } from '../../server/utils/scanner/sources'
+import { createHotsSourceAdapter } from '../../server/utils/scanner/sources/hots'
+import { createLolSourceAdapter } from '../../server/utils/scanner/sources/lol'
+import { createTftSourceAdapter } from '../../server/utils/scanner/sources/tft'
+import { createValorantSourceAdapter } from '../../server/utils/scanner/sources/valorant'
+import { createWowSourceAdapter } from '../../server/utils/scanner/sources/wow'
 
 describe('Scanner Sources', () => {
   it('instantiates all 5 default source adapters', () => {
