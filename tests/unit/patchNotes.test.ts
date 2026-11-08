@@ -3,10 +3,10 @@ import {
   createPatchNotesClient,
   createTftPatchNotesClient,
   createValorantPatchNotesClient,
+  PatchNotesUnavailableError,
   parsePatchNotes,
   parseTftPatchNotes,
   parseValorantPatchNotes,
-  PatchNotesUnavailableError,
 } from '../../server/utils/patchNotes'
 
 function article(title: string, url: string, date: string) {

@@ -1,5 +1,5 @@
-import { effectScope, ref } from 'vue'
 import { describe, expect, it } from 'vitest'
+import { effectScope, ref } from 'vue'
 import { usePagination } from '../../app/composables/usePagination'
 
 describe('pagination des listes longues', () => {

@@ -5,9 +5,8 @@ import type {
   DataDragonItems,
   DataDragonRunes,
 } from '#shared/types/dataDragon'
-import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
 import type { HotsHeroesResponse, HotsMapsResponse } from '#shared/types/hots'
-import { hotsImage } from '~/utils/hotsImages'
+import type { TftChampionsResponse, TftItemsResponse, TftTraitsResponse } from '#shared/types/tft'
 import type {
   ValorantAgentsResponse,
   ValorantMapsResponse,
@@ -18,6 +17,7 @@ import type {
   WowRacesResponse,
   WowSpecializationsResponse,
 } from '#shared/types/wow'
+import { hotsImage } from '~/utils/hotsImages'
 import { valorantNumber, valorantWeaponCategory } from '~/utils/valorantWeapons'
 
 type SearchResult = { id: string; name: string; subtitle: string; to: string; image: string }

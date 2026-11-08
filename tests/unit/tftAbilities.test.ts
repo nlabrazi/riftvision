@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createTftAbilitiesClient } from '../../server/utils/tftAbilities'
 import { DataDragonUnavailableError } from '../../server/utils/dataDragon'
+import { createTftAbilitiesClient } from '../../server/utils/tftAbilities'
 
 const ability = {
   name: 'Éclair',

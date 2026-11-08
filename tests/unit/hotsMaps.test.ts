@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getHotsMap, getHotsMaps } from '../../server/utils/hotsMaps'
 import { hotsImage } from '../../app/utils/hotsImages'
+import { getHotsMap, getHotsMaps } from '../../server/utils/hotsMaps'
 
 describe('champs de bataille Heroes of the Storm', () => {
   it('expose des cartes identifiables et une liste légère pour la recherche', () => {

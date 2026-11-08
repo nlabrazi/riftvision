@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { PatchNoteLink } from '#shared/types/patchNotes'
 import type { HotsPatchNote } from '#shared/types/hots'
+import type { PatchNoteLink } from '#shared/types/patchNotes'
 
 const props = defineProps<{
   article: PatchNoteLink | HotsPatchNote

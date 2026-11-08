@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getHotsHero, getHotsHeroes } from '../../server/utils/hotsHeroes'
 import { hotsImage } from '../../app/utils/hotsImages'
+import { getHotsHero, getHotsHeroes } from '../../server/utils/hotsHeroes'
 
 describe('catalogue Heroes of the Storm', () => {
   it('expose un catalogue français versionné sans charger toutes les fiches dans la recherche', () => {

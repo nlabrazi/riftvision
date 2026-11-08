@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TftCurrentSetResponse } from '#shared/types/tft'
+
 defineProps<{ current: TftCurrentSetResponse | null }>()
 </script>
 

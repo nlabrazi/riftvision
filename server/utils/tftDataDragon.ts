@@ -6,7 +6,7 @@ import type {
   TftTrait,
   TftTraitsResponse,
 } from '#shared/types/tft'
-import { dataDragon, DataDragonUnavailableError } from './dataDragon'
+import { DataDragonUnavailableError, dataDragon } from './dataDragon'
 
 const ORIGIN = 'https://ddragon.leagueoflegends.com'
 const TTL = 24 * 60 * 60 * 1000

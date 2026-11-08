@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Daily Data Scan & Supervision Sentinel
+
 - **Moteur de scan quotidien** : Surveillance automatique des sources externes pour 5 jeux (League of Legends, TFT, Valorant, World of Warcraft et Heroes of the Storm).
 - **Gestion des 4 états normalisés** : `OK` (aucun changement), `UPDATED` (nouveau patch ou contenu détecté), `DEGRADED` (panne partielle sans écrasement de snapshot) et `ERROR` (panne totale).
 - **Hachage canonique déterministe** : Algorithme SHA-256 évitant les faux positifs dus à l'ordre des propriétés JSON ou aux timestamps de build.
@@ -18,12 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-10-14
 
 ### Objectifs & Timers Neutres (Patch 14.8 Saison 14)
+
 - **Larves du Néant (Voidgrubs)** : Alignement de l'apparition initiale à **6:00 (360s)** au lieu de 5:00 pour respecter les règles officielles du Patch 14.8 (supprimant le chevauchement avec le premier dragon).
 - **Vagues multiples de Larves** : Comptage granulaire des éliminations de larves (`HordeKill`, 3 larves par vague). Déclenchement automatique du compte à rebours de 4:00 (240s) pour la vague 2 dès que la première vague est entièrement neutralisée avant 9:45 (585s).
 - **Despawn automatique du Néant** : Retrait automatique des larves à 13:45 (825s) pour préparer l'apparition du Héraut de la Faille à 14:00.
 - **Conditions du Dragon Ancestral & Âme de Dragon** : Calcul basé sur l'obtention de l'Âme par une seule et même équipe (4 dragons par une équipe) ou sur le tag `DragonType === 'Elder'`, évitant d'annoncer à tort un Dragon Ancestral prématuré lors d'un score partagé de 2-2.
 
 ### HUD Overlay In-Game & Calibration Drag & Drop
+
 - **Positionnement rehaussé (8% haut)** : Déplacement de la position par défaut des bannières d'alerte à **8% du haut** de l'écran (au lieu de 20%), dégageant la zone de combat, les sbires et le champion.
 - **Mode Calibration interactif (Touche F8 & Menu Tray)** : Possibilité de déverrouiller la souris pour glisser-déposer librement la zone d'alerte où vous le souhaitez.
 - **Persistance locale des coordonnées** : Sauvegarde immédiate des coordonnées `(X, Y)` dans le `localStorage` de votre machine.
@@ -32,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pont sécurisé contextBridge Electron** : Bascule dynamique du mode `setIgnoreMouseEvents` entre le mode calibration interactif et le mode de jeu 100% traversant.
 
 ### Historique des parties & Persistance du Récapitulatif
+
 - **Résolution de la disparition instantanée** : Découplage complet de la modale de récapitulatif post-game du polling live. Le bilan reste affiché à l'écran même lorsque le client de jeu League of Legends se ferme.
 - **Archivage automatique local** : Sauvegarde des 50 dernières parties jouées dans `server/data/match-history.json` avec miroir de secours `localStorage`.
 - **Visionneuse Hextech « Historique des parties »** : Modale dédiée accessible depuis la barre d'en-tête (avec compteur) et la page d'accueil, affichant pour chaque partie le résultat (Victoire/Défaite), le champion, la durée, le score KDA, les CS/min et l'écart économique (&Delta; Gold).
@@ -39,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Endpoints REST `/api/history`** : Routes `GET`, `POST` et `DELETE` pour la gestion des archives de parties.
 
 ### Compagnon Desktop & Distribution
+
 - **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger propulsé par Electron, superposé à League of Legends (mode fenêtré borderless) avec fenêtre transparente, sans bordure et 100% traversante à la souris (`setIgnoreMouseEvents(true)`).
 - **Intégration Barre des tâches (System Tray)** : Icône Windows dans la zone de notification avec notification native de démarrage et menu contextuel complet (Statut, Ouvrir le tableau de bord, Calibrer la position F8, Tester F9, Masquer/Afficher Ctrl+Shift+O, Options, À propos, et Quitter).
 - **Lancement automatique du Dashboard** : Ouverture automatique du tableau de bord dans le navigateur par défaut dès le démarrage du compagnon.
@@ -64,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.3] - 2026-10-12
 
 ### Maintenance & CI
+
 - Mise à niveau du pipeline Jenkins avec l'image Playwright Noble (`mcr.microsoft.com/playwright:v1.63.0-noble`) et exécution automatisée de la suite de tests E2E.
 - Mise à niveau de l'image de base Docker vers Node.js 22 LTS (`node:22-bookworm-slim`).
 - Alignement des versions (`1.2.3`), badge de version d'en-tête et harmonisation des liens portfolio vers `nabster.dev`.
@@ -71,12 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.2] - 2026-09-22
 
 ### Tests & Résilience
+
 - Ajout de suites de tests End-to-End Playwright pour la résilience réseau (erreurs HTTP 500 sur le statut initial, gestion des déconnexions/reconnexions en cours de partie et conservation des données affichées).
 - Suite de tests E2E dédiée au testeur d'alertes (`AlertTester`) dans le volet de diagnostic technique pour la validation des bannières et bruitages en mode démo.
 
 ## [1.2.1] - 2026-09-19
 
 ### Intégration continue
+
 - Ajout du fichier de pipeline CI `Jenkinsfile` avec la bibliothèque partagée `nabster-ci`.
 - Notifications Telegram automatisées pour le suivi des builds (démarrage, succès, échec).
 - Étapes de pipeline pour l'installation, le linting Biome, la vérification du formatage, les tests unitaires et le build de production.
@@ -84,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-09-18
 
 ### Interface & Ressources
+
 - Intégration officielle de Font Awesome pour l'ensemble des icônes de l'interface et du footer via le composant `RvIcon`.
 - Intégration de 17 bruitages WAV officiels de League of Legends avec système de secours synthétisé Web Audio API et bascule muet globale.
 - Liens portfolio, dépôt GitHub, profil X et contact dans le footer de l'application avec tests E2E associés.
@@ -92,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-09-15
 
 ### Interface & ergonomie
+
 - Nouvelle navigation à deux vues : **Dashboard** et **Carte immersive**. Le diagnostic API reste accessible depuis le bouton dédié.
 - Dashboard avec carte permanente, journal de combat filtrable et recherchable, scores et inventaires des deux équipes.
 - Carte immersive adaptée à la hauteur de l'écran, journal latéral escamotable et plein écran natif avec retour au dashboard.
@@ -101,12 +111,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simulateur d'alertes réservé au mode démo. Suppression des alertes et de leur file d'attente lors d'un changement de session.
 
 ### Précision des données
+
 - Les champions sont affichés sur des **repères par rôle**, explicitement indicatifs : les données utilisées ne fournissent pas leurs coordonnées réelles.
 - Les alertes d'objectifs utilisent leurs fosses et les alertes de tourelles utilisent les structures identifiées ; aucun déplacement de champion n'est simulé.
 - L'historique chargé à la connexion reste consultable sans déclencher d'alertes en direct.
 - L'économie affichée correspond à la valeur des inventaires, pas à l'or total gagné en partie.
 
 ### Validation
+
 - Tests unitaires du repérage des événements et du nettoyage des alertes.
 - Parcours Playwright : dashboard, filtres, carte, alertes, diagnostic, responsive et plein écran.
 - Port du serveur E2E configurable via `PLAYWRIGHT_BASE_URL`.
@@ -114,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-03-01
 
 ### ✨ Features
+
 - **Dual-View Ergonomics (Dashboard vs Focus Radar)**:
   - Add dedicated **Focus Radar & Alertes** view (`FocusRadarView.vue`) designed specifically for active in-game second-screen usage with zero cognitive overload.
   - Large-scale centered Summoner's Rift tactical map (460x460) with real-time champion positioning, alive/dead statuses, neutral objectives, and turret states.
@@ -131,12 +144,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Global audio mute toggle (`🔊 Audio ON` / `🔇 Muet`) persisted in state with visual indicator in header.
 
 ### 🧪 Tests
+
 - Add comprehensive Vitest unit tests for flash alert queueing, auto-dismiss, diff ingestion, item filtering, and mute states (`tests/unit/flashAlerts.test.ts`).
 - Add Playwright E2E tests validating the Focus Radar view, large map rendering, alert trigger & dismiss flow, and audio toggle (`tests/e2e/flashAlerts.spec.ts`).
 
 ## [0.3.0] - 2026-03-01
 
 ### ✨ Features
+
 - **Interactive Tactical Minimap (Summoner's Rift 2D)**:
   - Add interactive minimap component (`TacticalMinimap.vue`) on official Summoner's Rift 512x512 canvas (`sr-map.png`).
   - Real-time 10-champion pin projection with DDragon circular portraits, team borders, level badges, and death/respawn timers.
@@ -146,27 +161,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Standardized 2D map landmark and role coordinate system (`shared/utils/mapCoordinates.ts`).
 
 ### 🧪 Tests
+
 - Add unit tests for 2D role coordinates, objective landmarks, and turret state extraction (`tests/unit/tacticalMap.test.ts`).
 - Add Playwright E2E tests verifying minimap button appearance upon connection, interactive toggle, 10-champion pin rendering, and view switching (`tests/e2e/dashboard.spec.ts`).
 
 ## [0.2.1] - 2026-03-01
 
 ### ✨ Features
+
 - **Explicit Live Mode & Clean Standby UX**:
   - Introduce dedicated Live listening toggle (`isLiveActive`) in header and empty state, preventing aggressive background polling loops when idle.
-  - Replace aggressive red disconnected banner with an elegant Hextech amber/gold standby indicator (*« En attente du client League of Legends »*).
+  - Replace aggressive red disconnected banner with an elegant Hextech amber/gold standby indicator (_« En attente du client League of Legends »_).
   - Relocate raw technical connection errors (`Riot API timeout after 1500ms`, socket errors) exclusively to the Diagnostic API view, keeping the tactical dashboard clean.
 
 ### 🧪 Tests
+
 - Add unit tests for live mode lifecycle, clean standby state, and seamless mock/live transitions (`tests/unit/useRiotLive.test.ts`).
 - Add Playwright E2E test verifying clean standby rendering without raw technical error banners, followed by explicit live mode activation (`tests/e2e/diagnostic.spec.ts`).
 
 ### 🛠️ Improvements & Bug Fixes
+
 - Fix Biome lint warnings on non-null assertions in tests.
 
 ## [0.2.0] - 2026-03-01
 
 ### ✨ Features
+
 - **Diff Engine & Economy Calculator**: Pure diff algorithm detecting inventory purchases/consumptions, kills, respawns, dragon/baron/turret takedowns, and Blue vs Red gold difference (`shared/utils/gameDiff.ts`)
 - **Data Dragon CDN Helpers**: Static asset URLs for champion squares, item icons, and MM:SS time formatting (`shared/utils/ddragon.ts`)
 - **Tactical Side-by-Side Dashboard**: Blue vs Red comparative scoreboard with KDA, level, respawn timers, gold difference $\Delta$, and full 6+1 item slots with DDragon icons (`app/components/TacticalDashboard.vue`)
@@ -174,10 +194,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **View Switcher**: Seamless toggling between Tactical Dashboard view and Diagnostic Console view (`app/pages/index.vue`)
 
 ### 🧪 Tests
+
 - Add comprehensive Vitest unit tests for inventory diffing, turret/dragon/baron attribution, and economy calculation (`tests/unit/gameDiff.test.ts`)
 - Add Playwright E2E tests for tactical dashboard rendering, champion display, and view switching (`tests/e2e/dashboard.spec.ts`)
 
 ### 🛠️ Improvements & Bug Fixes
+
 - Fix async race condition in `useRiotLive` by adding sequence counters to discard stale out-of-order responses
 - Fix Playwright hydration timing by awaiting status API response before interactions
 - Use Nuxt 4 `#shared` alias for clean shared type and utility imports across client, server, and Nitro
@@ -186,6 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-03-01
 
 ### ✨ Features
+
 - Add Riot Live Client Data API models and TypeScript types (`shared/types/riot.ts`)
 - Add mock game dataset representing a real LoL match snapshot at 16:45 (`server/data/mockGame.ts`)
 - Implement server-side Riot API client with HTTPS self-signed SSL bypass and timeout handling (`server/utils/riotClient.ts`)
@@ -194,10 +217,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add reactive `useRiotLive` composable with auto-polling and mock state management
 
 ### 🧪 Tests
+
 - Add Vitest unit test suite verifying mock data integrity and Riot client behavior (`tests/unit/`)
 - Add Playwright E2E test suite verifying diagnostic page, headers, disclaimers, and mock toggle (`tests/e2e/`)
 
 ### 🛠️ Tooling & Infra
+
 - Configure Biome for ultra-fast linting, formatting, and CI checks (`biome.json`)
 - Add standard scripts: `npm run lint`, `npm run format`, `npm run format:check`, `npm run test`, `npm run e2e`
 - Maintain multi-stage Dockerfile and docker-compose configuration for local host-gateway bridging (`port 2999`)

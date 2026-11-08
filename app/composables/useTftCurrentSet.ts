@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { TftCurrentSetResponse } from '#shared/types/tft'
 
 export function useTftCurrentSet(

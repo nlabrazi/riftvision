@@ -1,7 +1,7 @@
 import type {
   WowClassDetails,
-  WowClassResponse,
   WowClassesResponse,
+  WowClassResponse,
   WowRace,
   WowRacesResponse,
   WowSpecialization,
