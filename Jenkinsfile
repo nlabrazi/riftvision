@@ -1,3 +1,4 @@
+
 @Library('nabster-ci') _
 
 pipeline {
@@ -18,30 +19,31 @@ pipeline {
           reuseNode true
         }
       }
+
       stages {
         stage('Install') {
           steps {
             withCredentials([
-            string(
-                credentialsId: 'github-packages-read',
-                variable: 'GITHUB_TOKEN'
-            )
-        ]) {
+                            string(
+                                credentialsId: 'github-packages-publish',
+                                variable: 'GITHUB_TOKEN'
+                            )
+                        ]) {
               sh '''
-                set +x
-                set -eu
-                umask 077
+                                set +x
+                                set -eu
+                                umask 077
 
-                NPMRC="$(mktemp)"
-                trap 'rm -f "$NPMRC"' EXIT
+                                NPMRC="$(mktemp)"
+                                trap 'rm -f "$NPMRC"' EXIT
 
-                printf '%s\\n' \
-                    '@nlabrazi:registry=https://npm.pkg.github.com' \
-                    "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" \
-                    > "$NPMRC"
+                                printf '%s\\n' \
+                                    '@nlabrazi:registry=https://npm.pkg.github.com' \
+                                    "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" \
+                                    > "$NPMRC"
 
-                NPM_CONFIG_USERCONFIG="$NPMRC" npm ci
-            '''
+                                NPM_CONFIG_USERCONFIG="$NPMRC" npm ci
+                            '''
             }
           }
         }
