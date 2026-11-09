@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { ValorantAgent, ValorantAgentsResponse } from '#shared/types/valorant'
 import {
   createValorantAbilityMediaClient,
   matchAbilityMedia,
 } from '../../server/utils/valorantAbilityMedia'
-import type { ValorantAgent, ValorantAgentsResponse } from '#shared/types/valorant'
 
 const id = 'e370fa57-4757-3604-3648-499e1f642d3f'
 const agent: ValorantAgent = {

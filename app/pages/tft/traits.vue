@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import type { TftCurrentSetResponse, TftTraitsResponse } from '#shared/types/tft'
 import TftCurrentSetNotice from '~/components/TftCurrentSetNotice.vue'
 import { tftSetFromId } from '~/utils/tftCatalog'
-import type { TftCurrentSetResponse, TftTraitsResponse } from '#shared/types/tft'
 
 useHead({ title: 'Traits TFT — RiftVision' })
 const { data, status, error, refresh } =

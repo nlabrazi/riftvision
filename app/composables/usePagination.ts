@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref, type WatchSource } from 'vue'
+import { computed, type Ref, ref, type WatchSource, watch } from 'vue'
 
 export function usePagination(total: Ref<number>, filters: WatchSource[], targetPageSize: number) {
   const page = ref(1)

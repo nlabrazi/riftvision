@@ -1,4 +1,4 @@
-import { dataDragon, DataDragonChampionNotFoundError } from '../../../utils/dataDragon'
+import { DataDragonChampionNotFoundError, dataDragon } from '../../../utils/dataDragon'
 
 export default defineEventHandler(async (event) => {
   try {

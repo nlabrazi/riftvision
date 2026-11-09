@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createTftCurrentSetClient } from '../../server/utils/tftCurrentSet'
-import { DataDragonUnavailableError } from '../../server/utils/dataDragon'
 import type { PatchNotesResponse } from '#shared/types/patchNotes'
+import { DataDragonUnavailableError } from '../../server/utils/dataDragon'
+import { createTftCurrentSetClient } from '../../server/utils/tftCurrentSet'
 
 const now = Date.parse('2026-11-01T12:00:00Z')
 const note = (title: string, publishedAt: string) => ({

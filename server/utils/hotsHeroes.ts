@@ -1,4 +1,4 @@
-import type { HotsHero, HotsHeroResponse, HotsHeroesResponse } from '#shared/types/hots'
+import type { HotsHero, HotsHeroesResponse, HotsHeroResponse } from '#shared/types/hots'
 import first from '../data/hots-heroes-a.json'
 import second from '../data/hots-heroes-b.json'
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import type { TftCurrentSetResponse, TftItemsResponse } from '#shared/types/tft'
 import TftCurrentSetNotice from '~/components/TftCurrentSetNotice.vue'
 import { tftSetFromId } from '~/utils/tftCatalog'
-import type { TftCurrentSetResponse, TftItemsResponse } from '#shared/types/tft'
 
 useHead({ title: 'Objets TFT — RiftVision' })
 const { data, status, error, refresh } = await useFetch<TftItemsResponse>('/api/ddragon/tft/items')

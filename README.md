@@ -30,7 +30,7 @@ Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tab
   - **Veille (Standby)** : Démarrage propre et silencieux sans requêtes agressives ni erreurs de timeout dans le vide.
   - **Mode Simulation (Démo)** : Instantané réel d'une partie (16:45) pour prototyper et tester sans client LoL actif.
   - **Mode Live** : Écoute explicite et synchronisation automatique avec le jeu en cours.
-- 👓 **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger (Electron), 100% traversant à la souris (*click-through*), superposé au jeu en mode *Plein écran fenêtré (Borderless)*.
+- 👓 **Overlay In-Game Transparent (HUD)** : Compagnon desktop ultra-léger (Electron), 100% traversant à la souris (_click-through_), superposé au jeu en mode _Plein écran fenêtré (Borderless)_.
 - ⚡ **Stack moderne** : Nuxt 4 (Vue 3), TypeScript, Tailwind CSS et Nuxt UI.
 - 🎨 **Icônes Font Awesome** : composant Vue officiel enregistré par un plugin Nuxt, utilisé pour l’interface et les liens du footer. Seules les icônes nécessaires sont importées.
 - 🔊 **Alertes audio** : 17 fichiers WAV intégrés, sons contextuels synthétisés et commande pour couper ou réactiver le son.
@@ -44,10 +44,11 @@ Le compagnon de partie prend aujourd’hui en charge **League of Legends** : tab
 ## ⚖️ Suivi League of Legends et Riot Games
 
 Le suivi League of Legends s’appuie sur les **Riot Games Developer Policies** :
+
 1. **Aucune injection mémoire ni altération de client** : L'application n'injecte aucun code et ne lit pas la mémoire du jeu. Elle consulte uniquement l'API locale HTTP mise à disposition par Riot Games pendant les parties.
-2. **Pas d'avantage déloyal (*Unfair Advantage*)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
+2. **Pas d'avantage déloyal (_Unfair Advantage_)** : Toutes les informations affichées proviennent exclusivement des données publiques délivrées par l'API officielle (aucune information cachée par le brouillard de guerre n'est révélée illégalement).
 3. **Mention légale obligatoire** :
-   > *RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.*
+   > _RiftVision isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc._
 
 ---
 
@@ -55,7 +56,7 @@ Le suivi League of Legends s’appuie sur les **Riot Games Developer Policies** 
 
 En complément du tableau de bord second écran, RiftVision propose un **overlay tête haute (HUD)** natif ultra-léger propulsé par Electron :
 
-- 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode *Plein écran fenêtré (Borderless)*.
+- 🪟 **Totalement transparent et sans bordure** : S'intègre naturellement par-dessus League of Legends en mode _Plein écran fenêtré (Borderless)_.
 - 🖱️ **100% Traversant (Click-Through)** : Grâce à l'API `setIgnoreMouseEvents(true, { forward: true })`, aucun clic de souris ou déplacement n'est intercepté en cours de jeu. Vous conservez un contrôle parfait et sans latence de votre personnage.
 - 🎯 **Positionnement rehaussé & Calibration Drag & Drop (F8)** : Par défaut, les alertes s'affichent à **8% du haut** de l'écran pour ne jamais masquer votre personnage ou vos sbires. Une pression sur **F8** active le mode calibration, permettant de glisser-déposer l'alerte à la souris où vous le souhaitez. Les coordonnées sont automatiquement enregistrées en local.
 - 📌 **Barre des tâches (System Tray)** : Se loge discrètement dans la zone de notification Windows avec notification native et menu contextuel clic-droit complet (Statut, Ouvrir le tableau de bord, Calibrer la position F8, Tester F9, Masquer/Afficher Ctrl+Shift+O, Options, À propos, et Quitter proprement).
@@ -71,6 +72,7 @@ En complément du tableau de bord second écran, RiftVision propose un **overlay
 ### 🏆 Bilan de fin de match & Historique des parties
 
 Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan de match »**, RiftVision ouvre un récapitulatif complet qui **reste affiché même après la fermeture du client de jeu League of Legends** :
+
 - **Persistance locale automatique** : Chaque partie complétée est archivée dans `server/data/match-history.json` (jusqu'à 50 matchs) avec miroir de secours `localStorage`.
 - **Modale « Historique des parties »** : Accessible via le bouton **Historique** dans l'en-tête et sur la page d'accueil avec affichage du résultat, du champion, de la durée, du ratio KDA, des CS/min et de l'écart économique.
 - **Réouverture en 1 clic** : Réouverture intégrale de n'importe quel rapport de match antérieur avec ses onglets détaillés.
@@ -82,12 +84,14 @@ Dès la destruction du Nexus (événement `GameEnd`) ou via le bouton **« Bilan
 - **Export en 1 clic** : Bouton pour copier instantanément un résumé propre dans le presse-papier.
 
 ### ⏱️ Précision des Timers d'Objectifs Neutres (Patch 14.8 Saison 14)
+
 - **Larves du Néant (Voidgrubs)** : Apparition initiale calée à **6:00** (360s). Gestion des vagues multiples (3 larves par vague, respawn de la vague 2 après 4:00 si éliminée avant 9:45), et despawn automatique à 13:45 pour le Héraut de 14:00.
 - **Dragon Ancestral** : Conditionné à l'obtention de l'Âme de Dragon (4 dragons d'une même équipe), garantissant des timers de respawn exacts à chaque étape de la partie.
 
 ### Lancement et distribution du compagnon
 
 #### En développement :
+
 ```bash
 # Lancer l'overlay avec Electron (nécessite que le serveur Nuxt tourne sur http://localhost:3000)
 npm run overlay
@@ -95,12 +99,15 @@ npm run overlay
 Sous Windows, vous pouvez aussi double-cliquer sur `scripts/start-overlay.bat` ou exécuter `scripts/start-overlay.ps1`.
 
 #### En production (Installateur officiel Windows .exe) :
+
 Pour distribuer le compagnon aux utilisateurs finaux **sans leur demander d'installer Node.js ni d'utiliser un terminal** :
+
 ```bash
 npm run overlay:build
 ```
 Cette commande génère un installateur graphique Windows complet `RiftVision-Overlay-Setup-1.3.0.exe` dans le dossier `dist-overlay/` :
-- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier avec bouton *Parcourir...*, Raccourcis Bureau et Menu Démarrer, Installation, Lancement).
+
+- **Assistant pas-à-pas** : Étapes claires (Présentation, Choix du dossier avec bouton _Parcourir..._, Raccourcis Bureau et Menu Démarrer, Installation, Lancement).
 - **Téléchargement direct depuis l'application web** : Le tableau de bord propose un bouton direct **« Télécharger l'application (.exe) »** connecté à la route `/api/download/overlay`.
 - **Détails & Informations** : Affichage des recommandations (mode Plein écran fenêtré) directement dans l'assistant.
 
@@ -143,7 +150,7 @@ Cette commande génère un installateur graphique Windows complet `RiftVision-Ov
   - [x] Intégration Font Awesome pour les icônes de l’interface et du footer
   - [x] Hot reload Docker / WSL2 avec polling et procédure de synchronisation des dépendances
 - [x] **v1.3 — Compagnon Desktop, Overlay HUD & Bilan de match**
-  - [x] Compagnon Electron transparent 100% traversant à la souris (*click-through*)
+  - [x] Compagnon Electron transparent 100% traversant à la souris (_click-through_)
   - [x] Intégration Barre des tâches (System Tray) avec menu contextuel et fermeture propre
   - [x] Lancement automatique du tableau de bord dans le navigateur par défaut
   - [x] Installateur Windows NSIS interactif avec choix de dossier d'installation (`RiftVision-Overlay-Setup-1.3.0.exe`)
@@ -275,8 +282,9 @@ Le catalogue `GET /api/wow/races` présente les races Retail et leurs variantes 
 ## 💻 Installation & Démarrage
 
 ### Prérequis
-* Node.js 22.x ou 24.x pour le développement et la suite de tests (Vitest 5 nécessite Node.js `^22.12.0`, `^24.0.0` ou `>=26.0.0`). Le Dockerfile utilise désormais Node.js 22 LTS.
-* League of Legends (sur la même machine pour le mode réel) ou utilisation du mode simulation intégré
+
+- Node.js 22.x ou 24.x pour le développement et la suite de tests (Vitest 5 nécessite Node.js `^22.12.0`, `^24.0.0` ou `>=26.0.0`). Le Dockerfile utilise désormais Node.js 22 LTS.
+- League of Legends (sur la même machine pour le mode réel) ou utilisation du mode simulation intégré
 
 ### Option A : Lancer en local
 
@@ -387,19 +395,19 @@ Consultez la [documentation complète du Daily Data Scan](docs/daily-data-scan.m
 
 ## 🛠️ Scripts Disponibles
 
-| Commande | Description |
-| :--- | :--- |
-| `npm run dev` | Démarre le serveur Nuxt en mode développement |
-| `npm run build` | Compile l'application pour la production |
-| `npm run lint` | Exécute le linter **Biome** sur l'ensemble du code |
-| `npm run format` | Formate le code avec **Biome** |
-| `npm run format:check` | Vérifie le formatage sans modifier les fichiers (idéal pour la CI) |
-| `npm run test` | Exécute la suite de tests unitaires avec **Vitest** |
-| `npm run e2e` | Exécute la suite de tests End-to-End avec **Playwright** |
-| `npm run overlay` | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
-| `npm run overlay:build` | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/` |
-| `npm run scan:data` | Exécute le scan quotidien des sources externes et affiche le rapport |
-| `npm run scan:data:sentinel` | Exécute le scan et met à jour `sentinel/cron-status.json` |
+| Commande                     | Description                                                                    |
+| :--------------------------- | :----------------------------------------------------------------------------- |
+| `npm run dev`                | Démarre le serveur Nuxt en mode développement                                  |
+| `npm run build`              | Compile l'application pour la production                                       |
+| `npm run lint`               | Exécute le linter **Biome** sur l'ensemble du code                             |
+| `npm run format`             | Formate le code avec **Biome**                                                 |
+| `npm run format:check`       | Vérifie le formatage sans modifier les fichiers (idéal pour la CI)             |
+| `npm run test`               | Exécute la suite de tests unitaires avec **Vitest**                            |
+| `npm run e2e`                | Exécute la suite de tests End-to-End avec **Playwright**                       |
+| `npm run overlay`            | Démarre le compagnon d'overlay in-game Electron (transparent et click-through) |
+| `npm run overlay:build`      | Génère l'installateur graphique Windows (`.exe`) dans `dist-overlay/`          |
+| `npm run scan:data`          | Exécute le scan quotidien des sources externes et affiche le rapport           |
+| `npm run scan:data:sentinel` | Exécute le scan et met à jour `sentinel/cron-status.json`                      |
 
 ---
 

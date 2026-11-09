@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DataDragonChampionDetails } from '#shared/types/dataDragon'
 import type { ChampionAbilitySlot } from '#shared/types/championMedia'
+import type { DataDragonChampionDetails } from '#shared/types/dataDragon'
 import ChampionAbilities from '~/components/ChampionAbilities.vue'
 import { lolStatIcon } from '~/utils/lolStats'
 
