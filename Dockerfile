@@ -4,11 +4,13 @@ ARG NODE_IMAGE=node:24-bookworm-slim
 FROM ${NODE_IMAGE} AS base
 WORKDIR /app
 
-# deps
+# Dependencies
 COPY package*.json ./
-RUN npm ci
 
-# code
+# Temporary GitHub Packages authentication
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc,required=true npm ci
+
+# Application
 COPY . .
 
 FROM base AS dev

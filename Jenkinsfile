@@ -80,11 +80,32 @@ pipeline {
       }
         }
 
-        stage('Docker production build') {
+    stage('Docker production build') {
       steps {
-        sh 'docker build --target prod -t riftvision:ci .'
-      }
+        withCredentials([
+            string(
+                credentialsId: 'github-packages-publish',
+                variable: 'GITHUB_TOKEN'
+            )
+        ]) {
+            sh '''
+                set +x
+                set -eu
+                umask 077
+
+                NPMRC="$(mktemp)"
+                trap 'rm -f "$NPMRC"' EXIT
+
+                printf '%s\\n' '@nlabrazi:registry=https://npm.pkg.github.com' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > "$NPMRC"
+
+                DOCKER_BUILDKIT=1 docker build \
+                    --secret "id=npmrc,src=$NPMRC" \
+                    --target prod \
+                    -t riftvision:ci .
+            '''
         }
+      }
+    }
     }
 
     post {
