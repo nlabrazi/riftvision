@@ -8,11 +8,11 @@ Les données statiques déjà utilisées dans RiftVision décrivent les champion
 
 ## Sources et accès
 
-| Source | Intérêt | Limites pour ce projet |
-| --- | --- | --- |
-| [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) | Noms, images et caractéristiques des champions, objets et runes, par version et langue. | Données statiques : elles ne constituent pas un historique de parties. La mise à jour après un patch peut être différée et la version peut varier selon la région. |
-| [Riot Games API](https://developer.riotgames.com/apis), notamment `match-v5` | Piste pour obtenir l'historique et les détails de parties et construire des agrégats. | Nécessite une clé et une stratégie d'échantillonnage ; l'accès, les champs et les limites applicables restent à vérifier sur le portail pour le produit retenu. |
-| [League API](https://developer.riotgames.com/apis) | Informations liées aux classements officiels, utiles à l'étude d'un échantillon classé. | Un classement consulté aujourd'hui ne prouve pas le rang d'un joueur au moment d'une partie passée. La méthode de sélection reste à définir. |
+| Source                                                                       | Intérêt                                                                                 | Limites pour ce projet                                                                                                                                             |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon)          | Noms, images et caractéristiques des champions, objets et runes, par version et langue. | Données statiques : elles ne constituent pas un historique de parties. La mise à jour après un patch peut être différée et la version peut varier selon la région. |
+| [Riot Games API](https://developer.riotgames.com/apis), notamment `match-v5` | Piste pour obtenir l'historique et les détails de parties et construire des agrégats.   | Nécessite une clé et une stratégie d'échantillonnage ; l'accès, les champs et les limites applicables restent à vérifier sur le portail pour le produit retenu.    |
+| [League API](https://developer.riotgames.com/apis)                           | Informations liées aux classements officiels, utiles à l'étude d'un échantillon classé. | Un classement consulté aujourd'hui ne prouve pas le rang d'un joueur au moment d'une partie passée. La méthode de sélection reste à définir.                       |
 
 D'après la [documentation du portail](https://developer.riotgames.com/docs/portal), une clé de développement expire toutes les 24 heures. Une clé personnelle sert à un usage privé ou à une petite communauté privée ; Riot exclut son utilisation pour un produit public, y compris une bêta ouverte. Un produit public utilisant l'API doit demander une clé de production, généralement avec un prototype fonctionnel ; l'approbation et les quotas accordés restent à la discrétion de Riot.
 
