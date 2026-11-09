@@ -1,0 +1,11 @@
+
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["staging"],
+  "dependencyDashboard": true,
+  "timezone": "Europe/Paris",
+  "prConcurrentLimit": 5,
+  "automerge": false,
+  "npmrc": "@nlabrazi:registry=https://npm.pkg.github.com/"
+}
