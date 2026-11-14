@@ -26,9 +26,9 @@
     "scan:data:sentinel": "tsx scripts/daily-scan.ts --sentinel"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.7.2",
-    "@fortawesome/free-brands-svg-icons": "^6.7.2",
-    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-brands-svg-icons": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@fortawesome/vue-fontawesome": "^3.3.3",
     "@nuxt/hints": "^1.0.0-alpha.3",
     "@nuxt/image": "^2.0.0",
