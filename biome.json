@@ -1,35 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
   "extends": ["@nlabrazi/config-biome/configs/recommended"],
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
   "files": {
-    "includes": ["**/*.ts", "**/*.js", "**/*.mjs", "**/*.json", "**/*.vue", "**/*.md"],
-    "ignoreUnknown": false
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "asNeeded"
-    }
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.vue"],
-      "linter": {
-        "rules": {
-          "style": {
-            "useVueMultiWordComponentNames": "off"
-          },
-          "correctness": {
-            "noUnusedVariables": "off",
-            "noUnusedImports": "off"
-          }
-        }
-      }
-    }
-  ]
+    "includes": ["!**/*.css"]
+  }
 }
