@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { icons } from '../utils/icons'
+</script>
+
 <template>
   <footer class="app-footer" role="contentinfo">
     <div class="footer-container">
@@ -28,25 +32,25 @@
           <!-- Portfolio -->
           <a href="https://nabster.dev" target="_blank" rel="noopener noreferrer" class="social-link"
             title="Portfolio : nabster.dev" aria-label="Portfolio nabster.dev">
-            <FontAwesomeIcon :icon="['fas', 'globe']" class="fa-icon" aria-hidden="true" />
+            <FontAwesomeIcon :icon="icons.globe" class="fa-icon" aria-hidden="true" />
           </a>
 
           <!-- GitHub Repo -->
           <a href="https://github.com/nlabrazi/riftvision" target="_blank" rel="noopener noreferrer" class="social-link"
             title="Dépôt GitHub (riftvision)" aria-label="Dépôt GitHub">
-            <FontAwesomeIcon :icon="['fab', 'github']" class="fa-icon" aria-hidden="true" />
+            <FontAwesomeIcon :icon="icons.github" class="fa-icon" aria-hidden="true" />
           </a>
 
           <!-- Twitter / X -->
           <a href="https://x.com/Nabil71405502" target="_blank" rel="noopener noreferrer" class="social-link"
             title="X (Twitter) : @Nabil71405502" aria-label="X @Nabil71405502">
-            <FontAwesomeIcon :icon="['fab', 'x-twitter']" class="fa-icon" aria-hidden="true" />
+            <FontAwesomeIcon :icon="icons['x-twitter']" class="fa-icon" aria-hidden="true" />
           </a>
 
           <!-- Email / Contact -->
           <a href="mailto:na.labrazi@gmail.com" class="social-link" title="Contact : na.labrazi@gmail.com"
             aria-label="Contact Email">
-            <FontAwesomeIcon :icon="['fas', 'envelope']" class="fa-icon" aria-hidden="true" />
+            <FontAwesomeIcon :icon="icons.mail" class="fa-icon" aria-hidden="true" />
           </a>
         </div>
       </div>
