@@ -17,6 +17,7 @@
     "lint": "biome lint .",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "assets:download": "bash scripts/download-assets.sh",
