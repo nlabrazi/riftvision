@@ -13,7 +13,7 @@ pipeline {
         stage('CI & Tests') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.63.0-noble'
+                    image 'mcr.microsoft.com/playwright:v1.65.1-noble'
                     args '--ipc=host'
                     reuseNode true
                 }
