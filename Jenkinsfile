@@ -52,10 +52,10 @@ pipeline {
             }
         }
 
-        stage('Docker production build') {
+        stage('Docker build & push') {
             steps {
-                dockerBuildWithPackages(
-                    image: 'riftvision:ci',
+                dockerBuildAndPush(
+                    imageName: 'riftvision',
                     target: 'prod'
                 )
             }
