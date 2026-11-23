@@ -27,5 +27,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/scripts/daily-scan.ts ./scripts/daily-scan.ts
+COPY --from=build /app/server ./server
+COPY --from=build /app/shared ./shared
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]
