@@ -31,17 +31,17 @@
     "@fortawesome/free-brands-svg-icons": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@fortawesome/vue-fontawesome": "^3.3.3",
-    "@nuxt/hints": "^1.0.0-alpha.3",
+    "@nuxt/hints": "^1.1.6",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.12.0",
-    "nuxt": "^4.2.2",
-    "vue": "^3.5.25",
-    "vue-router": "^4.6.5"
+    "@nuxt/ui": "^4.13.1",
+    "nuxt": "^4.7.0",
+    "vue": "^3.5.46",
+    "vue-router": "^5.5.1"
   },
   "devDependencies": {
     "@nlabrazi/config-biome": "^0.2.0",
     "@nlabrazi/config-playwright": "^0.1.0",
-    "@nlabrazi/config-vitest": "^0.2.2",
+    "@nlabrazi/config-vitest": "^0.2.4",
     "@nlabrazi/tsconfig": "^0.1.0",
     "tsx": "^4.23.15"
   }
